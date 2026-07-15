@@ -1,0 +1,41 @@
+.root {
+    -fx-font-family: "Segoe UI", "Verdana", "Arial";
+    -fx-font-size: 13px;
+}
+
+.page-title {
+    -fx-border-color: #2f6fed;
+    -fx-border-radius: 10px;
+    -fx-label-padding: 2px 2px 4px 10px;
+    -fx-font-size: 25px;
+    -fx-font-weight: bold;
+}
+
+.form-card {
+    -fx-background-color: white;
+    -fx-background-radius: 10px;
+    -fx-padding: 16px;
+}
+
+.primary-button {
+    -fx-background-color: #2f6fed;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.danger-button {
+    -fx-background-color: #d64545;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.table-view {
+    -fx-background-color: white;
+}
+
+.status-badge {
+    -fx-background-radius: 100px;
+    -fx-padding: 3px 10px 3px 10px;
+    -fx-font-weight: bold;
+}
+

@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane id="dashboardLabel" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.sol.loanmanagementsystemspringbootserver.controllers.DashboardController">
+   <children>
+      <BorderPane layoutX="14.0" layoutY="14.0" prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <top>
+            <HBox fx:id="topBar" fillHeight="false" nodeOrientation="LEFT_TO_RIGHT" prefHeight="48.0" prefWidth="600.0" spacing="12.0" BorderPane.alignment="CENTER">
+               <children>
+                  <Label prefHeight="47.0" prefWidth="93.0" text="LMS VERSION 1.0" />
+                  <TextField fx:id="globalSearch" prefHeight="55.0" prefWidth="400.0" promptText="Search" HBox.hgrow="ALWAYS" />
+                  <MenuButton alignment="CENTER" mnemonicParsing="false" prefHeight="52.0" prefWidth="82.0" text="OPTIONS" HBox.hgrow="ALWAYS">
+                    <items>
+                      <MenuItem mnemonicParsing="false" text="Action 1" />
+                      <MenuItem mnemonicParsing="false" text="Action 2" />
+                    </items>
+                  </MenuButton>
+               </children>
+               <cursor>
+                  <Cursor fx:constant="OPEN_HAND" />
+               </cursor>
+            </HBox>
+         </top>
+         <left>
+            <VBox fx:id="navList" prefHeight="352.0" prefWidth="108.0" BorderPane.alignment="CENTER">
+               <children>
+                  <Label text="Home" VBox.vgrow="ALWAYS">
+                     <VBox.margin>
+                        <Insets left="5.0" top="10.0" />
+                     </VBox.margin>
+                     <padding>
+                        <Insets left="5.0" top="12.0" />
+                     </padding>
+                  </Label>
+                  <Label text="Loans" VBox.vgrow="ALWAYS">
+                     <VBox.margin>
+                        <Insets left="5.0" top="10.0" />
+                     </VBox.margin>
+                     <padding>
+                        <Insets left="5.0" top="12.0" />
+                     </padding>
+                  </Label>
+                  <Label text="Customers" VBox.vgrow="ALWAYS">
+                     <VBox.margin>
+                        <Insets left="5.0" top="10.0" />
+                     </VBox.margin>
+                     <padding>
+                        <Insets left="5.0" top="12.0" />
+                     </padding>
+                  </Label>
+                  <Label text="Applications" VBox.vgrow="ALWAYS">
+                     <VBox.margin>
+                        <Insets left="5.0" top="10.0" />
+                     </VBox.margin>
+                     <padding>
+                        <Insets left="5.0" top="12.0" />
+                     </padding>
+                  </Label>
+                  <Label text="Payments" VBox.vgrow="ALWAYS">
+                     <VBox.margin>
+                        <Insets left="5.0" top="10.0" />
+                     </VBox.margin>
+                     <padding>
+                        <Insets left="5.0" top="12.0" />
+                     </padding>
+                  </Label>
+                  <Label text="Reports" VBox.vgrow="ALWAYS">
+                     <VBox.margin>
+                        <Insets left="5.0" top="10.0" />
+                     </VBox.margin>
+                     <padding>
+                        <Insets left="5.0" top="12.0" />
+                     </padding>
+                  </Label>
+                  <Label text="Admin" VBox.vgrow="ALWAYS">
+                     <VBox.margin>
+                        <Insets left="5.0" top="10.0" />
+                     </VBox.margin>
+                     <padding>
+                        <Insets left="5.0" top="12.0" />
+                     </padding>
+                  </Label>
+                  <Label text="Settings" VBox.vgrow="ALWAYS">
+                     <VBox.margin>
+                        <Insets left="5.0" top="10.0" />
+                     </VBox.margin>
+                     <padding>
+                        <Insets left="5.0" top="12.0" />
+                     </padding>
+                  </Label>
+               </children>
+            </VBox>
+         </left>
+         <center>
+            <StackPane fx:id="mainContent" prefHeight="150.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+               <children>
+                  <GridPane>
+                    <columnConstraints>
+                      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                    </columnConstraints>
+                    <rowConstraints>
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                    </rowConstraints>
+                  </GridPane>
+               </children></StackPane>
+         </center>
+         <right>
+            <VBox prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
+               <children>
+                  <Label />
+                  <Label layoutX="1.0" prefHeight="42.0" prefWidth="63.0" text="Notifications" textAlignment="CENTER" wrapText="true" VBox.vgrow="ALWAYS">
+                     <font>
+                        <Font name="Bell MT" size="12.0" />
+                     </font>
+                     <VBox.margin>
+                        <Insets top="5.0" />
+                     </VBox.margin>
+                     <padding>
+                        <Insets bottom="5.0" />
+                     </padding></Label>
+                  <Label layoutX="1.0" prefHeight="46.0" prefWidth="84.0" text="upcoming Tasks " textAlignment="CENTER" wrapText="true" VBox.vgrow="ALWAYS">
+                     <font>
+                        <Font name="Bell MT" size="12.0" />
+                     </font>
+                     <VBox.margin>
+                        <Insets top="5.0" />
+                     </VBox.margin>
+                     <padding>
+                        <Insets bottom="5.0" />
+                     </padding></Label>
+                  <Label />
+                  <Label layoutX="1.0" prefHeight="54.0" prefWidth="74.0" text="System Status" textAlignment="CENTER" wrapText="true" VBox.vgrow="ALWAYS">
+                     <font>
+                        <Font name="Bell MT" size="12.0" />
+                     </font>
+                     <VBox.margin>
+                        <Insets top="5.0" />
+                     </VBox.margin>
+                     <padding>
+                        <Insets bottom="5.0" />
+                     </padding></Label>
+               </children>
+            </VBox>
+         </right>
+         <bottom>
+            <HBox fx:id="footerBar" alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="20.0" prefWidth="600.0" spacing="15.0" BorderPane.alignment="CENTER">
+               <children>
+                  <Label text="DB STATUS" />
+                  <Label text="VERSION 1.0" />
+                  <Label text="HELP" />
+               </children>
+               <opaqueInsets>
+                  <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+               </opaqueInsets>
+               <cursor>
+                  <Cursor fx:constant="HAND" />
+               </cursor></HBox>
+         </bottom>
+      </BorderPane>
+   </children>
+</AnchorPane>

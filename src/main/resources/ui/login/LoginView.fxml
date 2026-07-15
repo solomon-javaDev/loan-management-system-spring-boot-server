@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.sol.loanmanagementsystemspringbootserver.controllers.LoginController">
+   <children>
+      <VBox layoutX="129.0" layoutY="122.0" prefHeight="400.0" prefWidth="600.0" spacing="25.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="12.0" AnchorPane.rightAnchor="12.0" AnchorPane.topAnchor="20.0">
+         <children>
+            <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="31.0" prefWidth="576.0" styleClass="page-title" text="LOAN MANAGEMENT SYSTEM" textAlignment="CENTER" textFill="#1d7d16" textOverrun="WORD_ELLIPSIS">
+               <VBox.margin>
+                  <Insets top="12.0" />
+               </VBox.margin>
+               <padding>
+                  <Insets bottom="50.0" />
+               </padding></Label>
+            <TextField fx:id="usernameField" alignment="CENTER" promptText="USERNAME" />
+            <PasswordField fx:id="passwordField" alignment="CENTER" promptText="PASSWORD" />
+            <HBox alignment="CENTER" focusTraversable="true" prefHeight="31.0" prefWidth="600.0" spacing="30.0">
+               <children>
+                  <Button fx:id="loginButton" mnemonicParsing="false" onAction="#onLoginClicked" styleClass="primary-button" text="LOGIN" />
+                  <Button fx:id="creatAccountButton" onAction="#handleCreateAccountClick" mnemonicParsing="false" text="CREATE ACCOUNT" />
+               </children>
+               <padding>
+                  <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+               </padding>
+               <VBox.margin>
+                  <Insets top="50.0" />
+               </VBox.margin>
+            </HBox>
+            <HBox alignment="CENTER" focusTraversable="true" layoutX="10.0" layoutY="266.0" prefHeight="31.0" prefWidth="600.0" spacing="30.0">
+               <padding>
+                  <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+               </padding>
+               <children>
+                  <Label fx:id="messageLabel" text="">
+                     <font>
+                        <Font name="Verdana Bold" size="12.0" />
+                     </font>
+                  </Label>
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+   </children>
+</AnchorPane>
