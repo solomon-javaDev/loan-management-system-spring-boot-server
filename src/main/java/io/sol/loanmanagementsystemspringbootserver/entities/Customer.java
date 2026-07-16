@@ -1,6 +1,8 @@
 package io.sol.loanmanagementsystemspringbootserver.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 public class Customer {
@@ -10,29 +12,44 @@ public class Customer {
     private int id;
 
     @Column
+    @NotNull(message = "First name cannot be empty")
     private String firstName;
 
     @Column
+    @NotNull(message = "Last name cannot be empty")
     private String lastName;
 
     @Column
     private String otherNames;
 
-    @Column
+    @Column(unique = true)
+    @Email(message = "Please submit an email")
     private String email;
 
     @Column
     private String telephone;
 
-    public Customer(){
+    public Customer() {
 
+    }
+
+    public Customer(String firstName, String lastName, String otherNames, String email, String telephone) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.otherNames = otherNames;
+        this.email = email;
+        this.telephone = telephone;
     }
 
     public int getId() {
         return id;
     }
 
-      public String getFirstName() {
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getFirstName() {
         return firstName;
     }
 

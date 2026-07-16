@@ -3,9 +3,63 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.sol.loanmanagementsystemspringbootserver.controllers.CustomerController">
+<AnchorPane prefHeight="500.0" prefWidth="750.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.sol.loanmanagementsystemspringbootserver.controllers.CustomerController">
    <children>
-      <Label layoutX="251.0" layoutY="153.0" text="WELCOME TO THE CUSTOMERS VIEW" />
+      <VBox spacing="12.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="20.0">
+         <children>
+            <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Customer Management" />
+            <Label fx:id="messageLabel" text="Enter customer details or select an existing record." wrapText="true" />
+
+            <GridPane hgap="10.0" vgap="8.0">
+               <columnConstraints>
+                  <ColumnConstraints minWidth="120.0" />
+                  <ColumnConstraints hgrow="ALWAYS" minWidth="200.0" />
+               </columnConstraints>
+               <children>
+                  <Label text="First name" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                  <TextField fx:id="firstNameField" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                  <Label text="Last name" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                  <TextField fx:id="lastNameField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                  <Label text="Other names" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                  <TextField fx:id="otherNamesField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+                  <Label text="Email" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                  <TextField fx:id="emailField" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+
+                  <Label text="Telephone" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                  <TextField fx:id="telephoneField" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+               </children>
+               <rowConstraints>
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+               </rowConstraints>
+            </GridPane>
+
+            <HBox spacing="10.0">
+               <children>
+                  <Button fx:id="customerSaveButton" onAction="#handleSaveCustomer" text="Save" />
+                  <Button fx:id="customerUpdateButton" onAction="#handleUpdateCustomer" text="Update" />
+                  <Button fx:id="customerDeleteButton" onAction="#handleDeleteCustomer" text="Delete" />
+                  <Button fx:id="customerClearButton" onAction="#handleClearForm" text="Clear" />
+               </children>
+            </HBox>
+
+            <TableView fx:id="customersTable" VBox.vgrow="ALWAYS">
+               <columns>
+                  <TableColumn fx:id="idColumn" prefWidth="60.0" text="ID" />
+                  <TableColumn fx:id="firstNameColumn" prefWidth="120.0" text="First Name" />
+                  <TableColumn fx:id="lastNameColumn" prefWidth="120.0" text="Last Name" />
+                  <TableColumn fx:id="otherNamesColumn" prefWidth="120.0" text="Other Names" />
+                  <TableColumn fx:id="emailColumn" prefWidth="180.0" text="Email" />
+                  <TableColumn fx:id="telephoneColumn" prefWidth="120.0" text="Telephone" />
+               </columns>
+            </TableView>
+         </children>
+      </VBox>
    </children>
 </AnchorPane>
