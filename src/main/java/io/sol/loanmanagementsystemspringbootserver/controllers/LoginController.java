@@ -1,5 +1,6 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
+import io.sol.loanmanagementsystemspringbootserver.config.StageManager;
 import io.sol.loanmanagementsystemspringbootserver.services.AuthenticationService;
 import org.springframework.context.ApplicationContext;
 import javafx.fxml.FXML;
@@ -18,6 +19,7 @@ import java.io.IOException;
 @Component
 public class LoginController {
 
+    private final StageManager stageManager;
     @FXML
     private TextField usernameField;
 
@@ -36,9 +38,10 @@ public class LoginController {
     private final AuthenticationService authenticationService;
     private final ApplicationContext applicationContext;
 
-    public LoginController(AuthenticationService authenticationService, ApplicationContext applicationContext) {
+    public LoginController(AuthenticationService authenticationService, ApplicationContext applicationContext, StageManager stageManager) {
         this.authenticationService = authenticationService;
         this.applicationContext = applicationContext;
+        this.stageManager = stageManager;
     }
 
     @FXML
@@ -68,9 +71,7 @@ public class LoginController {
 
     private void loadDashboard() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/dashboard/DashboardView.fxml"));
-            loader.setControllerFactory(applicationContext::getBean);
-            Parent dashboardRoot = loader.load();
+            Parent dashboardRoot = stageManager.loadView("/ui/dashboard/DashboardView.fxml");
 
             Stage stage = (Stage) loginButton.getScene().getWindow();
             stage.setScene(new Scene(dashboardRoot));
