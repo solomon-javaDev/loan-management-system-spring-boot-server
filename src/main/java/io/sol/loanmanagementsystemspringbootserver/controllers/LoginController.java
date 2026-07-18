@@ -1,6 +1,8 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
+import io.sol.loanmanagementsystemspringbootserver.config.Result;
 import io.sol.loanmanagementsystemspringbootserver.config.StageManager;
+import io.sol.loanmanagementsystemspringbootserver.entities.User;
 import io.sol.loanmanagementsystemspringbootserver.services.AuthenticationService;
 import org.springframework.context.ApplicationContext;
 import javafx.fxml.FXML;
@@ -59,14 +61,12 @@ public class LoginController {
         String username = usernameField.getText() == null ? "" : usernameField.getText().trim();
         String password = passwordField.getText() == null ? "" : passwordField.getText();
 
-        if (username.isEmpty() || password.isEmpty()) {
-            messageLabel.setText("Please enter both username and password.");
-            return;
-        }
+        Result<User> authResult = authenticationService.authenticate(username, password);
+        messageLabel.setText(authResult.message());
 
-        authenticationService.authenticate(username, password).ifPresentOrElse(
-                user -> loadDashboard(),
-                () -> messageLabel.setText("Invalid username or password. Please try again."));
+        if (authResult.isSuccess()) {
+            loadDashboard();
+        }
     }
 
     private void loadDashboard() {

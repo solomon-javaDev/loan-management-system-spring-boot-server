@@ -28,7 +28,7 @@
          <left>
             <VBox fx:id="navList" blendMode="SRC_ATOP" prefHeight="352.0" prefWidth="108.0" spacing="10.0" BorderPane.alignment="CENTER">
                <children>
-                  <Button fx:id="homeButton" contentDisplay="CENTER" mnemonicParsing="false" text="HOME" textAlignment="CENTER" VBox.vgrow="ALWAYS">
+                  <Button fx:id="homeButton" contentDisplay="CENTER" mnemonicParsing="false" onAction="#showHomeView" text="HOME" textAlignment="CENTER" VBox.vgrow="ALWAYS">
                      <VBox.margin>
                         <Insets left="5.0" top="5.0" />
                      </VBox.margin>
@@ -36,7 +36,7 @@
                         <Insets left="5.0" top="5.0" />
                      </padding>
                   </Button>
-                  <Button fx:id="loansButton" contentDisplay="CENTER" mnemonicParsing="false" text="LOANS" textAlignment="CENTER" VBox.vgrow="ALWAYS">
+                  <Button fx:id="loansButton" contentDisplay="CENTER" mnemonicParsing="false" onAction="#showLoanView" text="LOANS" textAlignment="CENTER" VBox.vgrow="ALWAYS">
                      <VBox.margin>
                         <Insets left="5.0" top="5.0" />
                      </VBox.margin>
@@ -60,7 +60,7 @@
                         <Insets left="5.0" top="5.0" />
                      </padding>
                   </Button>
-                  <Button fx:id="paymentsButton" contentDisplay="CENTER" mnemonicParsing="false" text="PAYMENTS" textAlignment="CENTER" VBox.vgrow="ALWAYS">
+                  <Button fx:id="paymentsButton" contentDisplay="CENTER" mnemonicParsing="false" onAction="#showPaymentsView" text="PAYMENTS" textAlignment="CENTER" VBox.vgrow="ALWAYS">
                      <VBox.margin>
                         <Insets left="5.0" top="5.0" />
                      </VBox.margin>

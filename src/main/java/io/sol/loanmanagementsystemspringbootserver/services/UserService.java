@@ -1,10 +1,9 @@
 package io.sol.loanmanagementsystemspringbootserver.services;
 
+import io.sol.loanmanagementsystemspringbootserver.config.Result;
 import io.sol.loanmanagementsystemspringbootserver.entities.User;
 import io.sol.loanmanagementsystemspringbootserver.repositories.UserRepository;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @Service
 public class UserService {
@@ -15,15 +14,31 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public Optional<User> getUserById(Integer id) {
-        return userRepository.findById(id);
+    public Result<User> getUserById(Integer id) {
+        if (id == null || id <= 0) {
+            return Result.invalid("A valid user id is required.", null);
+        }
+
+        return userRepository.findById(id)
+                .map(user -> Result.success("User loaded successfully.", user))
+                .orElseGet(() -> Result.notFound("User not found.", null));
     }
 
-    public Optional<User> findByUsername(String username) {
-        return userRepository.findByUsername(username);
+    public Result<User> findByUsername(String username) {
+        if (username == null || username.isBlank()) {
+            return Result.invalid("Username is required.", null);
+        }
+
+        return userRepository.findByUsername(username)
+                .map(user -> Result.success("User loaded successfully.", user))
+                .orElseGet(() -> Result.notFound("User not found.", null));
     }
 
-    public User save(User user) {
-        return userRepository.save(user);
+    public Result<User> save(User user) {
+        if (user == null) {
+            return Result.invalid("User details are required.", null);
+        }
+
+        return Result.success("User saved successfully.", userRepository.save(user));
     }
 }

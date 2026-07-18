@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "users")
+@Inheritance(strategy = InheritanceType.JOINED)
 public class User {
 
     @Id
@@ -16,13 +17,16 @@ public class User {
     @Column(nullable = false, unique = true)
     private String username;
 
-    @NotBlank
     @Column(nullable = false)
     private String password;
 
     @Email
     @Column(unique = true)
     private String email;
+
+    @Enumerated(EnumType.STRING)
+    @Column
+    private Role role;
 
     public Integer getId() {
         return id;
@@ -50,5 +54,12 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public void setRole(Role role) {
+    }
+
+    public Role getRole(){
+        return this.role;
     }
 }

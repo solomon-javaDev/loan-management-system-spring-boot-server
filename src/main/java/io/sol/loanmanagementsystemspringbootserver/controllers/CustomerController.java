@@ -1,5 +1,6 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
+import io.sol.loanmanagementsystemspringbootserver.config.Result;
 import io.sol.loanmanagementsystemspringbootserver.entities.Customer;
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
 import javafx.collections.FXCollections;
@@ -95,10 +96,13 @@ public class CustomerController {
     @FXML
     private void handleSaveCustomer() {
         Customer customer = buildCustomerFromForm();
-        customerService.createCustomer(customer);
-        loadCustomers();
-        clearForm();
-        messageLabel.setText("Customer saved successfully.");
+        Result<Customer> result = customerService.createCustomer(customer);
+        messageLabel.setText(result.message());
+
+        if (result.isSuccess()) {
+            loadCustomers();
+            clearForm();
+        }
     }
 
     @FXML
@@ -112,10 +116,13 @@ public class CustomerController {
 
         Customer updatedCustomer = buildCustomerFromForm();
         updatedCustomer.setId(selectedCustomer.getId());
-        customerService.updateCustomer(updatedCustomer);
-        loadCustomers();
-        clearForm();
-        messageLabel.setText("Customer updated successfully.");
+        Result<Customer> result = customerService.updateCustomer(updatedCustomer);
+        messageLabel.setText(result.message());
+
+        if (result.isSuccess()) {
+            loadCustomers();
+            clearForm();
+        }
     }
 
     @FXML
@@ -127,10 +134,13 @@ public class CustomerController {
             return;
         }
 
-        customerService.deleteCustomer(selectedCustomer);
-        loadCustomers();
-        clearForm();
-        messageLabel.setText("Customer deleted successfully.");
+        Result<Void> result = customerService.deleteCustomer(selectedCustomer);
+        messageLabel.setText(result.message());
+
+        if (result.isSuccess()) {
+            loadCustomers();
+            clearForm();
+        }
     }
 
     @FXML
@@ -148,7 +158,8 @@ public class CustomerController {
     }
 
     private void loadCustomers() {
-        customersTable.setItems(FXCollections.observableArrayList(customerService.getAllCustomers()));
+        Result<java.util.List<Customer>> result = customerService.getAllCustomers();
+        customersTable.setItems(FXCollections.observableArrayList(result.value()));
     }
 
     private Customer buildCustomerFromForm() {

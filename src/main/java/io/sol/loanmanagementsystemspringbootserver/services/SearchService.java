@@ -1,5 +1,6 @@
 package io.sol.loanmanagementsystemspringbootserver.services;
 
+import io.sol.loanmanagementsystemspringbootserver.config.Result;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import org.springframework.stereotype.Service;
@@ -9,15 +10,16 @@ public class SearchService {
 
     private final StringProperty searchQuery = new SimpleStringProperty("");
 
-    public StringProperty searchQueryProperty(){
+    public StringProperty searchQueryProperty() {
         return searchQuery;
     }
 
-    public String getSearchQuery(){
-        return searchQuery.get();
+    public Result<String> getSearchQuery() {
+        return Result.success("Search query loaded successfully.", searchQuery.get());
     }
 
-    public void setSearchQuery(String query){
-        this.searchQuery.set(query);
+    public Result<String> setSearchQuery(String query) {
+        this.searchQuery.set(query == null ? "" : query);
+        return Result.success("Search query updated successfully.", this.searchQuery.get());
     }
 }

@@ -1,6 +1,7 @@
 package io.sol.loanmanagementsystemspringbootserver.config;
 
 import io.sol.loanmanagementsystemspringbootserver.entities.Customer;
+import io.sol.loanmanagementsystemspringbootserver.entities.Role;
 import io.sol.loanmanagementsystemspringbootserver.entities.User;
 import io.sol.loanmanagementsystemspringbootserver.repositories.CustomerRepository;
 import io.sol.loanmanagementsystemspringbootserver.repositories.UserRepository;
@@ -21,6 +22,7 @@ public class SeedDataConfig {
                     User adminUser = new User();
                     adminUser.setEmail("admin@lms.com");
                     adminUser.setUsername("admin");
+                    adminUser.setRole(Role.ADMIN);
                     adminUser.setPassword(passwordEncoder.encode("admin123"));
                     userRepository.save(adminUser);
 
