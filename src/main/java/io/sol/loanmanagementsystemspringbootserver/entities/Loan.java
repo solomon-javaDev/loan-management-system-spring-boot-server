@@ -19,7 +19,7 @@ public class Loan {
     @Column(nullable = false)
     private LocalDate maturityDate;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private LocalDate fullPaidDate;
 
     @Column(nullable = false)
@@ -28,7 +28,7 @@ public class Loan {
     @Column(nullable = false)
     private BigDecimal interestRate;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private int tenor;
 
     @Column(nullable = false)
@@ -37,11 +37,47 @@ public class Loan {
     @Column(nullable = false)
     private BigDecimal fees;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private LoanStatus status;
 
-    @Column(nullable = false)
-    private String fieldOfficer;
+    @ManyToOne
+    @JoinColumn(name = "employee_id")
+    private Employee fieldOfficer;
+
+    @ManyToOne
+    @JoinColumn(name = "guarantor_id")
+    private Guarantor guarantor;
+
+    @ManyToOne
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
+
+    public Loan() {
+
+    }
+
+    public Customer getCustomer() {
+        return customer;
+    }
+
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
+    }
+
+
+    public Loan(LocalDate startDate, LocalDate maturityDate, LocalDate fullPaidDate, BigDecimal principal, BigDecimal interestRate, int tenor, String collateral, BigDecimal fees) {
+        this.startDate = startDate;
+        this.maturityDate = maturityDate;
+        this.fullPaidDate = fullPaidDate;
+        this.principal = principal;
+        this.interestRate = interestRate;
+        this.tenor = tenor;
+        this.collateral = collateral;
+        this.fees = fees;
+
+
+    }
 
     public int getId() {
         return id;
@@ -115,19 +151,29 @@ public class Loan {
         this.fees = fees;
     }
 
-    public String getStatus() {
+    public LoanStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(LoanStatus status) {
         this.status = status;
     }
 
-    public String getFieldOfficer() {
+    public Employee getFieldOfficer() {
         return fieldOfficer;
     }
 
-    public void setFieldOfficer(String fieldOfficer) {
+    public void setFieldOfficer(Employee fieldOfficer) {
         this.fieldOfficer = fieldOfficer;
     }
+
+    public Guarantor getGuarantor() {
+        return guarantor;
+    }
+
+    public void setGuarantor(Guarantor guarantor) {
+        this.guarantor = guarantor;
+    }
+
+
 }

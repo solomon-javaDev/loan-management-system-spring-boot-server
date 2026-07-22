@@ -1,16 +1,17 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
 import io.sol.loanmanagementsystemspringbootserver.config.Result;
+import io.sol.loanmanagementsystemspringbootserver.entities.Employee;
 import io.sol.loanmanagementsystemspringbootserver.entities.Loan;
+import io.sol.loanmanagementsystemspringbootserver.entities.LoanStatus;
+import io.sol.loanmanagementsystemspringbootserver.entities.Role;
+import io.sol.loanmanagementsystemspringbootserver.services.EmployeeService;
 import io.sol.loanmanagementsystemspringbootserver.services.LoansService;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.util.StringConverter;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -22,6 +23,7 @@ import java.util.List;
 public class LoansController {
 
     private final LoansService loansService;
+    private final EmployeeService employeeService;
 
     @FXML
     private TableView<Loan> loansTable;
@@ -84,7 +86,7 @@ public class LoansController {
     private TextField statusField;
 
     @FXML
-    private TextField fieldOfficerField;
+    private ComboBox fieldOfficerField;
 
     @FXML
     private Button saveButton;
@@ -101,14 +103,19 @@ public class LoansController {
     @FXML
     private Label messageLabel;
 
-    public LoansController(LoansService loansService) {
+    public LoansController(LoansService loansService, EmployeeService employeeService) {
         this.loansService = loansService;
+        this.employeeService = employeeService;
     }
 
     @FXML
     public void initialize() {
+        System.out.println("Loaded the laons view");
         configureTable();
+        initializeFieldOfficersDropDown();
         loadLoans();
+        messageLabel.setText("Loans loaded successfully");
+
 
         loansTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, selectedLoan) -> {
             if (selectedLoan != null) {
@@ -116,6 +123,47 @@ public class LoansController {
             }
         });
     }
+
+    private void initializeFieldOfficersDropDown() {
+        System.out.println("Initializing field officers");
+        Result<List<Employee>> fieldOfficersResult = employeeService.getEmployeeByRole(Role.FIELD_OFFICER);
+
+        if (fieldOfficersResult.isSuccess() && fieldOfficersResult.value() != null) {
+            List<Employee> officersList = fieldOfficersResult.value();
+
+            // Log the list size to the IDE console to verify the database is actually returning values
+            System.out.println("DEBUG: Found " + officersList.size() + " field officers in database.");
+
+            // Using a clean clear-and-set sequence to force JavaFX graphics layout refreshes
+            fieldOfficerField.getItems().clear();
+            fieldOfficerField.getItems().addAll(officersList);
+
+            // Assigning the anonymous converter subclass cleanly
+            fieldOfficerField.setConverter(new StringConverter<Employee>() {
+                @Override
+                public String toString(Employee employee) {
+                    if (employee == null) {
+                        return "";
+                    }
+                    // Handling optional null parameter cases safely to prevent UI string leaks
+                    String first = employee.getFirstName() == null ? "" : employee.getFirstName();
+                    String last = employee.getLastName() == null ? "" : employee.getLastName();
+                    return (first + " " + last).trim();
+                }
+
+                @Override
+                public Employee fromString(String s) {
+                    return null; // ComboBox is read-only dropdown selection
+                }
+            });
+        } else {
+            String currentMessage = messageLabel.getText() == null ? "" : messageLabel.getText();
+            String errorMessage = fieldOfficersResult != null ? fieldOfficersResult.message() : "Unknown Service Error";
+            messageLabel.setText(currentMessage + "\n" + errorMessage);
+            System.out.println(errorMessage);
+        }
+    }
+
 
     @FXML
     private void handleSaveLoan() {
@@ -187,7 +235,6 @@ public class LoansController {
     private void loadLoans() {
         Result<List<Loan>> result = loansService.getAllLoans();
         loansTable.setItems(FXCollections.observableArrayList(result.value()));
-        messageLabel.setText(result.message());
     }
 
     private Loan buildLoanFromForm() {
@@ -200,8 +247,8 @@ public class LoansController {
         loan.setTenor(parseInt(tenorField.getText()));
         loan.setCollateral(collateralField.getText() == null ? "" : collateralField.getText().trim());
         loan.setFees(parseBigDecimal(feesField.getText()));
-        loan.setStatus(statusField.getText() == null ? "" : statusField.getText().trim());
-        loan.setFieldOfficer(fieldOfficerField.getText() == null ? "" : fieldOfficerField.getText().trim());
+        loan.setStatus(LoanStatus.valueOf(statusField.getText() == null ? "" : statusField.getText().trim()));
+        loan.setFieldOfficer((Employee) fieldOfficerField.getValue());
         return loan;
     }
 
@@ -213,8 +260,12 @@ public class LoansController {
         tenorField.setText(String.valueOf(loan.getTenor()));
         collateralField.setText(loan.getCollateral());
         feesField.setText(loan.getFees() == null ? "" : loan.getFees().toPlainString());
-        statusField.setText(loan.getStatus());
-        fieldOfficerField.setText(loan.getFieldOfficer());
+        statusField.setText(loan.getStatus().toString());
+        if(loan.getFieldOfficer()!=null){
+            fieldOfficerField.setValue(loan.getFieldOfficer());
+        }else{
+            fieldOfficerField.getSelectionModel().clearSelection();
+        }
     }
 
     private void clearForm() {
@@ -226,7 +277,8 @@ public class LoansController {
         collateralField.clear();
         feesField.clear();
         statusField.clear();
-        fieldOfficerField.clear();
+        fieldOfficerField.getSelectionModel().clearSelection(); // Reset dropdown state
+        loansTable.getSelectionModel().clearSelection();
         loansTable.getSelectionModel().clearSelection();
     }
 

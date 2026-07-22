@@ -1,20 +1,26 @@
 package io.sol.loanmanagementsystemspringbootserver.services;
 
 import io.sol.loanmanagementsystemspringbootserver.config.Result;
+import io.sol.loanmanagementsystemspringbootserver.entities.Customer;
 import io.sol.loanmanagementsystemspringbootserver.entities.Loan;
+import io.sol.loanmanagementsystemspringbootserver.repositories.CustomerRepository;
 import io.sol.loanmanagementsystemspringbootserver.repositories.LoansRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class LoansService {
 
     private final LoansRepository loanRepository;
+    private final CustomerRepository customerRepository;
 
-    public LoansService(LoansRepository loanRepository) {
+    public LoansService(LoansRepository loanRepository, CustomerRepository customerRepository) {
         this.loanRepository = loanRepository;
+        this.customerRepository = customerRepository;
     }
 
     public Result<List<Loan>> getAllLoans() {
@@ -40,6 +46,31 @@ public class LoansService {
         Loan savedLoan = loanRepository.save(loan);
         return Result.success("Loan saved successfully.", savedLoan);
     }
+    @Transactional
+    public Result<Loan> issueLoan(int customerId, Loan loan) {
+        // 1. Validate the loan object properties upfront to save database roundtrips
+        Result<Loan> validationResult = validateLoan(loan);
+        if (validationResult.isFailure()) {
+            return validationResult;
+        }
+
+        // 2. Locate the existing customer or return a descriptive failure payload
+        Optional<Customer> customerOptional = customerRepository.findById(customerId);
+        if (customerOptional.isEmpty()) {
+            return Result.notFound("Customer not found. Please create or select a valid customer first.", null);
+        }
+
+        Customer customer = customerOptional.get();
+
+        // 3. Sync the bidirectional object graph using entity helper method
+        customer.addLoan(loan);
+
+        // 4. Explicitly persist the loan entity and store its database-generated ID
+        Loan savedLoan = loanRepository.save(loan);
+
+        return Result.success("Loan attached to customer successfully.", savedLoan);
+    }
+
 
     public Result<Loan> updateLoan(Loan loan) {
         if (loan == null || loan.getId() <= 0) {
@@ -63,6 +94,8 @@ public class LoansService {
                     existingLoan.setFees(loan.getFees());
                     existingLoan.setStatus(loan.getStatus());
                     existingLoan.setFieldOfficer(loan.getFieldOfficer());
+                    existingLoan.setGuarantor(loan.getGuarantor());
+                    existingLoan.setCustomer(loan.getCustomer());
                     return Result.success("Loan updated successfully.", loanRepository.save(existingLoan));
                 })
                 .orElseGet(() -> Result.notFound("Loan not found.", null));
@@ -81,7 +114,7 @@ public class LoansService {
         return Result.success("Loan deleted successfully.", null);
     }
 
-    private Result<Loan> validateLoan(Loan loan) {
+    private static Result<Loan> validateLoan(Loan loan) {
         if (loan == null) {
             return Result.invalid("Loan details are required.", null);
         }
