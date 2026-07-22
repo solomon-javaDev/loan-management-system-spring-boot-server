@@ -78,7 +78,7 @@ public class DashboardController {
     @FXML
     public void showHomeView(){
         try{
-            Parent customerView = stageManager.loadView("/ui/dashboard/LoanView.fxml");
+            Parent customerView = stageManager.loadView("/ui/dashboard/HomeView.fxml");
             mainContent.getChildren().setAll(customerView);
         } catch (IOException e) {
             throw new RuntimeException(e);

@@ -24,6 +24,14 @@ public class CustomerService {
             return Result.invalid("First name and last name are required.", null);
         }
 
+        if (isBlank(customer.getIdNumber())) {
+            return Result.invalid("ID number is required.", null);
+        }
+
+        if (repository.findByIdNumber(customer.getIdNumber()).isPresent()) {
+            return Result.invalid("Customer with this ID number already exists.", null);
+        }
+
         Customer savedCustomer = repository.save(customer);
         return Result.success("Customer saved successfully.", savedCustomer);
     }
@@ -45,6 +53,8 @@ public class CustomerService {
                     existingCustomer.setLastName(customer.getLastName());
                     existingCustomer.setTelephone(customer.getTelephone());
                     existingCustomer.setOtherNames(customer.getOtherNames());
+                    existingCustomer.setIdNumber(customer.getIdNumber());
+                    existingCustomer.setAddress(customer.getAddress());
                     return Result.success("Customer updated successfully.", repository.save(existingCustomer));
                 })
                 .orElseGet(() -> Result.notFound("Customer not found.", null));
