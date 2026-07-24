@@ -26,9 +26,8 @@ public class Customer {
     @Column
     private String otherNames;
 
-    @Column(unique = true)
-    @NotBlank(message = "ID number is required")
-    private String idNumber;
+    @Column
+    private String customerName;
 
     @Column(unique = true)
     @Email(message = "Please submit an email")
@@ -43,6 +42,7 @@ public class Customer {
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Loan> loans = new ArrayList<>();
+
 
 
     /*
@@ -67,17 +67,26 @@ public class Customer {
     }
 
     public Customer() {
+        this.customerName = firstName + " " + lastName + " " + otherNames;
 
     }
 
-    public Customer(String firstName, String lastName, String otherNames, String email, String telephone, String idNumber, String address) {
+    public Customer(String firstName, String lastName, String otherNames, String email, String telephone, String address) {
+        this.customerName = firstName + " " + lastName + " " + otherNames;
         this.firstName = firstName;
         this.lastName = lastName;
         this.otherNames = otherNames;
         this.email = email;
         this.telephone = telephone;
-        this.idNumber = idNumber;
         this.address = address;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
     }
 
     public int getId() {
@@ -128,15 +137,7 @@ public class Customer {
         this.telephone = telephone;
     }
 
-    public String getIdNumber() {
-        return idNumber;
-    }
-
-    public void setIdNumber(String idNumber) {
-        this.idNumber = idNumber;
-    }
-
-    public String getAddress() {
+     public String getAddress() {
         return address;
     }
 

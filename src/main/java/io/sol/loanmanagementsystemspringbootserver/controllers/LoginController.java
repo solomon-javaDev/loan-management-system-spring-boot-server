@@ -6,7 +6,6 @@ import io.sol.loanmanagementsystemspringbootserver.entities.User;
 import io.sol.loanmanagementsystemspringbootserver.services.AuthenticationService;
 import org.springframework.context.ApplicationContext;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -38,11 +37,8 @@ public class LoginController {
     private Button creatAccountButton;
 
     private final AuthenticationService authenticationService;
-    private final ApplicationContext applicationContext;
-
     public LoginController(AuthenticationService authenticationService, ApplicationContext applicationContext, StageManager stageManager) {
         this.authenticationService = authenticationService;
-        this.applicationContext = applicationContext;
         this.stageManager = stageManager;
     }
 

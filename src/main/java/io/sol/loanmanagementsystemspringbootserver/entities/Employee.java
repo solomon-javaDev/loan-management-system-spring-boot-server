@@ -15,6 +15,16 @@ public class Employee extends User {
 
     }
 
+    public Employee(String firstName, String lastName, int salary, String email, Role role) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.salary = salary;
+        super.setEmail(email);
+        super.setRole(role);
+        super.setUsername(firstName + " "+ lastName);
+        super.setPassword("0000");
+    }
+
     public String getFirstName() {
         return firstName;
     }
@@ -37,5 +47,18 @@ public class Employee extends User {
 
     public void setSalary(int salary) {
         this.salary = salary;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Employee)) return false;
+        Employee employee = (Employee) o;
+        return getId() != null && getId().equals(employee.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

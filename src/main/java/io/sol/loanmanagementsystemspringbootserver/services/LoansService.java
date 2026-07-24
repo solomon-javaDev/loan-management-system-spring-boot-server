@@ -37,15 +37,7 @@ public class LoansService {
                 .orElseGet(() -> Result.notFound("Loan not found.", null));
     }
 
-    public Result<Loan> createLoan(Loan loan) {
-        Result<Loan> validationResult = validateLoan(loan);
-        if (validationResult.isFailure()) {
-            return validationResult;
-        }
 
-        Loan savedLoan = loanRepository.save(loan);
-        return Result.success("Loan saved successfully.", savedLoan);
-    }
     @Transactional
     public Result<Loan> issueLoan(int customerId, Loan loan) {
         // 1. Validate the loan object properties upfront to save database roundtrips

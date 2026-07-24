@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -31,10 +32,10 @@ public class SeedDataConfig {
                                     }
                 if(customerRepository.count() == 0){
                     List<Customer> customers = List.of(
-                            new Customer("Anita","Nannungi", " ", "nannungi@gmail.com", "0778909762", "ID001", "Kampala"),
-                            new Customer("Nigel","Ukasha", "Jo", "fjk671gi@gmail.com", "0778908762", "ID002", "Entebbe"),
-                            new Customer("Indl","Lindl", " ", "lin90@gmail.com", "0778908762", "ID003", "Jinja"),
-                            new Customer("Aws","Sseki", "Emma ", "EmmanuelSeed9@gmail.com", "0768908762", "ID004", "Mbarara")
+                            new Customer("Anita","Nannungi", " ", "nannungi@gmail.com", "0778909762",  "Kampala"),
+                            new Customer("Nigel","Ukasha", "Jo", "fjk671gi@gmail.com", "0778908762",  "Entebbe"),
+                            new Customer("Indl","Lindl", " ", "lin90@gmail.com", "0778908762","Jinja"),
+                            new Customer("Aws","Sseki", "Emma ", "EmmanuelSeed9@gmail.com", "0768908762", "Mbarara")
                     );
 
                     customerRepository.saveAll(customers);
@@ -45,33 +46,15 @@ public class SeedDataConfig {
 
                 if(employeeRepository.count() <= 2){
 
-                    Employee employee = new Employee();
-                    employee.setFirstName("Anita");
-                    employee.setLastName("Nannungi Nigel");
-                    employee.setUsername(employee.getFirstName()+" "+employee.getLastName());
-                    employee.setPassword("0000");
-                    employee.setRole(Role.FIELD_OFFICER);
-                    employee.setSalary(10000);
 
-                    Employee employee1 = new Employee();
-                    employee1.setFirstName("Solomon");
-                    employee1.setLastName("Kalungi");
-                    employee1.setUsername(employee1.getFirstName()+" "+employee1.getLastName());
-                    employee1.setPassword("0000");
-                    employee1.setRole(Role.FIELD_OFFICER);
-                    employee1.setSalary(13000);
+                    List<Employee> field_officers = new ArrayList<>();
+                    field_officers.add(new Employee("Solomon", "Twist", 20000, "solomon@twist.com", Role.FIELD_OFFICER));
+                    field_officers.add(new Employee("Nisha", "Twist", 20300, "nisha@twist.com", Role.FIELD_OFFICER));
+                    field_officers.add(new Employee("Hansa", "Gans", 20000, "hans@gans.com", Role.FIELD_OFFICER));
+                    field_officers.add(new Employee("Hasifa", "Muus", 12000, "has@has.com", Role.FIELD_OFFICER));
+                    field_officers.add(new Employee("Wendy", "Glav", 20000, "wens@wen.com", Role.FIELD_OFFICER));
 
-                    Employee employee2 = new Employee();
-                    employee2.setFirstName("Randiloph");
-                    employee2.setLastName("Randy");
-                    employee2.setUsername(employee2.getFirstName()+" "+employee2.getLastName());
-                    employee2.setPassword("0000");
-                    employee2.setRole(Role.FIELD_OFFICER);
-                    employee2.setSalary(15000);
-
-                    employeeRepository.save(employee1);
-                    employeeRepository.save(employee2);
-                    employeeRepository.save(employee);
+                    employeeRepository.saveAll(field_officers);
 
                 }
                 if(loansRepository.count() == 0){

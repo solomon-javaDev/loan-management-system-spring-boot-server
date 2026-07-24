@@ -9,6 +9,8 @@ import javafx.stage.Stage;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import java.util.Objects;
+
 public class FxMainApp extends Application {
 
     private ConfigurableApplicationContext applicationContext;
@@ -27,7 +29,7 @@ public class FxMainApp extends Application {
         Parent root = loader.load();
 
         Scene scene = new Scene(root);
-        scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
+        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/styles.css")).toExternalForm());
 
         primaryStage.setTitle("Loan Management System");
         primaryStage.setScene(scene);
