@@ -60,7 +60,15 @@
                         <Insets left="5.0" top="5.0" />
                      </padding>
                   </Button>
-                  <Button fx:id="paymentsButton" contentDisplay="CENTER" mnemonicParsing="false" onMouseClicked="#showPaymentsView" text="PAYMENTS" textAlignment="CENTER" VBox.vgrow="ALWAYS">
+                  <Button fx:id="paymentsButton" contentDisplay="CENTER" mnemonicParsing="false" onMouseClicked="#showPaymentsView" text="REPAYMENTS" textAlignment="CENTER" VBox.vgrow="ALWAYS">
+                     <VBox.margin>
+                        <Insets left="5.0" top="5.0" />
+                     </VBox.margin>
+                     <padding>
+                        <Insets left="5.0" top="5.0" />
+                     </padding>
+                  </Button>
+                  <Button fx:id="cashierButton" contentDisplay="CENTER" mnemonicParsing="false" onMouseClicked="#showCashierView" text="CASHIER" textAlignment="CENTER" VBox.vgrow="ALWAYS">
                      <VBox.margin>
                         <Insets left="5.0" top="5.0" />
                      </VBox.margin>

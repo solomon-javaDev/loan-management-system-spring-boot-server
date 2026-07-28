@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane prefHeight="450.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.sol.loanmanagementsystemspringbootserver.controllers.RepaymentController">
+   <children>
+      <BorderPane prefHeight="450.0" prefWidth="700.0">
+         <left>
+            <VBox spacing="12.0" prefWidth="300.0">
+               <children>
+                  <Label text="Loan" />
+                  <ComboBox fx:id="loanSelector" prefWidth="260.0" />
+                  <Label text="Installment ID" />
+                  <TextField fx:id="installmentField" />
+                  <Label text="Amount" />
+                  <TextField fx:id="amountField" />
+                  <Label text="Received by" />
+                  <TextField fx:id="receivedByField" />
+                  <Button text="Apply Payment" onAction="#handleApplyPayment" />
+                  <Label fx:id="messageLabel" textFill="#b22222" />
+               </children>
+               <padding>
+                  <Insets top="10.0" left="10.0" right="10.0" bottom="10.0" />
+               </padding>
+            </VBox>
+         </left>
+         <center>
+            <VBox spacing="10.0">
+               <children>
+                  <Label text="Receipt" />
+                  <TextArea fx:id="receiptArea" prefHeight="300.0" />
+               </children>
+               <padding>
+                  <Insets top="10.0" left="10.0" right="10.0" bottom="10.0" />
+               </padding>
+            </VBox>
+         </center>
+      </BorderPane>
+   </children>
+</AnchorPane>

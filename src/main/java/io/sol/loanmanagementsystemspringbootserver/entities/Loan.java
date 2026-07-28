@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "loans")
@@ -22,10 +24,10 @@ public class Loan {
     @Column(nullable = true)
     private LocalDate fullPaidDate;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal principal;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal interestRate;
 
     @Column(nullable = true)
@@ -34,8 +36,23 @@ public class Loan {
     @Column(nullable = false)
     private String collateral;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal fees;
+
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal processingFee = BigDecimal.ZERO;
+
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal outstandingPrincipal = BigDecimal.ZERO;
+
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal outstandingInterest = BigDecimal.ZERO;
+
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal totalPaid = BigDecimal.ZERO;
+
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal totalAmountDue = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -53,8 +70,13 @@ public class Loan {
     @JoinColumn(name = "customer_id")
     private Customer customer;
 
-    public Loan() {
+    @OneToMany(mappedBy = "loan", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<LoanInstallment> installments = new ArrayList<>();
 
+    @OneToMany(mappedBy = "loan", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Repayment> repayments = new ArrayList<>();
+
+    public Loan() {
     }
 
     public Customer getCustomer() {
@@ -65,7 +87,6 @@ public class Loan {
         this.customer = customer;
     }
 
-
     public Loan(LocalDate startDate, LocalDate maturityDate, LocalDate fullPaidDate, BigDecimal principal, BigDecimal interestRate, int tenor, String collateral, BigDecimal fees) {
         this.startDate = startDate;
         this.maturityDate = maturityDate;
@@ -75,8 +96,6 @@ public class Loan {
         this.tenor = tenor;
         this.collateral = collateral;
         this.fees = fees;
-
-
     }
 
     public int getId() {
@@ -151,6 +170,46 @@ public class Loan {
         this.fees = fees;
     }
 
+    public BigDecimal getProcessingFee() {
+        return processingFee;
+    }
+
+    public void setProcessingFee(BigDecimal processingFee) {
+        this.processingFee = processingFee;
+    }
+
+    public BigDecimal getOutstandingPrincipal() {
+        return outstandingPrincipal;
+    }
+
+    public void setOutstandingPrincipal(BigDecimal outstandingPrincipal) {
+        this.outstandingPrincipal = outstandingPrincipal;
+    }
+
+    public BigDecimal getOutstandingInterest() {
+        return outstandingInterest;
+    }
+
+    public void setOutstandingInterest(BigDecimal outstandingInterest) {
+        this.outstandingInterest = outstandingInterest;
+    }
+
+    public BigDecimal getTotalPaid() {
+        return totalPaid;
+    }
+
+    public void setTotalPaid(BigDecimal totalPaid) {
+        this.totalPaid = totalPaid;
+    }
+
+    public BigDecimal getTotalAmountDue() {
+        return totalAmountDue;
+    }
+
+    public void setTotalAmountDue(BigDecimal totalAmountDue) {
+        this.totalAmountDue = totalAmountDue;
+    }
+
     public LoanStatus getStatus() {
         return status;
     }
@@ -175,5 +234,19 @@ public class Loan {
         this.guarantor = guarantor;
     }
 
+    public List<LoanInstallment> getInstallments() {
+        return installments;
+    }
 
+    public void setInstallments(List<LoanInstallment> installments) {
+        this.installments = installments;
+    }
+
+    public List<Repayment> getRepayments() {
+        return repayments;
+    }
+
+    public void setRepayments(List<Repayment> repayments) {
+        this.repayments = repayments;
+    }
 }

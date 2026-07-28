@@ -107,7 +107,17 @@ public class DashboardController {
     @FXML
     public void showPaymentsView(){
         try{
-            Parent customerView = stageManager.loadView("/ui/dashboard/PaymentsView.fxml");
+            Parent customerView = stageManager.loadView("/ui/dashboard/RepaymentView.fxml");
+            mainContent.getChildren().setAll(customerView);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
+    public void showCashierView(){
+        try{
+            Parent customerView = stageManager.loadView("/ui/dashboard/CashierDashboardView.fxml");
             mainContent.getChildren().setAll(customerView);
         } catch (IOException e) {
             throw new RuntimeException(e);
