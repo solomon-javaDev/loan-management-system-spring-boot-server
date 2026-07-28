@@ -2,7 +2,9 @@ package io.sol.loanmanagementsystemspringbootserver.controllers;
 
 import io.sol.loanmanagementsystemspringbootserver.config.Result;
 import io.sol.loanmanagementsystemspringbootserver.entities.Customer;
+import io.sol.loanmanagementsystemspringbootserver.repositories.CustomerRepository;
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -61,6 +63,9 @@ public class CustomerController {
 
     @FXML
     private TableColumn<Customer, String> telephoneColumn;
+
+    @FXML
+    private TableColumn<Customer, Number> numberOfLoans;
 
     @FXML
     private Label messageLabel;
@@ -155,6 +160,9 @@ public class CustomerController {
         otherNamesColumn.setCellValueFactory(new PropertyValueFactory<>("otherNames"));
         emailColumn.setCellValueFactory(new PropertyValueFactory<>("email"));
         telephoneColumn.setCellValueFactory(new PropertyValueFactory<>("telephone"));
+
+        numberOfLoans.setCellValueFactory(new PropertyValueFactory<>("loanCount"));
+
     }
 
     private void loadCustomers() {
