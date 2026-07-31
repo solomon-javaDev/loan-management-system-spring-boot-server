@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "loans")
@@ -53,6 +55,9 @@ public class Loan {
     @JoinColumn(name = "customer_id")
     private Customer customer;
 
+    @OneToMany(mappedBy = "loan", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Payment> payments = new ArrayList<>();
+
     public Loan() {
 
     }
@@ -77,6 +82,32 @@ public class Loan {
         this.fees = fees;
 
 
+    }
+
+    public BigDecimal getDisbursedAmount(){
+        return principal.subtract(this.fees);
+    }
+
+    public BigDecimal getTotalPaid(){
+        return payments.stream()
+                .map(Payment::getAmountReceived)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public BigDecimal getOutstandingBalance(){
+        return getTotalDue().subtract(getTotalPaid());
+    }
+
+    public BigDecimal getTotalDue(){
+        return this.principal.add(this.principal.multiply(this.interestRate));
+    }
+
+    public List<Payment> getPayments() {
+        return payments;
+    }
+
+    public void setPayments(List<Payment> payments) {
+        this.payments = payments;
     }
 
     public int getId() {
@@ -175,5 +206,11 @@ public class Loan {
         this.guarantor = guarantor;
     }
 
+    public String getReference() {
+        String statusPart = status != null ? status.toString() : "";
+        String principalPart = principal != null ? principal.toString() : "";
+        String customerPart = customer != null && customer.getLastName() != null ? customer.getLastName() : "";
+        return String.join(" ", String.valueOf(id), statusPart, principalPart, customerPart);
+    }
 
 }

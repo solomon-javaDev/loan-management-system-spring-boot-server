@@ -1,6 +1,6 @@
 package io.sol.loanmanagementsystemspringbootserver.services;
 
-import io.sol.loanmanagementsystemspringbootserver.config.Result;
+import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.entities.Customer;
 import io.sol.loanmanagementsystemspringbootserver.entities.Loan;
 import io.sol.loanmanagementsystemspringbootserver.repositories.CustomerRepository;

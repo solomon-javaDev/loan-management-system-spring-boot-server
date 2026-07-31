@@ -1,10 +1,8 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
-import io.sol.loanmanagementsystemspringbootserver.config.Result;
+import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.entities.Customer;
-import io.sol.loanmanagementsystemspringbootserver.repositories.CustomerRepository;
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;

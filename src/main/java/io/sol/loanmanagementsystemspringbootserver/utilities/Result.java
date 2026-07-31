@@ -1,4 +1,4 @@
-package io.sol.loanmanagementsystemspringbootserver.config;
+package io.sol.loanmanagementsystemspringbootserver.utilities;
 
 /**
  * Represents a sealed interface to model the result of an operation. The interface can be used to

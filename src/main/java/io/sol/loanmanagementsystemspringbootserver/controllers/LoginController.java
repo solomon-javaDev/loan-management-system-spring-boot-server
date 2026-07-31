@@ -1,7 +1,7 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
-import io.sol.loanmanagementsystemspringbootserver.config.Result;
-import io.sol.loanmanagementsystemspringbootserver.config.StageManager;
+import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import io.sol.loanmanagementsystemspringbootserver.utilities.StageManager;
 import io.sol.loanmanagementsystemspringbootserver.entities.User;
 import io.sol.loanmanagementsystemspringbootserver.services.AuthenticationService;
 import org.springframework.context.ApplicationContext;
@@ -71,6 +71,7 @@ public class LoginController {
 
             Stage stage = (Stage) loginButton.getScene().getWindow();
             stage.setScene(new Scene(dashboardRoot));
+            stage.setMaximized(true);
             stage.setTitle("Loan Management System - Dashboard");
             stage.setResizable(true);
         } catch (IOException e) {

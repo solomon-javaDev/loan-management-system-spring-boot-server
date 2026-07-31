@@ -1,6 +1,6 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
-import io.sol.loanmanagementsystemspringbootserver.config.StageManager;
+import io.sol.loanmanagementsystemspringbootserver.utilities.StageManager;
 import io.sol.loanmanagementsystemspringbootserver.services.SearchService;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;

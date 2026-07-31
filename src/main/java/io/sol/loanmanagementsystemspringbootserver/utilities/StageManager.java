@@ -1,4 +1,4 @@
-package io.sol.loanmanagementsystemspringbootserver.config;
+package io.sol.loanmanagementsystemspringbootserver.utilities;
 
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;

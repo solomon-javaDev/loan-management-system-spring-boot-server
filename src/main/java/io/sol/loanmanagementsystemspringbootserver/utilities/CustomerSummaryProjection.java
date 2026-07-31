@@ -1,4 +1,4 @@
-package io.sol.loanmanagementsystemspringbootserver.config;
+package io.sol.loanmanagementsystemspringbootserver.utilities;
 
 public interface CustomerSummaryProjection {
     Long getId();

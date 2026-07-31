@@ -1,10 +1,11 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
-import io.sol.loanmanagementsystemspringbootserver.config.Result;
+import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.entities.*;
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
 import io.sol.loanmanagementsystemspringbootserver.services.EmployeeService;
 import io.sol.loanmanagementsystemspringbootserver.services.LoansService;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UiControlUtilities;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -24,6 +25,7 @@ public class LoansController {
     private final LoansService loansService;
     private final EmployeeService employeeService;
     private final CustomerService customerService;
+    private final UiControlUtilities uiControlUtilities;
 
     @FXML
     private TableView<Loan> loansTable;
@@ -109,18 +111,26 @@ public class LoansController {
     @FXML
     private Label messageLabel;
 
-    public LoansController(LoansService loansService, EmployeeService employeeService, CustomerService customerService) {
+    public LoansController(LoansService loansService, EmployeeService employeeService, CustomerService customerService, UiControlUtilities uiControlUtilities) {
         this.loansService = loansService;
         this.employeeService = employeeService;
         this.customerService = customerService;
+        this.uiControlUtilities = uiControlUtilities;
     }
 
     @FXML
     public void initialize() {
         System.out.println("Loaded the loans view");
         configureTable();
-        initializeCustomerDropDown();
-        initializeFieldOfficersDropDown();
+
+        uiControlUtilities.configureDropDown(customerList, customerService.getAllCustomers().value(),
+                c -> c.getFirstName() + " " + c.getLastName()
+                );
+
+        uiControlUtilities.configureDropDown(fieldOfficerField, employeeService.getEmployeeByRole(Role.FIELD_OFFICER).value(),
+                e -> e.getFirstName() + " " + e.getLastName()
+                );
+
         loadLoans();
         messageLabel.setText("Loans loaded successfully");
 
@@ -138,60 +148,8 @@ public class LoansController {
         loansTable.setItems(FXCollections.observableArrayList(result.value()));
     }
 
-   
 
-    private void initializeCustomerDropDown() {
-        Result<List<Customer>> customers = customerService.getAllCustomers();
-        if (customers.isSuccess()) {
-            customerList.getItems().addAll(customers.value());
-            customerList.setConverter(new StringConverter<Customer>() {
-                @Override
-                public String toString(Customer customer) {
-                    if (customer == null) {
-                        return "";
-                    }
-                    return customer.getFirstName() + " " + customer.getLastName();
-                }
-
-                @Override
-                public Customer fromString(String string) {
-                    return null;
-                }
-            });
-        } else {
-            System.out.println(customers.message());
-        }
-    }
-
-    private void initializeFieldOfficersDropDown() {
-        System.out.println("Initializing Field officers");
-
-        Result<List<Employee>> field_officers = employeeService.getEmployeeByRole(Role.FIELD_OFFICER);
-
-        if(field_officers.isSuccess()) {
-            fieldOfficerField.getItems().addAll(field_officers.value());
-
-            fieldOfficerField.setConverter(new StringConverter<Employee>() {
-                @Override
-                public String toString(Employee employee) {
-                    if (employee == null) {
-                        return "";
-                    }
-                    return employee.getFirstName() + " " + employee.getLastName();
-                }
-
-                @Override
-                public Employee fromString(String s) {
-                    return null;
-                }
-            });
-        } else {
-            System.out.println(field_officers.message());
-        }
-        System.out.println("Field officers init");
-    }
-
-         private Loan buildLoanFromForm() {
+        private Loan buildLoanFromForm() {
         Loan loan = new Loan();
         loan.setStartDate(startDatePicker.getValue());
         loan.setMaturityDate(maturityDatePicker.getValue());

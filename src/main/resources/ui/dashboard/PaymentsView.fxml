@@ -26,14 +26,14 @@
                         <Label text="CUSTOMER NAME" GridPane.rowIndex="1" />
                         <Label text="AMOUNT RECIEVED" GridPane.rowIndex="2" />
                         <Label text="LOAN REFERENCE" GridPane.rowIndex="3" />
-                        <TextField GridPane.columnIndex="1" />
-                        <TextField GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                        <TextField prefHeight="27.0" prefWidth="171.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                        <TextField fx:id="amountRecieved" prefHeight="27.0" prefWidth="171.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
                            <padding>
                               <Insets right="5.0" />
                            </padding>
                         </TextField>
-                        <TextField GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                        <DatePicker fx:id="date" GridPane.columnIndex="1" />
+                        <ComboBox fx:id="loanReference" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="30.0" prefWidth="131.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                        <ComboBox fx:id="customerName" maxWidth="1.7976931348623157E308" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                      </children>
                      <padding>
                         <Insets right="15.0" />
@@ -61,6 +61,8 @@
               <columns>
                 <TableColumn prefWidth="75.0" text="DATE" />
                 <TableColumn prefWidth="136.0" text="CUSTOMER NAME" />
+                  <TableColumn prefWidth="136.0" text="AMOUNT" />
+                  <TableColumn prefWidth="136.0" text="LOAN REFERENCE" />
               </columns>
             </TableView>
          </center>
