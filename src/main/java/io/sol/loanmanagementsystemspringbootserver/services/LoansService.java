@@ -1,5 +1,7 @@
 package io.sol.loanmanagementsystemspringbootserver.services;
 
+import io.sol.loanmanagementsystemspringbootserver.dtos.LoanDTO;
+import io.sol.loanmanagementsystemspringbootserver.mappers.DTOMapper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.entities.Customer;
 import io.sol.loanmanagementsystemspringbootserver.entities.Loan;
@@ -11,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class LoansService {
@@ -23,72 +26,81 @@ public class LoansService {
         this.customerRepository = customerRepository;
     }
 
-    public Result<List<Loan>> getAllLoans() {
-        return Result.success("Loans loaded successfully.", loanRepository.findAll());
+    public Result<List<LoanDTO>> getAllLoans() {
+        return Result.success("Loans loaded successfully.", 
+            loanRepository.findAll().stream().map(DTOMapper::toDTO).collect(Collectors.toList()));
     }
 
-    public Result<Loan> getLoanById(Integer id) {
+    public Result<LoanDTO> getLoanById(Integer id) {
         if (id == null || id <= 0) {
             return Result.invalid("A valid loan id is required.", null);
         }
 
         return loanRepository.findById(id)
-                .map(loan -> Result.success("Loan loaded successfully.", loan))
+                .map(loan -> Result.success("Loan loaded successfully.", DTOMapper.toDTO(loan)))
                 .orElseGet(() -> Result.notFound("Loan not found.", null));
+    }
+
+    public Optional<Loan> getLoanEntityById(Integer id) {
+        return loanRepository.findById(id);
+    }
+
+    @Transactional
+    public Loan saveLoanEntity(Loan loan) {
+        return loanRepository.save(loan);
     }
 
 
     @Transactional
-    public Result<Loan> issueLoan(int customerId, Loan loan) {
-        // 1. Validate the loan object properties upfront to save database roundtrips
-        Result<Loan> validationResult = validateLoan(loan);
+    public Result<LoanDTO> issueLoan(int customerId, LoanDTO loanDto) {
+        // 1. Validate the loan object properties upfront
+        Result<LoanDTO> validationResult = validateLoan(loanDto);
         if (validationResult.isFailure()) {
             return validationResult;
         }
 
-        // 2. Locate the existing customer or return a descriptive failure payload
+        // 2. Locate the existing customer
         Optional<Customer> customerOptional = customerRepository.findById(customerId);
         if (customerOptional.isEmpty()) {
             return Result.notFound("Customer not found. Please create or select a valid customer first.", null);
         }
 
         Customer customer = customerOptional.get();
+        Loan loan = DTOMapper.toEntity(loanDto);
 
-        // 3. Sync the bidirectional object graph using entity helper method
+        // 3. Sync the bidirectional object graph
         customer.addLoan(loan);
 
-        // 4. Explicitly persist the loan entity and store its database-generated ID
+        // 4. Explicitly persist the loan entity
         Loan savedLoan = loanRepository.save(loan);
 
-        return Result.success("Loan attached to customer successfully.", savedLoan);
+        return Result.success("Loan attached to customer successfully.", DTOMapper.toDTO(savedLoan));
     }
 
 
-    public Result<Loan> updateLoan(Loan loan) {
-        if (loan == null || loan.getId() <= 0) {
+    public Result<LoanDTO> updateLoan(LoanDTO loanDto) {
+        if (loanDto == null || loanDto.getId() <= 0) {
             return Result.invalid("Select a loan from the table before updating.", null);
         }
 
-        Result<Loan> validationResult = validateLoan(loan);
+        Result<LoanDTO> validationResult = validateLoan(loanDto);
         if (validationResult.isFailure()) {
             return validationResult;
         }
 
-        return loanRepository.findById(loan.getId())
+        return loanRepository.findById(loanDto.getId())
                 .map(existingLoan -> {
-                    existingLoan.setStartDate(loan.getStartDate());
-                    existingLoan.setMaturityDate(loan.getMaturityDate());
-                    existingLoan.setFullPaidDate(loan.getFullPaidDate());
-                    existingLoan.setPrincipal(loan.getPrincipal());
-                    existingLoan.setInterestRate(loan.getInterestRate());
-                    existingLoan.setTenor(loan.getTenor());
-                    existingLoan.setCollateral(loan.getCollateral());
-                    existingLoan.setFees(loan.getFees());
-                    existingLoan.setStatus(loan.getStatus());
-                    existingLoan.setFieldOfficer(loan.getFieldOfficer());
-                    existingLoan.setGuarantor(loan.getGuarantor());
-                    existingLoan.setCustomer(loan.getCustomer());
-                    return Result.success("Loan updated successfully.", loanRepository.save(existingLoan));
+                    existingLoan.setStartDate(loanDto.getStartDate());
+                    existingLoan.setMaturityDate(loanDto.getMaturityDate());
+                    existingLoan.setFullPaidDate(loanDto.getFullPaidDate());
+                    existingLoan.setPrincipal(loanDto.getPrincipal());
+                    existingLoan.setInterestRate(loanDto.getInterestRate());
+                    existingLoan.setTenor(loanDto.getTenor());
+                    existingLoan.setCollateral(loanDto.getCollateral());
+                    existingLoan.setFees(loanDto.getFees());
+                    existingLoan.setStatus(loanDto.getStatus());
+                    // Relations update if needed, but usually IDs stay the same
+                    return Result.success("Loan updated successfully.", DTOMapper.toDTO(loanRepository.save(existingLoan)));
                 })
                 .orElseGet(() -> Result.notFound("Loan not found.", null));
     }
@@ -106,7 +118,7 @@ public class LoansService {
         return Result.success("Loan deleted successfully.", null);
     }
 
-    private static Result<Loan> validateLoan(Loan loan) {
+    private static Result<LoanDTO> validateLoan(LoanDTO loan) {
         if (loan == null) {
             return Result.invalid("Loan details are required.", null);
         }

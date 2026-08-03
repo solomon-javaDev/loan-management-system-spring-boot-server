@@ -4,62 +4,123 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.sol.loanmanagementsystemspringbootserver.controllers.HomeController">
-   <children>
-      <GridPane layoutX="54.0" layoutY="71.0" prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-        <columnConstraints>
-          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-        </columnConstraints>
-        <rowConstraints>
-          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-        </rowConstraints>
+<ScrollPane fitToWidth="true" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.sol.loanmanagementsystemspringbootserver.controllers.HomeController">
+   <content>
+      <VBox spacing="20.0">
+         <padding>
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+         </padding>
          <children>
-            <HBox prefHeight="100.0" prefWidth="200.0" spacing="10.0" GridPane.halignment="CENTER" GridPane.hgrow="SOMETIMES" GridPane.valignment="CENTER" GridPane.vgrow="SOMETIMES">
+            <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Daily Summary Statistics" />
+            
+            <GridPane hgap="20.0" vgap="15.0">
+              <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
+              </columnConstraints>
+              <children>
+                 <VBox style="-fx-background-color: #f4f4f4; -fx-padding: 10; -fx-background-radius: 5;">
+                    <Label text="Total Customers" />
+                    <Label fx:id="totalCustomersLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" text="0" />
+                 </VBox>
+                 <VBox style="-fx-background-color: #f4f4f4; -fx-padding: 10; -fx-background-radius: 5;" GridPane.columnIndex="1">
+                    <Label text="Active Customers" />
+                    <Label fx:id="activeCustomersLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" text="0" />
+                 </VBox>
+                 <VBox style="-fx-background-color: #f4f4f4; -fx-padding: 10; -fx-background-radius: 5;" GridPane.columnIndex="2">
+                    <Label text="Customers Paid Today" />
+                    <Label fx:id="customersPaidTodayLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" text="0" />
+                 </VBox>
+                 
+                 <VBox style="-fx-background-color: #f4f4f4; -fx-padding: 10; -fx-background-radius: 5;" GridPane.rowIndex="1">
+                    <Label text="Collection Rate" />
+                    <Label fx:id="collectionRateLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" text="0%" />
+                 </VBox>
+                 <VBox style="-fx-background-color: #f4f4f4; -fx-padding: 10; -fx-background-radius: 5;" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                    <Label text="New Customers Today" />
+                    <Label fx:id="newCustomersTodayLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" text="0" />
+                 </VBox>
+                 <VBox style="-fx-background-color: #f4f4f4; -fx-padding: 10; -fx-background-radius: 5;" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                    <Label text="Total Collections" />
+                    <Label fx:id="totalCollectionsLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" text="0.00" />
+                 </VBox>
+
+                 <VBox style="-fx-background-color: #f4f4f4; -fx-padding: 10; -fx-background-radius: 5;" GridPane.rowIndex="2">
+                    <Label text="Loans Disbursed" />
+                    <Label fx:id="loansDisbursedLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" text="0" />
+                 </VBox>
+                 <VBox style="-fx-background-color: #f4f4f4; -fx-padding: 10; -fx-background-radius: 5;" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                    <Label text="Total Amount Disbursed" />
+                    <Label fx:id="totalAmountDisbursedLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" text="0.00" />
+                 </VBox>
+                 <VBox style="-fx-background-color: #f4f4f4; -fx-padding: 10; -fx-background-radius: 5;" GridPane.columnIndex="2" GridPane.rowIndex="2">
+                    <Label text="Principal Balance" />
+                    <Label fx:id="principalBalanceLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" text="0.00" />
+                 </VBox>
+                 
+                 <VBox style="-fx-background-color: #f4f4f4; -fx-padding: 10; -fx-background-radius: 5;" GridPane.rowIndex="3">
+                    <Label text="Total Loan Portfolio" />
+                    <Label fx:id="totalLoanPortfolioLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" text="0.00" />
+                 </VBox>
+                 <VBox style="-fx-background-color: #f4f4f4; -fx-padding: 10; -fx-background-radius: 5;" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                    <Label text="Opening Cash" />
+                    <Label fx:id="openingCashLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" text="0.00" />
+                 </VBox>
+                 <VBox style="-fx-background-color: #f4f4f4; -fx-padding: 10; -fx-background-radius: 5;" GridPane.columnIndex="2" GridPane.rowIndex="3">
+                    <Label text="Principal Collected" />
+                    <Label fx:id="principalCollectedLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" text="0.00" />
+                 </VBox>
+
+                 <VBox style="-fx-background-color: #f4f4f4; -fx-padding: 10; -fx-background-radius: 5;" GridPane.rowIndex="4">
+                    <Label text="Interest Collected" />
+                    <Label fx:id="interestCollectedLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" text="0.00" />
+                 </VBox>
+                 <VBox style="-fx-background-color: #f4f4f4; -fx-padding: 10; -fx-background-radius: 5;" GridPane.columnIndex="1" GridPane.rowIndex="4">
+                    <Label text="Processing Fees" />
+                    <Label fx:id="processingFeesLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" text="0.00" />
+                 </VBox>
+                 <VBox style="-fx-background-color: #f4f4f4; -fx-padding: 10; -fx-background-radius: 5;" GridPane.columnIndex="2" GridPane.rowIndex="4">
+                    <Label text="Bank Deposits" />
+                    <Label fx:id="bankDepositsLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" text="0.00" />
+                 </VBox>
+                 
+                 <VBox style="-fx-background-color: #f4f4f4; -fx-padding: 10; -fx-background-radius: 5;" GridPane.rowIndex="5">
+                    <Label text="Total Expenses" />
+                    <Label fx:id="totalExpensesLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" text="0.00" />
+                 </VBox>
+                 <VBox style="-fx-background-color: #f4f4f4; -fx-padding: 10; -fx-background-radius: 5;" GridPane.columnIndex="1" GridPane.rowIndex="5">
+                    <Label text="Loan Disbursements" />
+                    <Label fx:id="loanDisbursementsLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" text="0.00" />
+                 </VBox>
+                 <VBox style="-fx-background-color: #f4f4f4; -fx-padding: 10; -fx-background-radius: 5;" GridPane.columnIndex="2" GridPane.rowIndex="5">
+                    <Label text="Checkout Cash" />
+                    <Label fx:id="checkoutCashLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" text="0.00" />
+                 </VBox>
+              </children>
+            </GridPane>
+            
+            <HBox spacing="15.0">
                <children>
-                  <Label text="NUMBER OF PENDING LOANS" />
-                  <Label fx:id="pending_loans" text="LOANS PENDING" />
+                  <Button onAction="#handlePrintPdf" text="Print PDF" />
+                  <Button onAction="#handleSendEmail" text="Send Email" />
+                  <Button onAction="#handleExportExcel" text="Export Excel" />
                </children>
-               <GridPane.margin>
-                  <Insets bottom="15.0" top="15.0" />
-               </GridPane.margin>
             </HBox>
-            <HBox prefHeight="100.0" prefWidth="200.0" spacing="10.0" GridPane.halignment="CENTER" GridPane.hgrow="SOMETIMES" GridPane.rowIndex="2" GridPane.valignment="CENTER" GridPane.vgrow="SOMETIMES">
+            
+            <VBox spacing="10.0">
                <children>
-                  <Label text="NUMBER OF PAYMENTS TODAY" />
-                  <Label fx:id="daily_payments" text="PAYMENTS" />
+                  <Label style="-fx-font-weight: bold;" text="Related Views" />
+                  <HBox spacing="10.0">
+                     <children>
+                        <Hyperlink onAction="#handleNavCustomers" text="Customers" />
+                        <Hyperlink onAction="#handleNavLoans" text="Loans" />
+                        <Hyperlink onAction="#handleNavPayments" text="Payments" />
+                     </children>
+                  </HBox>
                </children>
-               <GridPane.margin>
-                  <Insets bottom="15.0" top="15.0" />
-               </GridPane.margin>
-            </HBox>
-            <HBox layoutX="10.0" layoutY="292.0" prefHeight="100.0" prefWidth="200.0" spacing="10.0" GridPane.columnIndex="1">
-               <children>
-                  <Label text="NUMBER OF EMPLOYEES" />
-                  <Label fx:id="total_employee_number" text="EMPLOYEES" />
-               </children>
-            </HBox>
-            <HBox layoutX="310.0" layoutY="10.0" prefHeight="100.0" prefWidth="200.0" spacing="10.0" GridPane.rowIndex="1">
-               <children>
-                  <Label text="NUMBER OF CUSTOMERS" />
-                  <Label fx:id="dashboard_customer_number" text="CUSTOMERS" />
-               </children>
-            </HBox>
-            <HBox layoutX="10.0" layoutY="144.0" prefHeight="100.0" prefWidth="200.0" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
-               <children>
-                  <Label text="OVERSTAYED LOANS" />
-                  <Label fx:id="over_stayed_loans" text="OVERSTAYED LOANS" />
-               </children>
-            </HBox>
-            <HBox layoutX="310.0" layoutY="144.0" prefHeight="100.0" prefWidth="200.0" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
-               <children>
-                  <Label text="NUMBER OF PENDING LOANS" />
-                  <Label text="LOANS PENDING" />
-               </children>
-            </HBox>
+            </VBox>
          </children>
-      </GridPane>
-   </children>
-</AnchorPane>
+      </VBox>
+   </content>
+</ScrollPane>

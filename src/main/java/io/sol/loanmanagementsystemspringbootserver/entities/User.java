@@ -28,6 +28,10 @@ public class User {
     @Column
     private Role role;
 
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
     public Integer getId() {
         return id;
     }

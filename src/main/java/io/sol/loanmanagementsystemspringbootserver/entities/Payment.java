@@ -8,6 +8,7 @@ import java.time.LocalDate;
 @Entity
 public class Payment {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column
@@ -20,14 +21,11 @@ public class Payment {
     @JoinColumn(name = "loan_id", nullable = false)
     private Loan loan;
 
-
-
-
-    public void setId(Long id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
 

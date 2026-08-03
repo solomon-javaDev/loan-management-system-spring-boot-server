@@ -7,6 +7,20 @@
 <AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.sol.loanmanagementsystemspringbootserver.controllers.PaymentsController">
    <children>
       <BorderPane prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <top>
+            <HBox alignment="CENTER_LEFT" spacing="10.0" BorderPane.alignment="CENTER">
+               <children>
+                  <Label text="Filter Payments:" />
+                  <Button mnemonicParsing="false" onAction="#handleFilterDay" text="Today" />
+                  <Button mnemonicParsing="false" onAction="#handleFilterWeek" text="This Week" />
+                  <Button mnemonicParsing="false" onAction="#handleFilterMonth" text="This Month" />
+                  <Button mnemonicParsing="false" onAction="#loadData" text="All" />
+               </children>
+               <padding>
+                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+               </padding>
+            </HBox>
+         </top>
          <left>
             <VBox prefHeight="400.0" prefWidth="295.0" spacing="12.0" BorderPane.alignment="CENTER">
                <children>
@@ -43,10 +57,10 @@
                      <children>
                         <ButtonBar prefHeight="40.0" prefWidth="200.0">
                           <buttons>
-                            <Button mnemonicParsing="false" text="SAVE" />
-                              <Button layoutX="135.0" layoutY="47.0" mnemonicParsing="false" text="UPDATE" />
-                              <Button layoutX="135.0" layoutY="47.0" mnemonicParsing="false" text="DELETE" />
-                              <Button layoutX="201.0" layoutY="47.0" mnemonicParsing="false" text="CLEAR" />
+                            <Button fx:id="paymentSaveButton" mnemonicParsing="false" onAction="#handleSavePayment" text="SAVE" />
+                              <Button fx:id="paymentUpdateButton" layoutX="135.0" layoutY="47.0" mnemonicParsing="false" onAction="#handleUpdatePayment" text="UPDATE" />
+                              <Button fx:id="paymentDeleteButton" layoutX="135.0" layoutY="47.0" mnemonicParsing="false" onAction="#handleDeletePayment" text="DELETE" />
+                              <Button fx:id="paymentClearButton" layoutX="201.0" layoutY="47.0" mnemonicParsing="false" onAction="#handleClearForm" text="CLEAR" />
                           </buttons>
                            <padding>
                               <Insets right="5.0" />
@@ -54,15 +68,16 @@
                         </ButtonBar>
                      </children>
                   </HBox>
+                  <Label fx:id="messageLabel" textFill="#e40e0e" />
                </children></VBox>
          </left>
          <center>
-            <TableView prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+            <TableView fx:id="paymentsTable" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
               <columns>
-                <TableColumn prefWidth="75.0" text="DATE" />
-                <TableColumn prefWidth="136.0" text="CUSTOMER NAME" />
-                  <TableColumn prefWidth="136.0" text="AMOUNT" />
-                  <TableColumn prefWidth="136.0" text="LOAN REFERENCE" />
+                <TableColumn fx:id="dateColumn" prefWidth="75.0" text="DATE" />
+                <TableColumn fx:id="customerColumn" prefWidth="136.0" text="CUSTOMER NAME" />
+                  <TableColumn fx:id="amountColumn" prefWidth="136.0" text="AMOUNT" />
+                  <TableColumn fx:id="loanRefColumn" prefWidth="136.0" text="LOAN REFERENCE" />
               </columns>
             </TableView>
          </center>

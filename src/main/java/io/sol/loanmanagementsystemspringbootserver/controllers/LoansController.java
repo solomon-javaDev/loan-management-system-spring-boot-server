@@ -1,7 +1,11 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
+import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO;
+import io.sol.loanmanagementsystemspringbootserver.dtos.EmployeeDTO;
+import io.sol.loanmanagementsystemspringbootserver.dtos.LoanDTO;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
-import io.sol.loanmanagementsystemspringbootserver.entities.*;
+import io.sol.loanmanagementsystemspringbootserver.entities.LoanStatus;
+import io.sol.loanmanagementsystemspringbootserver.entities.Role;
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
 import io.sol.loanmanagementsystemspringbootserver.services.EmployeeService;
 import io.sol.loanmanagementsystemspringbootserver.services.LoansService;
@@ -28,43 +32,43 @@ public class LoansController {
     private final UiControlUtilities uiControlUtilities;
 
     @FXML
-    private TableView<Loan> loansTable;
+    private TableView<LoanDTO> loansTable;
 
     @FXML
-    private TableColumn<Loan, Integer> idColumn;
+    private TableColumn<LoanDTO, Integer> idColumn;
 
     @FXML
-    private TableColumn<Loan, String> customerNameColumn;
+    private TableColumn<LoanDTO, String> customerNameColumn;
 
     @FXML
-    private TableColumn<Loan, LocalDate> startDateColumn;
+    private TableColumn<LoanDTO, LocalDate> startDateColumn;
 
     @FXML
-    private TableColumn<Loan, LocalDate> maturityDateColumn;
+    private TableColumn<LoanDTO, LocalDate> maturityDateColumn;
 
     @FXML
-    private TableColumn<Loan, LocalDate> fullPaidDateColumn;
+    private TableColumn<LoanDTO, LocalDate> fullPaidDateColumn;
 
     @FXML
-    private TableColumn<Loan, BigDecimal> principalColumn;
+    private TableColumn<LoanDTO, BigDecimal> principalColumn;
 
     @FXML
-    private TableColumn<Loan, BigDecimal> interestRateColumn;
+    private TableColumn<LoanDTO, BigDecimal> interestRateColumn;
 
     @FXML
-    private TableColumn<Loan, Integer> tenorColumn;
+    private TableColumn<LoanDTO, Integer> tenorColumn;
 
     @FXML
-    private TableColumn<Loan, String> collateralColumn;
+    private TableColumn<LoanDTO, String> collateralColumn;
 
     @FXML
-    private TableColumn<Loan, BigDecimal> feesColumn;
+    private TableColumn<LoanDTO, BigDecimal> feesColumn;
 
     @FXML
-    private TableColumn<Loan, String> statusColumn;
+    private TableColumn<LoanDTO, String> statusColumn;
 
     @FXML
-    private TableColumn<Loan, String> fieldOfficerColumn;
+    private TableColumn<LoanDTO, String> fieldOfficerColumn;
 
     @FXML
     private DatePicker startDatePicker;
@@ -91,10 +95,10 @@ public class LoansController {
     private TextField statusField;
 
     @FXML
-    private ComboBox<Employee> fieldOfficerField;
+    private ComboBox<EmployeeDTO> fieldOfficerField;
 
     @FXML
-    private ComboBox<Customer> customerList;
+    private ComboBox<CustomerDTO> customerList;
 
     @FXML
     private Button saveButton;
@@ -144,13 +148,13 @@ public class LoansController {
 
     
     private void loadLoans() {
-        Result<List<Loan>> result = loansService.getAllLoans();
+        Result<List<LoanDTO>> result = loansService.getAllLoans();
         loansTable.setItems(FXCollections.observableArrayList(result.value()));
     }
 
 
-        private Loan buildLoanFromForm() {
-        Loan loan = new Loan();
+        private LoanDTO buildLoanFromForm() {
+        LoanDTO loan = new LoanDTO();
         loan.setStartDate(startDatePicker.getValue());
         loan.setMaturityDate(maturityDatePicker.getValue());
         loan.setFullPaidDate(startDatePicker.getValue());
@@ -160,12 +164,18 @@ public class LoansController {
         loan.setCollateral(collateralField.getText() == null ? "" : collateralField.getText().trim());
         loan.setFees(parseBigDecimal(feesField.getText()));
         loan.setStatus(LoanStatus.valueOf(statusField.getText() == null ? "" : statusField.getText().trim()));
-        loan.setFieldOfficer(fieldOfficerField.getValue());
-        loan.setCustomer(customerList.getValue());
+        if (fieldOfficerField.getValue() != null) {
+            loan.setFieldOfficerId(fieldOfficerField.getValue().getId());
+            loan.setFieldOfficerName(fieldOfficerField.getValue().toString());
+        }
+        if (customerList.getValue() != null) {
+            loan.setCustomerId(customerList.getValue().getId());
+            loan.setCustomerName(customerList.getValue().toString());
+        }
         return loan;
     }
 
-    private void populateForm(Loan loan) {
+    private void populateForm(LoanDTO loan) {
         startDatePicker.setValue(loan.getStartDate());
         maturityDatePicker.setValue(loan.getMaturityDate());
         principalField.setText(loan.getPrincipal() == null ? "" : loan.getPrincipal().toPlainString());
@@ -173,14 +183,23 @@ public class LoansController {
         tenorField.setText(String.valueOf(loan.getTenor()));
         collateralField.setText(loan.getCollateral());
         feesField.setText(loan.getFees() == null ? "" : loan.getFees().toPlainString());
-        statusField.setText(loan.getStatus().toString());
-        if (loan.getFieldOfficer() != null) {
-            fieldOfficerField.setValue(loan.getFieldOfficer());
+        statusField.setText(loan.getStatus() != null ? loan.getStatus().toString() : "");
+        
+        if (loan.getFieldOfficerId() != null) {
+             // Find in combo box
+             fieldOfficerField.getItems().stream()
+                .filter(e -> e.getId().equals(loan.getFieldOfficerId()))
+                .findFirst()
+                .ifPresent(e -> fieldOfficerField.setValue(e));
         } else {
             fieldOfficerField.getSelectionModel().clearSelection();
         }
-        if (loan.getCustomer() != null) {
-            customerList.setValue(loan.getCustomer());
+        
+        if (loan.getCustomerId() != null) {
+            customerList.getItems().stream()
+                .filter(c -> c.getId() == loan.getCustomerId())
+                .findFirst()
+                .ifPresent(c -> customerList.setValue(c));
         } else {
             customerList.getSelectionModel().clearSelection();
         }
@@ -189,9 +208,12 @@ public class LoansController {
 
     @FXML
     private void handleSaveLoan() {
-        Loan loan = buildLoanFromForm();
-        int id = loan.getCustomer().getId();
-        Result<Loan> result = loansService.issueLoan(id, loan);
+        LoanDTO loan = buildLoanFromForm();
+        if (loan.getCustomerId() == null) {
+            messageLabel.setText("Select a customer first.");
+            return;
+        }
+        Result<LoanDTO> result = loansService.issueLoan(loan.getCustomerId(), loan);
         messageLabel.setText(result.message());
 
 
@@ -203,15 +225,15 @@ public class LoansController {
 
     @FXML
     private void handleUpdateLoan() {
-        Loan selectedLoan = loansTable.getSelectionModel().getSelectedItem();
+        LoanDTO selectedLoan = loansTable.getSelectionModel().getSelectedItem();
         if (selectedLoan == null) {
             messageLabel.setText("Select a loan from the table first.");
             return;
         }
 
-        Loan loan = buildLoanFromForm();
+        LoanDTO loan = buildLoanFromForm();
         loan.setId(selectedLoan.getId());
-        Result<Loan> result = loansService.updateLoan(loan);
+        Result<LoanDTO> result = loansService.updateLoan(loan);
         messageLabel.setText(result.message());
 
         if (result.isSuccess()) {
@@ -222,7 +244,7 @@ public class LoansController {
 
     @FXML
     private void handleDeleteLoan() {
-        Loan selectedLoan = loansTable.getSelectionModel().getSelectedItem();
+        LoanDTO selectedLoan = loansTable.getSelectionModel().getSelectedItem();
         if (selectedLoan == null) {
             messageLabel.setText("Select a loan to delete.");
             return;
@@ -245,11 +267,8 @@ public class LoansController {
     private void configureTable() {
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
         customerNameColumn.setCellValueFactory(cellData -> {
-            Customer customer = cellData.getValue().getCustomer();
-            if (customer != null) {
-                return new SimpleStringProperty(customer.getFirstName() + " " + customer.getLastName());
-            }
-            return new SimpleStringProperty("");
+            String name = cellData.getValue().getCustomerName();
+            return new SimpleStringProperty(name != null ? name : "");
         });
         startDateColumn.setCellValueFactory(new PropertyValueFactory<>("startDate"));
         maturityDateColumn.setCellValueFactory(new PropertyValueFactory<>("maturityDate"));
@@ -261,15 +280,9 @@ public class LoansController {
         feesColumn.setCellValueFactory(new PropertyValueFactory<>("fees"));
         statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
 
-        // Custom cell value factory to display employee name instead of object
         fieldOfficerColumn.setCellValueFactory(cellData -> {
-            Employee employee = cellData.getValue().getFieldOfficer();
-            if (employee != null) {
-                return new SimpleStringProperty(
-                    employee.getFirstName() + " " + employee.getLastName()
-                );
-            }
-            return new SimpleStringProperty("");
+            String name = cellData.getValue().getFieldOfficerName();
+            return new SimpleStringProperty(name != null ? name : "");
         });
     }
 

@@ -113,4 +113,14 @@ public class DashboardController {
             throw new RuntimeException(e);
         }
     }
+
+    @FXML
+    public void showReportsView(){
+        // Logic for reports view navigation
+    }
+
+    @FXML
+    public void showSettingsView(){
+        // Logic for settings view navigation
+    }
 }

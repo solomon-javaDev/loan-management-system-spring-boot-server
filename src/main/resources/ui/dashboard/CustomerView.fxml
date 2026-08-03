@@ -52,6 +52,7 @@
             <TableView fx:id="customersTable" VBox.vgrow="ALWAYS">
                <columns>
                   <TableColumn fx:id="idColumn" prefWidth="60.0" text="ID" />
+                  <TableColumn fx:id="accountNumberColumn" prefWidth="120.0" text="Acc No" />
                   <TableColumn fx:id="firstNameColumn" prefWidth="120.0" text="First Name" />
                   <TableColumn fx:id="lastNameColumn" prefWidth="120.0" text="Last Name" />
                   <TableColumn fx:id="otherNamesColumn" prefWidth="120.0" text="Other Names" />

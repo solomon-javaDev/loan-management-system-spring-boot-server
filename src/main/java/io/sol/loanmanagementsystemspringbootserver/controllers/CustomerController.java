@@ -1,7 +1,7 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
+import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
-import io.sol.loanmanagementsystemspringbootserver.entities.Customer;
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -42,28 +42,31 @@ public class CustomerController {
     private Button customerClearButton;
 
     @FXML
-    private TableView<Customer> customersTable;
+    private TableView<CustomerDTO> customersTable;
 
     @FXML
-    private TableColumn<Customer, Integer> idColumn;
+    private TableColumn<CustomerDTO, Integer> idColumn;
 
     @FXML
-    private TableColumn<Customer, String> firstNameColumn;
+    private TableColumn<CustomerDTO, String> firstNameColumn;
 
     @FXML
-    private TableColumn<Customer, String> lastNameColumn;
+    private TableColumn<CustomerDTO, String> lastNameColumn;
 
     @FXML
-    private TableColumn<Customer, String> otherNamesColumn;
+    private TableColumn<CustomerDTO, String> otherNamesColumn;
 
     @FXML
-    private TableColumn<Customer, String> emailColumn;
+    private TableColumn<CustomerDTO, String> emailColumn;
 
     @FXML
-    private TableColumn<Customer, String> telephoneColumn;
+    private TableColumn<CustomerDTO, String> telephoneColumn;
 
     @FXML
-    private TableColumn<Customer, Number> numberOfLoans;
+    private TableColumn<CustomerDTO, String> accountNumberColumn;
+
+    @FXML
+    private TableColumn<CustomerDTO, Number> numberOfLoans;
 
     @FXML
     private Label messageLabel;
@@ -98,8 +101,8 @@ public class CustomerController {
 
     @FXML
     private void handleSaveCustomer() {
-        Customer customer = buildCustomerFromForm();
-        Result<Customer> result = customerService.createCustomer(customer);
+        CustomerDTO customer = buildCustomerFromForm();
+        Result<CustomerDTO> result = customerService.createCustomer(customer);
         messageLabel.setText(result.message());
 
         if (result.isSuccess()) {
@@ -110,16 +113,16 @@ public class CustomerController {
 
     @FXML
     private void handleUpdateCustomer() {
-        Customer selectedCustomer = customersTable.getSelectionModel().getSelectedItem();
+        CustomerDTO selectedCustomer = customersTable.getSelectionModel().getSelectedItem();
 
         if (selectedCustomer == null) {
             messageLabel.setText("Select a customer from the table first.");
             return;
         }
 
-        Customer updatedCustomer = buildCustomerFromForm();
+        CustomerDTO updatedCustomer = buildCustomerFromForm();
         updatedCustomer.setId(selectedCustomer.getId());
-        Result<Customer> result = customerService.updateCustomer(updatedCustomer);
+        Result<CustomerDTO> result = customerService.updateCustomer(updatedCustomer);
         messageLabel.setText(result.message());
 
         if (result.isSuccess()) {
@@ -130,7 +133,7 @@ public class CustomerController {
 
     @FXML
     private void handleDeleteCustomer() {
-        Customer selectedCustomer = customersTable.getSelectionModel().getSelectedItem();
+        CustomerDTO selectedCustomer = customersTable.getSelectionModel().getSelectedItem();
 
         if (selectedCustomer == null) {
             messageLabel.setText("Select a customer to delete.");
@@ -153,23 +156,29 @@ public class CustomerController {
 
     private void configureTable() {
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
+        accountNumberColumn.setCellValueFactory(new PropertyValueFactory<>("accountNumber"));
         firstNameColumn.setCellValueFactory(new PropertyValueFactory<>("firstName"));
         lastNameColumn.setCellValueFactory(new PropertyValueFactory<>("lastName"));
         otherNamesColumn.setCellValueFactory(new PropertyValueFactory<>("otherNames"));
         emailColumn.setCellValueFactory(new PropertyValueFactory<>("email"));
         telephoneColumn.setCellValueFactory(new PropertyValueFactory<>("telephone"));
 
-        numberOfLoans.setCellValueFactory(new PropertyValueFactory<>("loanCount"));
-
+        numberOfLoans.setCellValueFactory(cellData -> {
+            CustomerDTO customer = cellData.getValue();
+            if (customer != null) {
+                return new javafx.beans.property.SimpleIntegerProperty(customer.getLoanCount());
+            }
+            return new javafx.beans.property.SimpleIntegerProperty(0);
+        });
     }
 
     private void loadCustomers() {
-        Result<java.util.List<Customer>> result = customerService.getAllCustomers();
+        Result<java.util.List<CustomerDTO>> result = customerService.getAllCustomers();
         customersTable.setItems(FXCollections.observableArrayList(result.value()));
     }
 
-    private Customer buildCustomerFromForm() {
-        Customer customer = new Customer();
+    private CustomerDTO buildCustomerFromForm() {
+        CustomerDTO customer = new CustomerDTO();
         customer.setFirstName(firstNameField.getText() == null ? "" : firstNameField.getText().trim());
         customer.setLastName(lastNameField.getText() == null ? "" : lastNameField.getText().trim());
         customer.setOtherNames(otherNamesField.getText() == null ? "" : otherNamesField.getText().trim());
@@ -178,7 +187,7 @@ public class CustomerController {
         return customer;
     }
 
-    private void populateForm(Customer customer) {
+    private void populateForm(CustomerDTO customer) {
         firstNameField.setText(customer.getFirstName());
         lastNameField.setText(customer.getLastName());
         otherNamesField.setText(customer.getOtherNames());
