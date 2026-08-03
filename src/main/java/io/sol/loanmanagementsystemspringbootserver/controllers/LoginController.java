@@ -17,6 +17,17 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
+/**
+ * The LoginController class is a JavaFX controller responsible for managing the login
+ * functionality in the application. It handles user input and interactions, including
+ * username and password entry, login button clicks, and account creation.
+ * It communicates with the {@code AuthenticationService} to authenticate users
+ * and navigates to the dashboard upon successful login.
+ *
+ * This controller is managed as a Spring component, allowing for dependency injection
+ * of services and context required for its operation.
+ */
+
 @Component
 public class LoginController {
 

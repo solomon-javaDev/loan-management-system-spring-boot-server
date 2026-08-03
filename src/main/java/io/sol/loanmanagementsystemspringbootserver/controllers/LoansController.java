@@ -23,6 +23,23 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+/**
+ * Controller class for managing loan-related operations in a UI context.
+ * Responsible for handling the loans' view, initializing components,
+ * and managing user interactions such as creating, updating, deleting,
+ * and filtering loans.
+ *
+ * This class manages form components, data binding for the table view,
+ * and delegation of business logic to the associated services.
+ *
+ * Primary functionalities include:
+ * - Loading all loans into the table.
+ * - Managing and clearing the loan form.
+ * - Issuing a new loan.
+ * - Updating existing loans.
+ * - Deleting loans.
+ */
+
 @Component
 public class LoansController {
 

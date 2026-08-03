@@ -15,6 +15,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Service class that provides operations for managing loans and their associations
+ * with customers. The class interacts with the underlying data repositories to
+ * perform CRUD operations on loan entities and provides functionality such as
+ * issuing loans, updating loan details, and validating input data.
+ */
 @Service
 public class LoansService {
 

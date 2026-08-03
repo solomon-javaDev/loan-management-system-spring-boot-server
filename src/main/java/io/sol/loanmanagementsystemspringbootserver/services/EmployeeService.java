@@ -12,6 +12,13 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
+/**
+ * The EmployeeService class provides services related to employees, including retrieval
+ * of employees by their roles. It acts as a service layer in the application, managing
+ * business logic and interacting with the repository layer.
+ */
+
 @Service
 public class EmployeeService {
 

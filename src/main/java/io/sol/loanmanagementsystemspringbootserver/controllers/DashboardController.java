@@ -20,6 +20,22 @@ import java.io.IOException;
  * Inject new StageManager into the DashboardController.
  * When a user clicks a navigation label, clear the existing layout inside the StackPane and inject the newly loaded root node.
  */
+
+/**
+ * The DashboardController class serves as the main controller for the dashboard of the
+ * application. It provides functionality to navigate between different views of the
+ * application and manage interactions with the user interface components.
+ *
+ * This controller is responsible for:
+ * - Managing and switching between various dashboard views such as Customers, Loans,
+ *   Applications, Payments, Settings, and Reports.
+ * - Handling the user logout functionality by switching to the login view.
+ * - Synchronizing the search bar's text field with the SearchService for real-time search updates.
+ *
+ * The class uses JavaFX annotations (@FXML) to bind methods and UI components from the
+ * respective FXML files. It also leverages dependency injection for managing its dependencies,
+ * such as SearchService and StageManager.
+ */
 @Component
 public class DashboardController {
 

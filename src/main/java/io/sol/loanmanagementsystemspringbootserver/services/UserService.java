@@ -5,6 +5,10 @@ import io.sol.loanmanagementsystemspringbootserver.entities.User;
 import io.sol.loanmanagementsystemspringbootserver.repositories.UserRepository;
 import org.springframework.stereotype.Service;
 
+/**
+ * The UserService class provides business logic related to user operations.
+ * It interacts with the UserRepository to persist and retrieve user data.
+ */
 @Service
 public class UserService {
 

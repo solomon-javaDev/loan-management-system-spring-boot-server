@@ -9,6 +9,14 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import org.springframework.stereotype.Component;
 
+/**
+ * This class is a Spring-managed component that serves as the controller for managing customer-related
+ * functionalities within a JavaFX application. It interacts with the UI elements defined in the FXML and
+ * facilitates the CRUD operations for customers by interfacing with a `CustomerService`.
+ *
+ * Responsibilities include initializing the customer table, handling form events, enabling or disabling
+ * appropriate buttons based on context, and updating the UI to reflect operations performed on customer data.
+ */
 @Component
 public class CustomerController {
 

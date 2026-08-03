@@ -10,6 +10,20 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * The ActivityLoggingService class provides functionality for logging system activities
+ * performed by users. It logs information to both the console and a dedicated log file.
+ *
+ * Responsibilities:
+ * - Logs activity details including timestamp, username, and activity description.
+ * - Writes log entries to a standard logger for console output.
+ * - Persists log entries to a file for long-term storage and reference.
+ *
+ * Key Features:
+ * - Uses a consistent logging format with timestamps for clarity.
+ * - Handles file write operations to ensure activities are persistently logged.
+ * - Logs errors that occur during the file-writing process for troubleshooting.
+ */
 @Service
 public class ActivityLoggingService {
 

@@ -12,6 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * The CustomerService class provides services for managing customer operations
+ * such as creating, retrieving, updating, and deleting customer records.
+ * It interacts with the data repository and performs operations on Customer entities.
+ */
+
 @Service
 public class CustomerService {
 

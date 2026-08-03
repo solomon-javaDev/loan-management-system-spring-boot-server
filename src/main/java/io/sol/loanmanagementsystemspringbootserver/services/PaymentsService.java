@@ -16,6 +16,11 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Service class responsible for handling payment operations and related functionalities.
+ * Manages interactions with the PaymentRepository and LoansService to perform CRUD operations,
+ * update loan statuses, and retrieve payment data.
+ */
 @Service
 public class PaymentsService {
 

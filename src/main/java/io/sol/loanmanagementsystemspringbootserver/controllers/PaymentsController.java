@@ -20,6 +20,55 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * The PaymentsController class is responsible for managing the user interface interactions
+ * related to payment operations in the application. It is a part of the UI layer and interacts
+ * with various services to perform payment-related actions such as saving, updating, deleting,
+ * and filtering payment records.
+ *
+ * Responsibilities of this controller include:
+ * - Configuring and initializing UI components such as tables, dropdowns, and other controls.
+ * - Handling user actions and binding data to UI components.
+ * - Communicating with services to fetch, update, and save data.
+ * - Filtering payment records based on specific criteria (e.g., date, week, month).
+ *
+ * The PaymentsController integrates with the following services:
+ * - CustomerService: For fetching and managing customer-related data.
+ * - UiControlUtilities: For handling common UI configurations and utilities.
+ * - LoansService: For retrieving and managing loan-related data.
+ * - PaymentsService: For performing operations related to payments, such as fetching, saving,
+ *   updating, and deleting payment records.
+ *
+ * The class uses FXML annotations to map UI components, ensuring seamless interaction with the
+ * JavaFX framework.
+ *
+ * Key Features:
+ * - TableView for displaying a list of payments with columns for date, customer, amount, and loan reference.
+ * - Dropdowns for selecting customers and loans.
+ * - Basic CRUD operations for payments.
+ * - Input validation and UI feedback for user actions.
+ * - Filtering of data based on specific time periods (day, week, month).
+ *
+ * Methods:
+ * 1. initialize: Sets up the initial configuration for the UI components and binds listeners.
+ * 2. configureTable: Configures the table columns for displaying payment information.
+ * 3. loadData: Loads the initial data for customers, loans, and payments.
+ * 4. filterLoansByCustomer: Filters loans based on a selected customer.
+ * 5. handleFilterDay, handleFilterWeek, handleFilterMonth: Filters payments by specific timeframes.
+ * 6. handleSavePayment: Saves a new payment based on user-provided data.
+ * 7. handleUpdatePayment: Updates an existing payment based on changes made by the user.
+ * 8. handleDeletePayment: Deletes a selected payment.
+ * 9. handleClearForm: Clears all form fields and resets the UI state.
+ * 10. populateForm: Populates form inputs when a payment is selected from the table.
+ *
+ * Dependencies:
+ * - JavaFX components such as TableView, ComboBox, DatePicker, TextField, and Buttons.
+ * - External services (CustomerService, UiControlUtilities, LoansService, PaymentsService).
+ *
+ * This class ensures a user-friendly interface for managing payments while maintaining robust
+ * communication with backend services for data consistency.
+ */
+
 @Component
 public class PaymentsController {
 

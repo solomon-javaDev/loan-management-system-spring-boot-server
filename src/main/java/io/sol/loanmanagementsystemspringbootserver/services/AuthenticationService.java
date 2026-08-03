@@ -5,6 +5,12 @@ import io.sol.loanmanagementsystemspringbootserver.entities.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+/**
+ * AuthenticationService provides methods for handling user authentication and password encoding.
+ * It interacts with the UserService to validate user credentials and the PasswordEncoder to manage password encoding.
+ * This service follows a result-based approach to represent success or failure conditions.
+ */
+
 @Service
 public class AuthenticationService {
 

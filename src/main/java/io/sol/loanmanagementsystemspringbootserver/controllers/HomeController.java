@@ -16,6 +16,17 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * The HomeController class is a Spring component that serves as the controller
+ * for managing and displaying statistical and financial data on the application's home/dashboard.
+ * It communicates with various service layers to fetch data and updates the UI labels accordingly.
+ *
+ * Responsibilities of the HomeController include:
+ * - Computing and displaying daily statistics such as total customers, active customers,
+ *   loans disbursed, collection rates, etc.
+ * - Handling user interactions and navigation to other views within the application.
+ * - Providing actions to export or print the summarized data.
+ */
 @Component
 public class HomeController {
 
