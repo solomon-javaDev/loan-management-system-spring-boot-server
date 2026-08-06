@@ -1,6 +1,8 @@
 package io.sol.loanmanagementsystemspringbootserver.services;
 
+import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerCreateDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO;
+import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerResponseDTO;
 import io.sol.loanmanagementsystemspringbootserver.mappers.DTOMapper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.entities.Customer;
@@ -28,7 +30,7 @@ public class CustomerService {
         this.repository = repository;
     }
 
-    public Result<CustomerDTO> createCustomer(CustomerDTO customerDto) {
+    public Result<CustomerResponseDTO> createCustomer(CustomerCreateDTO customerDto) {
         if (customerDto == null || isBlank(customerDto.getFirstName()) || isBlank(customerDto.getLastName())) {
             return Result.invalid("First name and last name are required.", null);
         }
@@ -36,10 +38,10 @@ public class CustomerService {
         Customer customer = DTOMapper.toEntity(customerDto);
         customer.setAccountNumber(generateAccountNumber());
         Customer savedCustomer = repository.save(customer);
-        return Result.success("Customer saved successfully.", DTOMapper.toDTO(savedCustomer));
+        return Result.success("Customer saved successfully.", DTOMapper.toResponseDTO(savedCustomer));
     }
 
-    private String generateAccountNumber() {
+    public String generateAccountNumber() {
         long count = repository.count();
         return String.format("055%08d", count + 1);
     }
@@ -57,7 +59,7 @@ public class CustomerService {
     }
 
     @Transactional
-    public Result<CustomerDTO> updateCustomer(CustomerDTO customerDto) {
+    public Result<CustomerResponseDTO> updateCustomer(CustomerDTO customerDto) {
         if (customerDto == null || customerDto.getId() <= 0) {
             return Result.invalid("Select a customer from the table before updating.", null);
         }
@@ -71,7 +73,7 @@ public class CustomerService {
                     existingCustomer.setOtherNames(customerDto.getOtherNames());
                     existingCustomer.setAddress(customerDto.getAddress());
                     Customer saved = repository.save(existingCustomer);
-                    return Result.success("Customer updated successfully.", DTOMapper.toDTO(saved));
+                    return Result.success("Customer updated successfully.", DTOMapper.toResponseDTO(saved));
                 })
                 .orElseGet(() -> Result.notFound("Customer not found.", null));
     }

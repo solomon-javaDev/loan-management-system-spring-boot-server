@@ -135,7 +135,7 @@ public class PaymentsController {
             if (newVal != null) {
                 filterLoansByCustomer(newVal);
             } else {
-                loanReference.setItems(FXCollections.emptyObservableList());
+                loanReference.setItems(FXCollections.emptyObservableList()); //there is no customer selected, so no loans to choose a payment for
             }
         });
 
@@ -175,7 +175,7 @@ public class PaymentsController {
         uiControlUtilities.configureDropDown(loanReference, loansService.getAllLoans().value(),
                 LoanDTO::getReference);
 
-        Result<java.util.List<PaymentDTO>> payments = paymentsService.getAllPayments();
+        Result<List<PaymentDTO>> payments = paymentsService.getAllPayments();
         paymentsTable.setItems(FXCollections.observableArrayList(payments.value()));
     }
 
@@ -183,7 +183,7 @@ public class PaymentsController {
         if (customer == null) return;
         
         Result<List<LoanDTO>> result = loansService.getAllLoans();
-        java.util.List<LoanDTO> filteredLoans = result.value().stream()
+        List<LoanDTO> filteredLoans = result.value().stream()
                 .filter(loan -> loan.getCustomerId() != null && loan.getCustomerId() == customer.getId())
                 .filter(loan -> loan.getStatus() == LoanStatus.PENDING || loan.getStatus() == LoanStatus.ACTIVE)
                 .toList();
@@ -193,7 +193,7 @@ public class PaymentsController {
 
     @FXML
     private void handleFilterDay() {
-        Result<java.util.List<PaymentDTO>> result = paymentsService.getPaymentsByDate(LocalDate.now());
+        Result<List<PaymentDTO>> result = paymentsService.getPaymentsByDate(LocalDate.now());
         paymentsTable.setItems(FXCollections.observableArrayList(result.value()));
     }
 
@@ -201,7 +201,7 @@ public class PaymentsController {
     private void handleFilterWeek() {
         LocalDate now = LocalDate.now();
         LocalDate startOfWeek = now.minusDays(now.getDayOfWeek().getValue() - 1);
-        Result<java.util.List<PaymentDTO>> result = paymentsService.getPaymentsBetween(startOfWeek, now);
+        Result<List<PaymentDTO>> result = paymentsService.getPaymentsBetween(startOfWeek, now);
         paymentsTable.setItems(FXCollections.observableArrayList(result.value()));
     }
 
@@ -209,7 +209,7 @@ public class PaymentsController {
     private void handleFilterMonth() {
         LocalDate now = LocalDate.now();
         LocalDate startOfMonth = now.withDayOfMonth(1);
-        Result<java.util.List<PaymentDTO>> result = paymentsService.getPaymentsBetween(startOfMonth, now);
+        Result<List<PaymentDTO>> result = paymentsService.getPaymentsBetween(startOfMonth, now);
         paymentsTable.setItems(FXCollections.observableArrayList(result.value()));
     }
 

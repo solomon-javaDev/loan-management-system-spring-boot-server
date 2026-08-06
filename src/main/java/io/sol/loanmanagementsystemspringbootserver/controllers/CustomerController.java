@@ -1,6 +1,8 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
+import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerCreateDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO;
+import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerResponseDTO;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
 import javafx.collections.FXCollections;
@@ -110,7 +112,17 @@ public class CustomerController {
     @FXML
     private void handleSaveCustomer() {
         CustomerDTO customer = buildCustomerFromForm();
-        Result<CustomerDTO> result = customerService.createCustomer(customer);
+
+        // Convert CustomerDTO to CustomerCreateDTO
+        CustomerCreateDTO createDTO = new CustomerCreateDTO();
+        createDTO.setFirstName(customer.getFirstName());
+        createDTO.setLastName(customer.getLastName());
+        createDTO.setOtherNames(customer.getOtherNames());
+        createDTO.setEmail(customer.getEmail());
+        createDTO.setTelephone(customer.getTelephone());
+        createDTO.setAddress(customer.getAddress());
+
+        Result<CustomerResponseDTO> result = customerService.createCustomer(createDTO);
         messageLabel.setText(result.message());
 
         if (result.isSuccess()) {
@@ -130,7 +142,7 @@ public class CustomerController {
 
         CustomerDTO updatedCustomer = buildCustomerFromForm();
         updatedCustomer.setId(selectedCustomer.getId());
-        Result<CustomerDTO> result = customerService.updateCustomer(updatedCustomer);
+        Result<CustomerResponseDTO> result = customerService.updateCustomer(updatedCustomer);
         messageLabel.setText(result.message());
 
         if (result.isSuccess()) {
