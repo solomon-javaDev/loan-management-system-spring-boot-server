@@ -99,16 +99,19 @@ public class PaymentsService {
             payments.stream().map(DTOMapper::toDTO).collect(Collectors.toList()));
     }
 
+    @Transactional(readOnly = true)
     public Result<List<PaymentDTO>> getPaymentsByDate(LocalDate date) {
         return Result.success("Payments for date loaded", 
             paymentRepository.findByDate(date).stream().map(DTOMapper::toDTO).collect(Collectors.toList()));
     }
 
+    @Transactional(readOnly = true)
     public Result<List<PaymentDTO>> getPaymentsBetween(LocalDate start, LocalDate end) {
         return Result.success("Payments between dates loaded", 
             paymentRepository.findByDateBetween(start, end).stream().map(DTOMapper::toDTO).collect(Collectors.toList()));
     }
-    
+
+    @Transactional(readOnly = true)
     public Result<List<PaymentDTO>> getPaymentsByLoan(int loanId) {
         return loansService.getLoanEntityById(loanId).map(loan -> 
              Result.success("Payments for loan loaded", 
@@ -116,7 +119,8 @@ public class PaymentsService {
         ).orElse(Result.notFound("Loan not found", null));
     }
 
-    private void updateLoanStatus(Loan loan) {
+    @Transactional(readOnly = true)
+    protected void updateLoanStatus(Loan loan) {
         if(loan.getStatus() == LoanStatus.PENDING && loan.getTotalPaid().compareTo(BigDecimal.ZERO) > 0 ){
             loan.setStatus(LoanStatus.ACTIVE);
         }

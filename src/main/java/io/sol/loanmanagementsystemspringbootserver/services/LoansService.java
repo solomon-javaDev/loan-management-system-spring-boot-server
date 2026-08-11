@@ -2,6 +2,7 @@ package io.sol.loanmanagementsystemspringbootserver.services;
 
 import io.sol.loanmanagementsystemspringbootserver.dtos.LoanDTO;
 import io.sol.loanmanagementsystemspringbootserver.mappers.DTOMapper;
+import io.sol.loanmanagementsystemspringbootserver.repositories.EmployeeRepository;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.entities.Customer;
 import io.sol.loanmanagementsystemspringbootserver.entities.Loan;
@@ -26,9 +27,11 @@ public class LoansService {
 
     private final LoansRepository loanRepository;
     private final CustomerRepository customerRepository;
+    private final EmployeeRepository employeeRepository;
 
-    public LoansService(LoansRepository loanRepository, CustomerRepository customerRepository) {
+    public LoansService(LoansRepository loanRepository, CustomerRepository customerRepository, EmployeeRepository employeeRepository) {
         this.loanRepository = loanRepository;
+        this.employeeRepository = employeeRepository;
         this.customerRepository = customerRepository;
     }
 
@@ -143,6 +146,10 @@ public class LoansService {
 
         if (loan.getMaturityDate().isBefore(loan.getStartDate())) {
             return Result.invalid("Maturity date cannot be earlier than the start date.", null);
+        }
+
+        if(loan.getFieldOfficerName().isBlank()){
+            return Result.invalid("Field Officer required", null);
         }
 
         return Result.success("", loan);

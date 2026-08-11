@@ -40,6 +40,12 @@ public class CustomerController {
     private TextField telephoneField;
 
     @FXML
+    private TextField addressField;
+
+    @FXML
+    private TextField accountNumberField;
+
+    @FXML
     private Button customerSaveButton;
 
     @FXML
@@ -58,6 +64,7 @@ public class CustomerController {
     private TableColumn<CustomerDTO, Integer> idColumn;
 
     @FXML
+
     private TableColumn<CustomerDTO, String> firstNameColumn;
 
     @FXML
@@ -77,6 +84,9 @@ public class CustomerController {
 
     @FXML
     private TableColumn<CustomerDTO, Number> numberOfLoans;
+
+    @FXML
+    private TableColumn<CustomerDTO, String> addressColumn;
 
     @FXML
     private Label messageLabel;
@@ -175,14 +185,13 @@ public class CustomerController {
     }
 
     private void configureTable() {
-        idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
         accountNumberColumn.setCellValueFactory(new PropertyValueFactory<>("accountNumber"));
         firstNameColumn.setCellValueFactory(new PropertyValueFactory<>("firstName"));
         lastNameColumn.setCellValueFactory(new PropertyValueFactory<>("lastName"));
         otherNamesColumn.setCellValueFactory(new PropertyValueFactory<>("otherNames"));
         emailColumn.setCellValueFactory(new PropertyValueFactory<>("email"));
         telephoneColumn.setCellValueFactory(new PropertyValueFactory<>("telephone"));
-
+        addressColumn.setCellValueFactory(new PropertyValueFactory<>("address"));
         numberOfLoans.setCellValueFactory(cellData -> {
             CustomerDTO customer = cellData.getValue();
             if (customer != null) {
@@ -204,23 +213,28 @@ public class CustomerController {
         customer.setOtherNames(otherNamesField.getText() == null ? "" : otherNamesField.getText().trim());
         customer.setEmail(emailField.getText() == null ? "" : emailField.getText().trim());
         customer.setTelephone(telephoneField.getText() == null ? "" : telephoneField.getText().trim());
+        customer.setAddress(addressField.getText()== null ?  " " : addressField.getText().trim());
         return customer;
     }
 
     private void populateForm(CustomerDTO customer) {
+        accountNumberField.setText(customer.getAccountNumber());
         firstNameField.setText(customer.getFirstName());
         lastNameField.setText(customer.getLastName());
         otherNamesField.setText(customer.getOtherNames());
         emailField.setText(customer.getEmail());
         telephoneField.setText(customer.getTelephone());
+        addressField.setText(customer.getAddress());
     }
 
     private void clearForm() {
+        accountNumberField.clear();
         firstNameField.clear();
         lastNameField.clear();
         otherNamesField.clear();
         emailField.clear();
         telephoneField.clear();
-        customersTable.getSelectionModel().clearSelection();
+        addressField.clear();;
+         customersTable.getSelectionModel().clearSelection();
     }
 }

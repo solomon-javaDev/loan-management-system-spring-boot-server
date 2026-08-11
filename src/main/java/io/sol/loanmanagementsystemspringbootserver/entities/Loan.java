@@ -210,7 +210,7 @@ public class Loan {
         String statusPart = status != null ? status.toString() : "";
         String principalPart = principal != null ? principal.toString() : "";
         String customerPart = customer != null && customer.getLastName() != null ? customer.getLastName() : "";
-        return String.join(" ", String.valueOf(id), statusPart, principalPart, customerPart);
+        return String.join("-", String.valueOf(id), statusPart, principalPart, customerPart);
     }
 
 }

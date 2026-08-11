@@ -187,7 +187,7 @@ public class LoansController {
         }
         if (customerList.getValue() != null) {
             loan.setCustomerId(customerList.getValue().getId());
-            loan.setCustomerName(customerList.getValue().toString());
+            loan.setCustomerName(customerList.getValue().getCustomerName());
         }
         return loan;
     }
@@ -201,7 +201,7 @@ public class LoansController {
         collateralField.setText(loan.getCollateral());
         feesField.setText(loan.getFees() == null ? "" : loan.getFees().toPlainString());
         statusField.setText(loan.getStatus() != null ? loan.getStatus().toString() : "");
-        
+
         if (loan.getFieldOfficerId() != null) {
              // Find in combo box
              fieldOfficerField.getItems().stream()
@@ -299,7 +299,7 @@ public class LoansController {
 
         fieldOfficerColumn.setCellValueFactory(cellData -> {
             String name = cellData.getValue().getFieldOfficerName();
-            return new SimpleStringProperty(name != null ? name : "");
+            return new SimpleStringProperty(name != null ? name : "null");
         });
     }
 

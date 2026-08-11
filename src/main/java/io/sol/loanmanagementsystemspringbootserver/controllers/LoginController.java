@@ -1,5 +1,8 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
+import io.sol.loanmanagementsystemspringbootserver.entities.Role;
+import io.sol.loanmanagementsystemspringbootserver.repositories.UserRepository;
+import io.sol.loanmanagementsystemspringbootserver.services.ActivityLoggingService;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.utilities.StageManager;
 import io.sol.loanmanagementsystemspringbootserver.entities.User;
@@ -32,6 +35,9 @@ import java.io.IOException;
 public class LoginController {
 
     private final StageManager stageManager;
+    private final ActivityLoggingService activityLoggingService;
+    private final UserRepository userRepository;
+
     @FXML
     private TextField usernameField;
 
@@ -48,9 +54,11 @@ public class LoginController {
     private Button creatAccountButton;
 
     private final AuthenticationService authenticationService;
-    public LoginController(AuthenticationService authenticationService, ApplicationContext applicationContext, StageManager stageManager) {
+    public LoginController(AuthenticationService authenticationService, ApplicationContext applicationContext, StageManager stageManager, ActivityLoggingService activityLoggingService, UserRepository userRepository) {
         this.authenticationService = authenticationService;
         this.stageManager = stageManager;
+        this.activityLoggingService = activityLoggingService;
+        this.userRepository = userRepository;
     }
 
     @FXML
@@ -58,10 +66,26 @@ public class LoginController {
 
     }
 
-    @FXML
-    private void handleCreateAccountClick(){
-
-    }
+//    @FXML
+//    private void handleCreateAccountClick(){
+//        String userName = usernameField.getText() == null ? " ": usernameField.getText().trim();
+//
+//        String password = passwordField.getText() == null ? " ": passwordField.getText();
+//
+//        User user = new User();
+//        user.setUsername(userName);
+//        user.setPassword(password);
+//        user.setRole(Role.ADMIN);
+//
+//
+//        try {
+//            userRepository.save(user);
+//        } catch (Exception e) {
+//            activityLoggingService.logActivity("User - ", "Attempted to save a new user, but an error ocurred: "+ e.getLocalizedMessage());
+//
+//        }
+//
+//    }
 
     @FXML
     private void onLoginClicked() {
@@ -73,6 +97,24 @@ public class LoginController {
 
         if (authResult.isSuccess()) {
             loadDashboard();
+        }
+    }
+
+
+    @FXML
+    private void loadCreateAccount(){
+        try{
+            Parent createAccountView = stageManager.loadView("ui/login/CreateAccountView.fxml");
+
+            Stage stage = (Stage) creatAccountButton.getScene().getWindow();
+            stage.setScene(new Scene(createAccountView));
+
+            stage.setMaximized(false);
+            stage.setTitle("Create Account - LMS");
+            stage.setResizable(false);
+        }catch(Exception e){
+            messageLabel.setText("Unable to load the Create Account form!");
+            activityLoggingService.logActivity("User - tried creating an account!", e.getLocalizedMessage());
         }
     }
 

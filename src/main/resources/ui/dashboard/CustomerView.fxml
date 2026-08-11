@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
@@ -13,25 +14,35 @@
             <GridPane hgap="10.0" vgap="8.0">
                <columnConstraints>
                   <ColumnConstraints minWidth="120.0" />
-                  <ColumnConstraints hgrow="ALWAYS" minWidth="200.0" />
+                  <ColumnConstraints halignment="LEFT" hgrow="ALWAYS" minWidth="200.0" />
                </columnConstraints>
                <children>
-                  <Label text="First name" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                  <TextField fx:id="firstNameField" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                  <Label text="First name" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                  <TextField fx:id="firstNameField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 
-                  <Label text="Last name" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                  <TextField fx:id="lastNameField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                  <Label text="Last name" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                  <TextField fx:id="lastNameField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
 
-                  <Label text="Other names" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-                  <TextField fx:id="otherNamesField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                  <Label text="Other names" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                  <TextField fx:id="otherNamesField" GridPane.columnIndex="1" GridPane.rowIndex="3" />
 
-                  <Label text="Email" GridPane.columnIndex="0" GridPane.rowIndex="3" />
-                  <TextField fx:id="emailField" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                  <Label text="Email" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                  <TextField fx:id="emailField" GridPane.columnIndex="1" GridPane.rowIndex="4" />
 
-                  <Label text="Telephone" GridPane.columnIndex="0" GridPane.rowIndex="4" />
-                  <TextField fx:id="telephoneField" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                  <Label text="Telephone" GridPane.columnIndex="0" GridPane.rowIndex="5" />
+                  <Label layoutX="10.0" layoutY="33.0" text="Account Number" />
+                  <TextField fx:id="telephoneField" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                  <Label layoutX="10.0" layoutY="147.0" text="Address" GridPane.rowIndex="6" />
+                  <TextField fx:id="addressField" layoutX="140.0" layoutY="143.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                  <TextField fx:id="accountNumberField" layoutX="140.0" layoutY="29.0" GridPane.columnIndex="1">
+                     <padding>
+                        <Insets bottom="5.0" />
+                     </padding>
+                  </TextField>
                </children>
                <rowConstraints>
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" />
+                  <RowConstraints />
                   <RowConstraints />
                   <RowConstraints />
                   <RowConstraints />
@@ -51,7 +62,6 @@
 
             <TableView fx:id="customersTable" VBox.vgrow="ALWAYS">
                <columns>
-                  <TableColumn fx:id="idColumn" prefWidth="60.0" text="ID" />
                   <TableColumn fx:id="accountNumberColumn" prefWidth="120.0" text="Acc No" />
                   <TableColumn fx:id="firstNameColumn" prefWidth="120.0" text="First Name" />
                   <TableColumn fx:id="lastNameColumn" prefWidth="120.0" text="Last Name" />
@@ -59,6 +69,7 @@
                   <TableColumn fx:id="emailColumn" prefWidth="180.0" text="Email" />
                   <TableColumn fx:id="numberOfLoans" prefWidth="75.0" text="Loans" />
                   <TableColumn fx:id="telephoneColumn" prefWidth="120.0" text="Telephone" />
+                  <TableColumn fx:id="addressColumn" prefWidth="180.0" text="Address" />
                </columns>
             </TableView>
          </children>

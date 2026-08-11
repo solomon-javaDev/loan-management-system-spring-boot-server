@@ -21,7 +21,7 @@
             <HBox alignment="CENTER" focusTraversable="true" prefHeight="31.0" prefWidth="600.0" spacing="30.0">
                <children>
                   <Button fx:id="loginButton" mnemonicParsing="false" onAction="#onLoginClicked" styleClass="primary-button" text="LOGIN" />
-                  <Button fx:id="creatAccountButton" onAction="#handleCreateAccountClick" mnemonicParsing="false" text="CREATE ACCOUNT" />
+                  <Button fx:id="creatAccountButton" mnemonicParsing="false" onAction="#loadCreateAccount" text="CREATE ACCOUNT" />
                </children>
                <padding>
                   <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />

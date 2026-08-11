@@ -94,8 +94,8 @@ public class DashboardController {
     @FXML
     public void showHomeView(){
         try{
-            Parent customerView = stageManager.loadView("/ui/dashboard/HomeView.fxml");
-            mainContent.getChildren().setAll(customerView);
+            Parent homeView = stageManager.loadView("/ui/dashboard/HomeView.fxml");
+            mainContent.getChildren().setAll(homeView);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -113,8 +113,8 @@ public class DashboardController {
     @FXML
     public void showLoanView(){
         try{
-            Parent customerView = stageManager.loadView("/ui/dashboard/LoanView.fxml");
-            mainContent.getChildren().setAll(customerView);
+            Parent loanView = stageManager.loadView("/ui/dashboard/LoanView.fxml");
+            mainContent.getChildren().setAll(loanView);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -123,8 +123,8 @@ public class DashboardController {
     @FXML
     public void showPaymentsView(){
         try{
-            Parent customerView = stageManager.loadView("/ui/dashboard/PaymentsView.fxml");
-            mainContent.getChildren().setAll(customerView);
+            Parent paymentsView = stageManager.loadView("/ui/dashboard/PaymentsView.fxml");
+            mainContent.getChildren().setAll(paymentsView);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

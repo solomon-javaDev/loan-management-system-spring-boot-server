@@ -69,6 +69,20 @@ public class DTOMapper {
         return dto;
     }
 
+    public static CustomerCreateDTO toCreateDTO(Customer customer){
+        if(customer == null) return null;
+
+        CustomerCreateDTO customerCreateDTO = new CustomerCreateDTO();
+        customerCreateDTO.setAddress(customer.getAddress());
+        customerCreateDTO.setEmail(customer.getEmail());
+        customerCreateDTO.setFirstName(customer.getFirstName());
+        customerCreateDTO.setLastName(customer.getLastName());
+        customerCreateDTO.setOtherNames(customer.getOtherNames());
+        customerCreateDTO.setTelephone(customer.getTelephone());
+
+        return customerCreateDTO;
+    }
+
     public static CustomerDTO toDTO(CustomerCreateDTO customer){
         if(customer == null) return null;
 
@@ -179,7 +193,7 @@ public class DTOMapper {
 
         if (loan.getCustomer() != null) {
             dto.setCustomerId(loan.getCustomer().getId());
-            dto.setCustomerName(loan.getCustomer().getCustomerName());
+            dto.setCustomerName(loan.getCustomer().getFirstName() + " " + loan.getCustomer().getLastName());
         }
 
         dto.setTotalPaid(loan.getTotalPaid());
@@ -237,7 +251,7 @@ public class DTOMapper {
         return payment;
     }
 
-    // Backward compatibility - keep old methods
+    // Backward compatibility - keeping old methods
     public static PaymentDTO toDTO(Payment payment) {
         if (payment == null) return null;
         PaymentDTO dto = new PaymentDTO();
@@ -250,7 +264,7 @@ public class DTOMapper {
             dto.setLoanReference(payment.getLoan().getReference());
             if (payment.getLoan().getCustomer() != null) {
                 dto.setCustomerId(payment.getLoan().getCustomer().getId());
-                dto.setCustomerName(payment.getLoan().getCustomer().getCustomerName());
+                dto.setCustomerName(payment.getLoan().getCustomer().getLastName());
             }
         }
 

@@ -4,16 +4,20 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.hibernate.annotations.SQLDelete;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@SQLDelete(sql = "update Customer SET deleted = true where id = ?")
 public class Customer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
+    private boolean deleted = Boolean.FALSE;
 
     @Column(unique = true)
     private String accountNumber;
@@ -150,6 +154,14 @@ public class Customer {
 
     public String getAccountNumber() {
         return accountNumber;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 
     public void setAccountNumber(String accountNumber) {

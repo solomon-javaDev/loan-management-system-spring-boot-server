@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -31,8 +32,19 @@ public class CustomerService {
     }
 
     public Result<CustomerResponseDTO> createCustomer(CustomerCreateDTO customerDto) {
-        if (customerDto == null || isBlank(customerDto.getFirstName()) || isBlank(customerDto.getLastName())) {
-            return Result.invalid("First name and last name are required.", null);
+        if(isBlank(customerDto.getFirstName())){
+            return Result.invalid("First name is required", null);
+                    }
+        if(isBlank(customerDto.getLastName())){
+            return Result.invalid("Last name is required", null);
+        }
+
+        if(customerDto.getTelephone().isEmpty()){
+            return Result.invalid("Telephone is required", null);
+        }
+
+        if(customerDto.getAddress().isBlank()){
+            return Result.invalid("Address is required", null);
         }
 
         Customer customer = DTOMapper.toEntity(customerDto);
@@ -85,6 +97,18 @@ public class CustomerService {
 
         repository.deleteById(customerDto.getId());
         return Result.success("Customer deleted successfully.", null);
+    }
+
+    public Result<Customer> restoreCustomer(int id){
+        Optional<Customer> customer = repository.findById(id);
+
+        if(customer.isPresent()){
+            customer.get().setDeleted(true);
+            return Result.success("Customer restored", customer.get());
+
+        }
+
+        return Result.notFound("Customer is not existing", null);
     }
 
     private boolean isBlank(String value) {
