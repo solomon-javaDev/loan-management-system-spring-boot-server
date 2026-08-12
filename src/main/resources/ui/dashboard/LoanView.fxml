@@ -81,6 +81,7 @@
                         <TableColumn fx:id="feesColumn" prefWidth="80.0" text="FEES" />
                         <TableColumn fx:id="statusColumn" prefWidth="90.0" text="STATUS" />
                         <TableColumn fx:id="fieldOfficerColumn" prefWidth="120.0" text="FIELD OFFICER" />
+                  <TableColumn fx:id="fullPayment" prefWidth="90.0" text="FULL PAYMENT" />
                     </columns>
                 </TableView>
             </center>

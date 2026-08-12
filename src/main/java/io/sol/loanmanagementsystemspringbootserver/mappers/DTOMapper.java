@@ -146,6 +146,7 @@ public class DTOMapper {
         dto.setTotalPaid(loan.getTotalPaid());
         dto.setOutstandingBalance(loan.getOutstandingBalance());
         dto.setTotalDue(loan.getTotalDue());
+        dto.setFullPayment(loan.getFullPayment());
         dto.setReference(loan.getReference());
 
         return dto;
@@ -199,6 +200,7 @@ public class DTOMapper {
         dto.setTotalPaid(loan.getTotalPaid());
         dto.setOutstandingBalance(loan.getOutstandingBalance());
         dto.setTotalDue(loan.getTotalDue());
+        dto.setFullPayment(loan.getFullPayment());
         dto.setReference(loan.getReference());
 
         return dto;
@@ -217,6 +219,7 @@ public class DTOMapper {
         loan.setCollateral(dto.getCollateral());
         loan.setFees(dto.getFees());
         loan.setStatus(dto.getStatus());
+        loan.setFullPayment(dto.getFullPayment());
         // Relations should be handled by the service layer
         return loan;
     }

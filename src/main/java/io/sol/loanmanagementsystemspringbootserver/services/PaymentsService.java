@@ -34,34 +34,24 @@ public class PaymentsService {
 
     @Transactional
     public Result<PaymentDTO> savePayment(LocalDate date, BigDecimal amountReceived, int loanID){
-        Result<LoanDTO> loanResult = loansService.getLoanById(loanID);
-        if (loanResult.isFailure()) {
-            return Result.notFound("Loan not found", null);
-        }
-        LoanDTO loanDto = loanResult.value();
-        // Since we need to update the loan status, we might still need the entity in the service layer
-        // But we should return a DTO to the controller.
-        
         if(amountReceived == null || amountReceived.compareTo(BigDecimal.ZERO) <= 0){
             return Result.invalid("Amount must be greater than zero", null);
         }
 
-        Payment payment = new Payment();
-        // We need the loan entity to set it on the payment
-        // Finding it again to avoid issues
         return loansService.getLoanEntityById(loanID).map(loan -> {
+             Payment payment = new Payment();
              payment.setLoan(loan);
              payment.setDate(date != null ? date : LocalDate.now());
              payment.setAmountReceived(amountReceived);
+             loan.addPayment(payment);
 
              Payment savedPayment = paymentRepository.save(payment);
         
-             // Update loan status
-             updateLoanStatus(loan);
-             // We need a way to save the loan entity back
+             updateLoanStatus(loan, savedPayment.getDate());
              loansService.saveLoanEntity(loan);
 
-             return Result.success("Successful payment", DTOMapper.toDTO(savedPayment));
+             String message = "Successful payment" + (loan.getStatus() == LoanStatus.CLOSED ? ", loan fully paid and cleared." : "");
+             return Result.success(message, DTOMapper.toDTO(savedPayment));
         }).orElse(Result.notFound("Loan not found", null));
     }
 
@@ -72,7 +62,7 @@ public class PaymentsService {
             payment.setAmountReceived(amountReceived);
             Payment updated = paymentRepository.save(payment);
             
-            updateLoanStatus(payment.getLoan());
+            updateLoanStatus(payment.getLoan(), updated.getDate());
             loansService.saveLoanEntity(payment.getLoan());
             
             return Result.success("Payment updated successfully", DTOMapper.toDTO(updated));
@@ -83,13 +73,22 @@ public class PaymentsService {
     public Result<Void> deletePayment(int paymentId) {
         return paymentRepository.findById(paymentId).map(payment -> {
             Loan loan = payment.getLoan();
+            loan.removePayment(payment);
             paymentRepository.delete(payment);
             
-            updateLoanStatus(loan);
+            updateLoanStatus(loan, getLastPaymentDate(loan));
             loansService.saveLoanEntity(loan);
             
             return Result.success("Payment deleted successfully", (Void) null);
         }).orElse(Result.notFound("Payment not found", null));
+    }
+
+    private LocalDate getLastPaymentDate(Loan loan) {
+        return loan.getPayments().stream()
+                .map(Payment::getDate)
+                .filter(date -> date != null)
+                .max(LocalDate::compareTo)
+                .orElse(null);
     }
 
     @Transactional(readOnly = true)
@@ -120,15 +119,21 @@ public class PaymentsService {
     }
 
     @Transactional(readOnly = true)
-    protected void updateLoanStatus(Loan loan) {
-        if(loan.getStatus() == LoanStatus.PENDING && loan.getTotalPaid().compareTo(BigDecimal.ZERO) > 0 ){
+    protected void updateLoanStatus(Loan loan, LocalDate lastPaymentDate) {
+        if (loan.getTotalPaid().compareTo(BigDecimal.ZERO) > 0 && loan.getStatus() == LoanStatus.PENDING) {
             loan.setStatus(LoanStatus.ACTIVE);
         }
 
-        if(loan.getOutstandingBalance().compareTo(BigDecimal.ZERO) <= 0){
+        if (loan.getOutstandingBalance().compareTo(BigDecimal.ZERO) <= 0) {
             loan.setStatus(LoanStatus.CLOSED);
-        } else if (loan.getStatus() == LoanStatus.CLOSED && loan.getOutstandingBalance().compareTo(BigDecimal.ZERO) > 0) {
-            loan.setStatus(LoanStatus.ACTIVE);
+            loan.setFullPayment(loan.getTotalPaid());
+            loan.setFullPaidDate(lastPaymentDate != null ? lastPaymentDate : LocalDate.now());
+        } else {
+            if (loan.getStatus() == LoanStatus.CLOSED) {
+                loan.setStatus(LoanStatus.ACTIVE);
+            }
+            loan.setFullPayment(null);
+            loan.setFullPaidDate(null);
         }
     }
 }

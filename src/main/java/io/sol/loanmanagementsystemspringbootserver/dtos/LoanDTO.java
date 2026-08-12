@@ -11,6 +11,7 @@ public class LoanDTO implements Serializable {
     private LocalDate maturityDate;
     private LocalDate fullPaidDate;
     private BigDecimal principal;
+    private BigDecimal fullPayment;
     private BigDecimal interestRate;
     private int tenor;
     private String collateral;
@@ -43,6 +44,14 @@ public class LoanDTO implements Serializable {
 
     public BigDecimal getPrincipal() { return principal; }
     public void setPrincipal(BigDecimal principal) { this.principal = principal; }
+
+    public BigDecimal getFullPayment() {
+        return fullPayment;
+    }
+
+    public void setFullPayment(BigDecimal fullPayment) {
+        this.fullPayment = fullPayment;
+    }
 
     public BigDecimal getInterestRate() { return interestRate; }
     public void setInterestRate(BigDecimal interestRate) { this.interestRate = interestRate; }

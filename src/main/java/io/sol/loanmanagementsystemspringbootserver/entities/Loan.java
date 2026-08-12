@@ -27,6 +27,7 @@ public class Loan {
     @Column(nullable = false)
     private BigDecimal principal;
 
+
     @Column(nullable = false)
     private BigDecimal interestRate;
 
@@ -57,6 +58,9 @@ public class Loan {
 
     @OneToMany(mappedBy = "loan", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<Payment> payments = new ArrayList<>();
+
+    @Column(nullable = true)
+    private BigDecimal fullPayment;
 
     public Loan() {
 
@@ -108,6 +112,24 @@ public class Loan {
 
     public void setPayments(List<Payment> payments) {
         this.payments = payments;
+    }
+
+    public void addPayment(Payment payment) {
+        if (payment == null) {
+            return;
+        }
+        payments.add(payment);
+        payment.setLoan(this);
+    }
+
+    public void removePayment(Payment payment) {
+        if (payment == null) {
+            return;
+        }
+        payments.remove(payment);
+        if (payment.getLoan() == this) {
+            payment.setLoan(null);
+        }
     }
 
     public int getId() {
@@ -204,6 +226,14 @@ public class Loan {
 
     public void setGuarantor(Guarantor guarantor) {
         this.guarantor = guarantor;
+    }
+
+    public BigDecimal getFullPayment() {
+        return fullPayment;
+    }
+
+    public void setFullPayment(BigDecimal fullPayment) {
+        this.fullPayment = fullPayment;
     }
 
     public String getReference() {

@@ -10,6 +10,7 @@ public class LoanResponseDTO implements Serializable {
     private LocalDate startDate;
     private LocalDate maturityDate;
     private LocalDate fullPaidDate;
+    private BigDecimal fullPayment;
     private BigDecimal principal;
     private BigDecimal interestRate;
     private int tenor;
@@ -92,5 +93,9 @@ public class LoanResponseDTO implements Serializable {
     @Override
     public String toString() {
         return reference != null ? reference : String.valueOf(id);
+    }
+
+    public void setFullPayment(BigDecimal fullPayment) {
+        this.fullPayment = fullPayment;
     }
 }

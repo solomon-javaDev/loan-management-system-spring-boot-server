@@ -89,6 +89,9 @@ public class LoansController {
     private TableColumn<LoanDTO, String> fieldOfficerColumn;
 
     @FXML
+    private TableColumn<LoanDTO, BigDecimal> fullPayment;
+
+    @FXML
     private DatePicker startDatePicker;
 
     @FXML
@@ -185,7 +188,6 @@ public class LoansController {
         LoanDTO loan = new LoanDTO();
         loan.setStartDate(startDatePicker.getValue());
         loan.setMaturityDate(maturityDatePicker.getValue());
-        loan.setFullPaidDate(startDatePicker.getValue());
         loan.setPrincipal(parseBigDecimal(principalField.getText()));
         loan.setInterestRate(parseBigDecimal(interestRateField.getText()));
         loan.setTenor(parseInt(tenorField.getText()));
@@ -310,6 +312,7 @@ public class LoansController {
         collateralColumn.setCellValueFactory(new PropertyValueFactory<>("collateral"));
         feesColumn.setCellValueFactory(new PropertyValueFactory<>("fees"));
         statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
+        fullPayment.setCellValueFactory(new PropertyValueFactory<>("fullPayment"));
 
         fieldOfficerColumn.setCellValueFactory(cellData -> {
             String name = cellData.getValue().getFieldOfficerName();
