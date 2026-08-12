@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -109,7 +110,7 @@ public class LoansController {
     private TextField feesField;
 
     @FXML
-    private TextField statusField;
+    private ComboBox<LoanStatus> statusField;
 
     @FXML
     private ComboBox<EmployeeDTO> fieldOfficerField;
@@ -152,6 +153,16 @@ public class LoansController {
                 e -> e.getFirstName() + " " + e.getLastName()
                 );
 
+        statusField.setItems(FXCollections.observableArrayList(LoanStatus.values()));
+        statusField.setValue(LoanStatus.PENDING);
+
+        maturityDatePicker.valueProperty().addListener((obs, oldValue, newValue) -> computeTenorFromDates());
+        startDatePicker.valueProperty().addListener((obs, oldValue, newValue) -> computeTenorFromDates());
+
+        saveButton.disableProperty().bind(loansTable.getSelectionModel().selectedItemProperty().isNotNull());
+        updateButton.disableProperty().bind(loansTable.getSelectionModel().selectedItemProperty().isNull());
+        deleteButton.disableProperty().bind(loansTable.getSelectionModel().selectedItemProperty().isNull());
+
         loadLoans();
         messageLabel.setText("Loans loaded successfully");
 
@@ -180,7 +191,7 @@ public class LoansController {
         loan.setTenor(parseInt(tenorField.getText()));
         loan.setCollateral(collateralField.getText() == null ? "" : collateralField.getText().trim());
         loan.setFees(parseBigDecimal(feesField.getText()));
-        loan.setStatus(LoanStatus.valueOf(statusField.getText() == null ? "" : statusField.getText().trim()));
+        loan.setStatus(statusField.getValue() != null ? statusField.getValue() : LoanStatus.PENDING);
         if (fieldOfficerField.getValue() != null) {
             loan.setFieldOfficerId(fieldOfficerField.getValue().getId());
             loan.setFieldOfficerName(fieldOfficerField.getValue().toString());
@@ -200,7 +211,7 @@ public class LoansController {
         tenorField.setText(String.valueOf(loan.getTenor()));
         collateralField.setText(loan.getCollateral());
         feesField.setText(loan.getFees() == null ? "" : loan.getFees().toPlainString());
-        statusField.setText(loan.getStatus() != null ? loan.getStatus().toString() : "");
+        statusField.setValue(loan.getStatus() != null ? loan.getStatus() : LoanStatus.PENDING);
 
         if (loan.getFieldOfficerId() != null) {
              // Find in combo box
@@ -249,7 +260,10 @@ public class LoansController {
         }
 
         LoanDTO loan = buildLoanFromForm();
-        loan.setId(selectedLoan.getId());
+        loan.setId(selectedLoan.getId());        if (loansTable.getSelectionModel().getSelectedItem() != null) {
+            messageLabel.setText("Clear the current selection before creating a new loan.");
+            return;
+        }
         Result<LoanDTO> result = loansService.updateLoan(loan);
         messageLabel.setText(result.message());
 
@@ -299,7 +313,7 @@ public class LoansController {
 
         fieldOfficerColumn.setCellValueFactory(cellData -> {
             String name = cellData.getValue().getFieldOfficerName();
-            return new SimpleStringProperty(name != null ? name : "null");
+            return new SimpleStringProperty(name != null ? name : "");
         });
     }
 
@@ -311,10 +325,35 @@ public class LoansController {
         tenorField.clear();
         collateralField.clear();
         feesField.clear();
-        statusField.clear();
+        statusField.setValue(LoanStatus.PENDING);
         fieldOfficerField.getSelectionModel().clearSelection(); // Reset dropdown state
         loansTable.getSelectionModel().clearSelection();
         loansTable.getSelectionModel().clearSelection();
+    }
+
+    private void computeTenorFromDates() {
+        LocalDate start = startDatePicker.getValue();
+        LocalDate maturity = maturityDatePicker.getValue();
+
+        if (start == null || maturity == null) {
+            tenorField.clear();
+            return;
+        }
+
+        if (maturity.isBefore(start)) {
+            tenorField.clear();
+            messageLabel.setText("Maturity date cannot be earlier than the start date.");
+            return;
+        }
+
+        int months = Period.between(start, maturity).getYears() * 12 + Period.between(start, maturity).getMonths();
+        int days = Period.between(start, maturity).getDays();
+        if (days > 0) {
+            months += 1;
+        }
+
+        tenorField.setText(String.valueOf(Math.max(months, 0)));
+        messageLabel.setText("");
     }
 
     private LocalDate parseDate(String value) {

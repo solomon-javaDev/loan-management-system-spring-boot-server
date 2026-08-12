@@ -52,7 +52,7 @@
                         <Insets left="5.0" top="5.0" />
                      </padding>
                   </Button>
-                  <Button fx:id="applicationsButton" contentDisplay="CENTER" maxWidth="1.7976931348623157E308" minWidth="-Infinity" mnemonicParsing="false" text="APPLICATIONS" textAlignment="CENTER" VBox.vgrow="ALWAYS">
+                  <Button fx:id="applicationsButton" contentDisplay="CENTER" maxWidth="1.7976931348623157E308" minWidth="-Infinity" mnemonicParsing="false" onAction="#showApplicationsView" text="APPLICATIONS" textAlignment="CENTER" VBox.vgrow="ALWAYS">
                      <VBox.margin>
                         <Insets left="5.0" top="5.0" />
                      </VBox.margin>
@@ -68,7 +68,7 @@
                         <Insets left="5.0" top="5.0" />
                      </padding>
                   </Button>
-                  <Button fx:id="reportsButton" contentDisplay="CENTER" maxWidth="1.7976931348623157E308" minWidth="-Infinity" mnemonicParsing="false" text="REPORTS" textAlignment="CENTER" VBox.vgrow="ALWAYS">
+                  <Button fx:id="reportsButton" contentDisplay="CENTER" maxWidth="1.7976931348623157E308" minWidth="-Infinity" mnemonicParsing="false" onAction="#showReportsView" text="REPORTS" textAlignment="CENTER" VBox.vgrow="ALWAYS">
                      <VBox.margin>
                         <Insets left="5.0" top="5.0" />
                      </VBox.margin>
@@ -76,7 +76,7 @@
                         <Insets left="5.0" top="5.0" />
                      </padding>
                   </Button>
-                  <Button fx:id="settingsButton" contentDisplay="CENTER" maxWidth="1.7976931348623157E308" minWidth="-Infinity" mnemonicParsing="false" text="SETTINGS" textAlignment="CENTER" VBox.vgrow="ALWAYS">
+                  <Button fx:id="settingsButton" contentDisplay="CENTER" maxWidth="1.7976931348623157E308" minWidth="-Infinity" mnemonicParsing="false" onAction="#showSettingsView" text="SETTINGS" textAlignment="CENTER" VBox.vgrow="ALWAYS">
                      <VBox.margin>
                         <Insets left="5.0" top="5.0" />
                      </VBox.margin>

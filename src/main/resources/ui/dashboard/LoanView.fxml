@@ -47,7 +47,7 @@
                                 <TextField fx:id="tenorField" GridPane.columnIndex="1" GridPane.rowIndex="5" />
                                 <TextField fx:id="collateralField" GridPane.columnIndex="1" GridPane.rowIndex="6" />
                                 <TextField fx:id="feesField" GridPane.columnIndex="1" GridPane.rowIndex="7" />
-                                <TextField fx:id="statusField" GridPane.columnIndex="1" GridPane.rowIndex="8" />
+                                <ComboBox fx:id="statusField" prefHeight="25.0" prefWidth="427.0" GridPane.columnIndex="1" GridPane.rowIndex="8" />
                         <Label layoutX="10.0" layoutY="321.0" text="CUSTOMER NAME" GridPane.rowIndex="2" />
                         <ComboBox fx:id="fieldOfficerField" prefHeight="25.0" prefWidth="426.0" GridPane.columnIndex="1" GridPane.hgrow="SOMETIMES" GridPane.rowIndex="9" GridPane.vgrow="ALWAYS" />
                         <ComboBox fx:id="customerList" prefHeight="25.0" prefWidth="425.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />

@@ -132,11 +132,31 @@ public class DashboardController {
 
     @FXML
     public void showReportsView(){
-        // Logic for reports view navigation
+        try{
+            Parent reportsView = stageManager.loadView("/ui/dashboard/ReportsView.fxml");
+            mainContent.getChildren().setAll(reportsView);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @FXML
     public void showSettingsView(){
-        // Logic for settings view navigation
+        try{
+            Parent settingsView = stageManager.loadView("/ui/dashboard/SettingsView.fxml");
+            mainContent.getChildren().setAll(settingsView);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
+    public void showApplicationsView(){
+        try{
+            Parent applicationsView = stageManager.loadView("/ui/dashboard/ApplicationsView.fxml");
+            mainContent.getChildren().setAll(applicationsView);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

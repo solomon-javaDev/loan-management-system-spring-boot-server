@@ -5,7 +5,9 @@ import io.sol.loanmanagementsystemspringbootserver.mappers.DTOMapper;
 import io.sol.loanmanagementsystemspringbootserver.repositories.EmployeeRepository;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.entities.Customer;
+import io.sol.loanmanagementsystemspringbootserver.entities.Employee;
 import io.sol.loanmanagementsystemspringbootserver.entities.Loan;
+import io.sol.loanmanagementsystemspringbootserver.entities.LoanStatus;
 import io.sol.loanmanagementsystemspringbootserver.repositories.CustomerRepository;
 import io.sol.loanmanagementsystemspringbootserver.repositories.LoansRepository;
 import org.springframework.stereotype.Service;
@@ -75,7 +77,20 @@ public class LoansService {
         }
 
         Customer customer = customerOptional.get();
+
+        boolean hasExistingLoan = customer.getLoans().stream()
+                .anyMatch(existingLoan -> existingLoan.getStatus() == LoanStatus.ACTIVE || existingLoan.getStatus() == LoanStatus.PENDING);
+        if (hasExistingLoan) {
+            return Result.invalid("This customer already has an active or pending loan. Issue a new loan only after the existing loan is settled or closed.", null);
+        }
+
         Loan loan = DTOMapper.toEntity(loanDto);
+        if (loanDto.getFieldOfficerId() != null) {
+            Optional<Employee> officer = employeeRepository.findById(loanDto.getFieldOfficerId());
+            if (officer.isPresent()) {
+                loan.setFieldOfficer(officer.get());
+            }
+        }
 
         // 3. Sync the bidirectional object graph
         customer.addLoan(loan);
@@ -107,7 +122,12 @@ public class LoansService {
                     existingLoan.setTenor(loanDto.getTenor());
                     existingLoan.setCollateral(loanDto.getCollateral());
                     existingLoan.setFees(loanDto.getFees());
-                    existingLoan.setStatus(loanDto.getStatus());
+                    existingLoan.setStatus(loanDto.getStatus() != null ? loanDto.getStatus() : LoanStatus.PENDING);
+
+                    if (loanDto.getFieldOfficerId() != null) {
+                        Optional<Employee> officer = employeeRepository.findById(loanDto.getFieldOfficerId());
+                        officer.ifPresent(existingLoan::setFieldOfficer);
+                    }
                     // Relations update if needed, but usually IDs stay the same
                     return Result.success("Loan updated successfully.", DTOMapper.toDTO(loanRepository.save(existingLoan)));
                 })
@@ -148,7 +168,15 @@ public class LoansService {
             return Result.invalid("Maturity date cannot be earlier than the start date.", null);
         }
 
-        if(loan.getFieldOfficerName().isBlank()){
+        if (loan.getTenor() < 0) {
+            return Result.invalid("Tenor cannot be negative. Check your maturity date.", null);
+        }
+
+        if (loan.getStatus() == null) {
+            loan.setStatus(LoanStatus.PENDING);
+        }
+
+        if (loan.getFieldOfficerId() == null || loan.getFieldOfficerName() == null || loan.getFieldOfficerName().isBlank()) {
             return Result.invalid("Field Officer required", null);
         }
 
