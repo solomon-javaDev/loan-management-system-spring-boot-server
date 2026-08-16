@@ -126,13 +126,11 @@ public class PaymentsService {
 
         if (loan.getOutstandingBalance().compareTo(BigDecimal.ZERO) <= 0) {
             loan.setStatus(LoanStatus.CLOSED);
-            loan.setFullPayment(loan.getTotalPaid());
             loan.setFullPaidDate(lastPaymentDate != null ? lastPaymentDate : LocalDate.now());
         } else {
             if (loan.getStatus() == LoanStatus.CLOSED) {
                 loan.setStatus(LoanStatus.ACTIVE);
             }
-            loan.setFullPayment(null);
             loan.setFullPaidDate(null);
         }
     }

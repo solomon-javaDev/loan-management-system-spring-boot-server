@@ -98,6 +98,17 @@ public class Loan {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    @PrePersist
+    @PreUpdate
+    public void calculateFullpayment(){
+        if(this.principal != null || this.interestRate != null){
+            BigDecimal interestAmount = this.principal.multiply(this.interestRate);
+            this.fullPayment = this.principal.add(interestAmount);
+        }
+        else {
+            this.fullPayment = BigDecimal.ZERO;
+        }
+    }
     public BigDecimal getOutstandingBalance(){
         return getTotalDue().subtract(getTotalPaid());
     }
@@ -232,9 +243,7 @@ public class Loan {
         return fullPayment;
     }
 
-    public void setFullPayment(BigDecimal fullPayment) {
-        this.fullPayment = fullPayment;
-    }
+
 
     public String getReference() {
         String statusPart = status != null ? status.toString() : "";

@@ -219,7 +219,6 @@ public class DTOMapper {
         loan.setCollateral(dto.getCollateral());
         loan.setFees(dto.getFees());
         loan.setStatus(dto.getStatus());
-        loan.setFullPayment(dto.getFullPayment());
         // Relations should be handled by the service layer
         return loan;
     }

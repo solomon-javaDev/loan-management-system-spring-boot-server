@@ -9,6 +9,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.chart.LineChart;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
 
@@ -46,7 +47,7 @@ public class ReportsController {
     }
 
     private void loadAgingAnalysis() {
-        Map<String, java.math.BigDecimal> aging = reportService.getAgingAnalysis();
+        Map<String, BigDecimal> aging = reportService.getAgingAnalysis();
         agingBox.getChildren().clear();
         aging.forEach((k,v) -> agingBox.getChildren().add(new Label(k + ": " + v)));
     }
