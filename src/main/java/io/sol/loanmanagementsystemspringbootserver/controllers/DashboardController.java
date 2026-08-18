@@ -150,13 +150,4 @@ public class DashboardController {
         }
     }
 
-    @FXML
-    public void showApplicationsView(){
-        try{
-            Parent applicationsView = stageManager.loadView("/ui/dashboard/ApplicationsView.fxml");
-            mainContent.getChildren().setAll(applicationsView);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
 }

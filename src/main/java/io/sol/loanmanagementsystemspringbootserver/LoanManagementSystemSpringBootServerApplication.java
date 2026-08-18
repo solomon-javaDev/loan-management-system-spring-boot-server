@@ -4,10 +4,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import javax.sql.DataSource;
 
 @SpringBootApplication
+@EnableScheduling
 public class LoanManagementSystemSpringBootServerApplication {
     public static void main(String[] args) {
         FxMainApp.launch(FxMainApp.class, args);

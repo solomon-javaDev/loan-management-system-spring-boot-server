@@ -1,11 +1,14 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
+import io.sol.loanmanagementsystemspringbootserver.services.SystemSettingService;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SettingsController {
+
+    private final SystemSettingService settingService;
 
     @FXML
     private TextField adminEmailsField;
@@ -22,16 +25,34 @@ public class SettingsController {
     @FXML
     private Label messageLabel;
 
+    public SettingsController(SystemSettingService settingService) {
+        this.settingService = settingService;
+    }
+
     @FXML
     public void initialize() {
         agingFreq.getItems().addAll("Daily","Every 3 days","Weekly","Monthly");
-        dailyReportCheckbox.setSelected(true);
-        dailyTimeField.setText("07:00");
+        
+        String savedEmails = settingService.getSetting("report.emails", "");
+        adminEmailsField.setText(savedEmails);
+        
+        String reportEnabled = settingService.getSetting("report.enabled", "true");
+        dailyReportCheckbox.setSelected(Boolean.parseBoolean(reportEnabled));
+        
+        String reportTime = settingService.getSetting("report.time", "07:00");
+        dailyTimeField.setText(reportTime);
+        
+        String agingF = settingService.getSetting("report.aging.freq", "Daily");
+        agingFreq.setValue(agingF);
     }
 
     @FXML
     private void handleSave() {
-        // TODO: persist into settings table/entity. For now just show a message
-        messageLabel.setText("Settings saved (not persisted).");
+        settingService.saveSetting("report.emails", adminEmailsField.getText());
+        settingService.saveSetting("report.enabled", String.valueOf(dailyReportCheckbox.isSelected()));
+        settingService.saveSetting("report.time", dailyTimeField.getText());
+        settingService.saveSetting("report.aging.freq", agingFreq.getValue());
+        
+        messageLabel.setText("Settings saved successfully.");
     }
 }

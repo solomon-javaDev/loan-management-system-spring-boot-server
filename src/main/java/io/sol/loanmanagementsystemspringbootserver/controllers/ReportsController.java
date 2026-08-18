@@ -1,5 +1,6 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
+import io.sol.loanmanagementsystemspringbootserver.services.DailyReportScheduler;
 import io.sol.loanmanagementsystemspringbootserver.services.ReportService;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import javafx.fxml.FXML;
@@ -17,6 +18,7 @@ import java.util.Map;
 public class ReportsController {
 
     private final ReportService reportService;
+    private final DailyReportScheduler reportScheduler;
 
     @FXML
     private VBox dailySummaryBox;
@@ -30,8 +32,9 @@ public class ReportsController {
     @FXML
     private Label messageLabel;
 
-    public ReportsController(ReportService reportService) {
+    public ReportsController(ReportService reportService, DailyReportScheduler reportScheduler) {
         this.reportService = reportService;
+        this.reportScheduler = reportScheduler;
     }
 
     @FXML
@@ -61,7 +64,12 @@ public class ReportsController {
 
     @FXML
     private void handleSendDaily() {
-        messageLabel.setText("Send daily report not yet implemented.");
+        try {
+            reportScheduler.sendDailyReport();
+            messageLabel.setText("Daily report email sent (if configured).");
+        } catch (Exception e) {
+            messageLabel.setText("Failed to send report: " + e.getMessage());
+        }
     }
 
     @FXML

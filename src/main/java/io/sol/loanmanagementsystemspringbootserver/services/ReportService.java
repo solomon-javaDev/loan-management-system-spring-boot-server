@@ -128,7 +128,42 @@ public class ReportService {
                 .filter(l -> l.getFieldOfficer() != null)
                 .collect(Collectors.groupingBy(
                         l -> l.getFieldOfficer().getFirstName() + " " + l.getFieldOfficer().getLastName(),
-                        Collectors.averagingDouble(l -> l.getTotalPaid().doubleValue() / l.getTotalDue().doubleValue())
+                        Collectors.averagingDouble(l -> {
+                            BigDecimal due = l.getTotalDue();
+                            if (due == null || due.compareTo(BigDecimal.ZERO) == 0) return 0.0;
+                            return l.getTotalPaid().doubleValue() / due.doubleValue();
+                        })
                 ));
+    }
+
+    public Map<String, Object> compileDailyReportData(LocalDate date) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("date", date);
+        
+        // 1. Daily Performance
+        data.put("dailyCash", getDailyCashReport(date));
+        
+        // 2. Aging Analysis
+        data.put("aging", getAgingAnalysis());
+        
+        // 3. Employee Performance
+        data.put("employeePerformance", getFieldOfficerWorkRate());
+        
+        // 4. Loans Given Out (Today)
+        List<Loan> todayLoans = loansRepository.findAll().stream()
+                .filter(l -> date.equals(l.getStartDate()))
+                .collect(Collectors.toList());
+        data.put("todayLoans", todayLoans.stream().map(DTOMapper::toDTO).collect(Collectors.toList()));
+        
+        BigDecimal totalDisbursed = todayLoans.stream()
+                .map(Loan::getPrincipal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        data.put("totalDisbursed", totalDisbursed);
+
+        // 5. Expenses (Placeholder as requested, but structured)
+        // In a real system, we'd have an ExpenseRepository
+        data.put("totalExpenses", BigDecimal.ZERO); 
+        
+        return data;
     }
 }

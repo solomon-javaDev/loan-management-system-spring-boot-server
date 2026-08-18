@@ -1,14 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
+<?import javafx.scene.chart.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="io.sol.loanmanagementsystemspringbootserver.controllers.ReportsController"
-            prefHeight="400.0" prefWidth="600.0">
-
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.sol.loanmanagementsystemspringbootserver.controllers.ReportsController">
+   <children>
+      <BorderPane prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <center>
+            <LineChart fx:id="trendChart" BorderPane.alignment="CENTER">
+              <xAxis>
+                <CategoryAxis side="BOTTOM" />
+              </xAxis>
+              <yAxis>
+                <NumberAxis side="LEFT" />
+              </yAxis>
+            </LineChart>
+         </center>
+         <bottom>
+            <VBox fx:id="agingBox" prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
+               <children>
+                  <Label fx:id="messageLabel" text="ERROR" />
+               </children></VBox>
+         </bottom>
+         <left>
+            <VBox fx:id="dailySummaryBox" prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER" />
+         </left>
+         <top>
+            <ButtonBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+              <buttons>
+                <Button mnemonicParsing="false" text="SAVE" />
+                  <Button mnemonicParsing="false" onAction="#handleRefresh" text="REFRESH" />
+                  <Button layoutX="449.0" layoutY="17.0" mnemonicParsing="false" text="SEND" />
+              </buttons>
+            </ButtonBar>
+         </top>
+      </BorderPane>
+   </children>
 </AnchorPane>
