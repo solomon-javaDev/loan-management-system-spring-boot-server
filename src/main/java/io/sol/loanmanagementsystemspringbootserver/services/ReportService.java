@@ -9,6 +9,8 @@ import io.sol.loanmanagementsystemspringbootserver.entities.Loan;
 import io.sol.loanmanagementsystemspringbootserver.entities.Payment;
 import io.sol.loanmanagementsystemspringbootserver.repositories.LoansRepository;
 import io.sol.loanmanagementsystemspringbootserver.repositories.PaymentRepository;
+import io.sol.loanmanagementsystemspringbootserver.mailing.EmailDetails;
+import io.sol.loanmanagementsystemspringbootserver.mailing.EmailsService;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -26,10 +28,65 @@ public class ReportService {
 
     private final LoansRepository loansRepository;
     private final PaymentRepository paymentRepository;
+    private final EmailsService emailsService;
+    private final SystemSettingService settingService;
 
-    public ReportService(LoansRepository loansRepository, PaymentRepository paymentRepository) {
+    public ReportService(LoansRepository loansRepository, PaymentRepository paymentRepository, 
+                         EmailsService emailsService, SystemSettingService settingService) {
         this.loansRepository = loansRepository;
         this.paymentRepository = paymentRepository;
+        this.emailsService = emailsService;
+        this.settingService = settingService;
+    }
+
+    public String sendDailyReport(LocalDate date) {
+        String recipientStr = settingService.getSetting("report.emails", "");
+        if (recipientStr.isBlank()) {
+            return "No recipient emails configured.";
+        }
+
+        Map<String, Object> data = compileDailyReportData(date);
+        String reportText = formatReportAsText(data);
+
+        String[] recipients = recipientStr.split("[,;]");
+        StringBuilder results = new StringBuilder();
+        for (String recipient : recipients) {
+            EmailDetails details = new EmailDetails();
+            details.setRecipient(recipient.trim());
+            details.setSubject("Daily Business Report - " + date);
+            details.setBody(reportText);
+            results.append(emailsService.sendSimpleMail(details)).append(" (").append(recipient.trim()).append("); ");
+        }
+
+        return results.toString();
+    }
+
+    private String formatReportAsText(Map<String, Object> data) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Daily Performance Report\n");
+        sb.append("Date: ").append(data.get("date")).append("\n\n");
+
+        sb.append("--- Daily Cash Summary ---\n");
+        Map<String, Object> dailyCash = (Map<String, Object>) data.get("dailyCash");
+        dailyCash.forEach((k, v) -> sb.append(k).append(": ").append(v).append("\n"));
+
+        sb.append("\n--- Aging Analysis ---\n");
+        Map<String, BigDecimal> aging = (Map<String, BigDecimal>) data.get("aging");
+        aging.forEach((k, v) -> sb.append(k).append(": ").append(v).append("\n"));
+
+        sb.append("\n--- Employee Performance (Work Rate) ---\n");
+        Map<String, Double> perf = (Map<String, Double>) data.get("employeePerformance");
+        perf.forEach((k, v) -> sb.append(k).append(": ").append(String.format("%.2f%%", v * 100)).append("\n"));
+
+        sb.append("\n--- Loans Disbursed Today ---\n");
+        sb.append("Total Amount Disbursed: ").append(data.get("totalDisbursed")).append("\n");
+        List<LoanDTO> loans = (List<LoanDTO>) data.get("todayLoans");
+        sb.append("Number of Loans: ").append(loans.size()).append("\n");
+
+        sb.append("\n--- Expenses ---\n");
+        sb.append("Total Expenses: ").append(data.get("totalExpenses")).append("\n");
+
+        return sb.toString();
     }
 
     public Map<String, Object> getDailyCashReport(LocalDate date) {

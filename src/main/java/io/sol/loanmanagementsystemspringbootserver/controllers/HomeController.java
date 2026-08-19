@@ -7,6 +7,7 @@ import io.sol.loanmanagementsystemspringbootserver.entities.LoanStatus;
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
 import io.sol.loanmanagementsystemspringbootserver.services.LoansService;
 import io.sol.loanmanagementsystemspringbootserver.services.PaymentsService;
+import io.sol.loanmanagementsystemspringbootserver.services.ReportService;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import org.springframework.context.annotation.Lazy;
@@ -33,6 +34,7 @@ public class HomeController {
     private final LoansService loansService;
     private final CustomerService customerService;
     private final PaymentsService paymentsService;
+    private final ReportService reportService;
     private final DashboardController dashboardController;
 
     @FXML
@@ -74,10 +76,12 @@ public class HomeController {
 
     public HomeController(LoansService loansService, CustomerService customerService, 
                           PaymentsService paymentsService,
+                          ReportService reportService,
                           @Lazy DashboardController dashboardController) {
         this.loansService = loansService;
         this.customerService = customerService;
         this.paymentsService = paymentsService;
+        this.reportService = reportService;
         this.dashboardController = dashboardController;
     }
 
@@ -168,7 +172,7 @@ public class HomeController {
 
     @FXML
     private void handleSendEmail() {
-        System.out.println("Sending Email summary...");
+        reportService.sendDailyReport(LocalDate.now());
     }
 
     @FXML

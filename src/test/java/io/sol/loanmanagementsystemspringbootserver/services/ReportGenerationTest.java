@@ -2,8 +2,9 @@ package io.sol.loanmanagementsystemspringbootserver.services;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.mail.javamail.JavaMailSender;
 
 import java.time.LocalDate;
@@ -17,7 +18,7 @@ public class ReportGenerationTest {
     @Autowired
     private ReportService reportService;
 
-    @MockBean
+    @MockitoBean
     private JavaMailSender mailSender;
 
     @Test
