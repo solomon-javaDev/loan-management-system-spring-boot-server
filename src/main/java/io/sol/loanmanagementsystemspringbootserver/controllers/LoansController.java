@@ -3,12 +3,13 @@ package io.sol.loanmanagementsystemspringbootserver.controllers;
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.EmployeeDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.LoanDTO;
-import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.entities.LoanStatus;
 import io.sol.loanmanagementsystemspringbootserver.entities.Role;
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
 import io.sol.loanmanagementsystemspringbootserver.services.EmployeeService;
 import io.sol.loanmanagementsystemspringbootserver.services.LoansService;
+import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UiControlUtilities;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -23,6 +24,7 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Controller class for managing loan-related operations in a UI context.
@@ -240,12 +242,23 @@ public class LoansController {
     private void handleSaveLoan() {
         LoanDTO loan = buildLoanFromForm();
         if (loan.getCustomerId() == null) {
-            messageLabel.setText("Select a customer first.");
+            UIHelper.showError("Error", "Select a customer first.");
             return;
         }
-        Result<LoanDTO> result = loansService.issueLoan(loan.getCustomerId(), loan);
-        messageLabel.setText(result.message());
+        
+        if (loan.getStartDate() != null && !loan.getStartDate().equals(LocalDate.now())) {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Loan Date Warning");
+            alert.setHeaderText("Non-Standard Loan Date");
+            alert.setContentText("The loan date is not today. This requires admin approval. Do you wish to proceed?");
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isEmpty() || result.get() != ButtonType.OK) {
+                return;
+            }
+        }
 
+        Result<LoanDTO> result = loansService.issueLoan(loan.getCustomerId(), loan);
+        UIHelper.updateStatusLabel(messageLabel, result);
 
         if (result.isSuccess()) {
             loadLoans();
@@ -257,17 +270,33 @@ public class LoansController {
     private void handleUpdateLoan() {
         LoanDTO selectedLoan = loansTable.getSelectionModel().getSelectedItem();
         if (selectedLoan == null) {
-            messageLabel.setText("Select a loan from the table first.");
+            UIHelper.showError("Error", "Select a loan from the table first.");
             return;
         }
 
         LoanDTO loan = buildLoanFromForm();
-        loan.setId(selectedLoan.getId());        if (loansTable.getSelectionModel().getSelectedItem() != null) {
-            messageLabel.setText("Clear the current selection before creating a new loan.");
-            return;
+        loan.setId(selectedLoan.getId());
+        
+        boolean sensitiveChange = !loan.getPrincipal().equals(selectedLoan.getPrincipal()) ||
+                                  !loan.getInterestRate().equals(selectedLoan.getInterestRate()) ||
+                                  !loan.getFees().equals(selectedLoan.getFees()) ||
+                                  !loan.getStartDate().equals(selectedLoan.getStartDate());
+        
+        if (sensitiveChange) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Sensitive Update Warning");
+            alert.setHeaderText("Critical Parameter Change Detected");
+            alert.setContentText("You are attempting to change critical loan parameters (Principal, Interest Rate, Fees, or Date). " +
+                                "This action will be permanently recorded and an alert will be sent to the administrator. " +
+                                "Do you want to proceed?");
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isEmpty() || result.get() != ButtonType.OK) {
+                return;
+            }
         }
+
         Result<LoanDTO> result = loansService.updateLoan(loan);
-        messageLabel.setText(result.message());
+        UIHelper.updateStatusLabel(messageLabel, result);
 
         if (result.isSuccess()) {
             loadLoans();

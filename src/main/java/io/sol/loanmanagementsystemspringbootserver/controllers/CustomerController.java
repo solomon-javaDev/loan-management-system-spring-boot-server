@@ -3,8 +3,9 @@ package io.sol.loanmanagementsystemspringbootserver.controllers;
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerCreateDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerResponseDTO;
-import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
+import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -133,7 +134,7 @@ public class CustomerController {
         createDTO.setAddress(customer.getAddress());
 
         Result<CustomerResponseDTO> result = customerService.createCustomer(createDTO);
-        messageLabel.setText(result.message());
+        UIHelper.updateStatusLabel(messageLabel, result);
 
         if (result.isSuccess()) {
             loadCustomers();
@@ -153,7 +154,7 @@ public class CustomerController {
         CustomerDTO updatedCustomer = buildCustomerFromForm();
         updatedCustomer.setId(selectedCustomer.getId());
         Result<CustomerResponseDTO> result = customerService.updateCustomer(updatedCustomer);
-        messageLabel.setText(result.message());
+        UIHelper.updateStatusLabel(messageLabel, result);
 
         if (result.isSuccess()) {
             loadCustomers();
@@ -171,7 +172,7 @@ public class CustomerController {
         }
 
         Result<Void> result = customerService.deleteCustomer(selectedCustomer);
-        messageLabel.setText(result.message());
+        UIHelper.updateStatusLabel(messageLabel, result);
 
         if (result.isSuccess()) {
             loadCustomers();

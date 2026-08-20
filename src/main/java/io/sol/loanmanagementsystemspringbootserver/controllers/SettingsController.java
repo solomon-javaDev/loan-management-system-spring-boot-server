@@ -1,6 +1,8 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
 import io.sol.loanmanagementsystemspringbootserver.services.SystemSettingService;
+import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import org.springframework.stereotype.Component;
@@ -48,11 +50,15 @@ public class SettingsController {
 
     @FXML
     private void handleSave() {
-        settingService.saveSetting("report.emails", adminEmailsField.getText());
-        settingService.saveSetting("report.enabled", String.valueOf(dailyReportCheckbox.isSelected()));
-        settingService.saveSetting("report.time", dailyTimeField.getText());
-        settingService.saveSetting("report.aging.freq", agingFreq.getValue());
-        
-        messageLabel.setText("Settings saved successfully.");
+        try {
+            settingService.saveSetting("report.emails", adminEmailsField.getText());
+            settingService.saveSetting("report.enabled", String.valueOf(dailyReportCheckbox.isSelected()));
+            settingService.saveSetting("report.time", dailyTimeField.getText());
+            settingService.saveSetting("report.aging.freq", agingFreq.getValue());
+            
+            UIHelper.updateStatusLabel(messageLabel, Result.success("Settings saved successfully.", null));
+        } catch (Exception e) {
+            UIHelper.updateStatusLabel(messageLabel, Result.invalid("Error saving settings: " + e.getMessage(), null));
+        }
     }
 }

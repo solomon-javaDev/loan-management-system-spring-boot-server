@@ -1,7 +1,9 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
+import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.utilities.StageManager;
 import io.sol.loanmanagementsystemspringbootserver.services.SearchService;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -72,7 +74,12 @@ public class DashboardController {
 
     @FXML
     public void initialize() {
-        searchService.searchQueryProperty().bindBidirectional(searchBar.textProperty());
+        searchBar.textProperty().addListener((obs, oldVal, newVal) -> {
+            Result<String> result = searchService.setSearchQuery(newVal);
+            if (result.isFailure()) {
+                UIHelper.showError("Search Error", result.message());
+            }
+        });
     }
 
     @FXML

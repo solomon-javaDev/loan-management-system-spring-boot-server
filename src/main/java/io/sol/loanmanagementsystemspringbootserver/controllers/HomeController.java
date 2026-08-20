@@ -1,21 +1,34 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
-import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO;
-import io.sol.loanmanagementsystemspringbootserver.dtos.LoanDTO;
-import io.sol.loanmanagementsystemspringbootserver.dtos.PaymentDTO;
+import io.sol.loanmanagementsystemspringbootserver.dtos.*;
 import io.sol.loanmanagementsystemspringbootserver.entities.LoanStatus;
-import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
-import io.sol.loanmanagementsystemspringbootserver.services.LoansService;
-import io.sol.loanmanagementsystemspringbootserver.services.PaymentsService;
-import io.sol.loanmanagementsystemspringbootserver.services.ReportService;
+import io.sol.loanmanagementsystemspringbootserver.mailing.EmailDetails;
+import io.sol.loanmanagementsystemspringbootserver.mailing.EmailsService;
+import io.sol.loanmanagementsystemspringbootserver.services.*;
+import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
+import java.util.*;
 
 /**
  * The HomeController class is a Spring component that serves as the controller
@@ -35,6 +48,7 @@ public class HomeController {
     private final CustomerService customerService;
     private final PaymentsService paymentsService;
     private final ReportService reportService;
+    private final EmailsService emailsService;
     private final DashboardController dashboardController;
 
     @FXML
@@ -77,11 +91,13 @@ public class HomeController {
     public HomeController(LoansService loansService, CustomerService customerService, 
                           PaymentsService paymentsService,
                           ReportService reportService,
+                          EmailsService emailsService,
                           @Lazy DashboardController dashboardController) {
         this.loansService = loansService;
         this.customerService = customerService;
         this.paymentsService = paymentsService;
         this.reportService = reportService;
+        this.emailsService = emailsService;
         this.dashboardController = dashboardController;
     }
 
@@ -90,6 +106,8 @@ public class HomeController {
         calculateDailyStats();
     }
 
+    private Map<String, String> statsMap = new LinkedHashMap<>();
+
     private void calculateDailyStats() {
         LocalDate today = LocalDate.now();
         List<CustomerDTO> allCustomers = customerService.getAllCustomers().value();
@@ -97,87 +115,200 @@ public class HomeController {
         List<PaymentDTO> allPayments = paymentsService.getAllPayments().value();
         List<PaymentDTO> todayPayments = paymentsService.getPaymentsByDate(today).value();
         
-        // loansService doesn't have getLoansByDate yet, let's filter manually
         List<LoanDTO> todayLoans = allLoans.stream()
                 .filter(l -> today.equals(l.getStartDate()))
                 .toList();
 
-        // 1. Total number of customers
-        totalCustomersLabel.setText(String.valueOf(allCustomers.size()));
+        statsMap.clear();
 
-        // 2. Number of active customers (having active loans)
+        updateStat("Total Customers", String.valueOf(allCustomers.size()), totalCustomersLabel);
+
         long activeCustomers = allLoans.stream()
                 .filter(l -> l.getStatus() == LoanStatus.ACTIVE)
                 .map(LoanDTO::getCustomerId)
                 .distinct()
                 .count();
-        activeCustomersLabel.setText(String.valueOf(activeCustomers));
+        updateStat("Active Customers", String.valueOf(activeCustomers), activeCustomersLabel);
 
-        // 3. Number of customers who have paid today
         long paidToday = todayPayments.stream()
                 .map(PaymentDTO::getCustomerId)
                 .distinct()
                 .count();
-        customersPaidTodayLabel.setText(String.valueOf(paidToday));
+        updateStat("Customers Paid Today", String.valueOf(paidToday), customersPaidTodayLabel);
 
-        // 4. Collection Rate
         double rate = activeCustomers > 0 ? (double) paidToday / activeCustomers * 100 : 0;
-        collectionRateLabel.setText(String.format("%.2f%%", rate));
+        updateStat("Collection Rate", String.format("%.2f%%", rate), collectionRateLabel);
 
-        // 5. New customers today
-        newCustomersTodayLabel.setText("0");
+        updateStat("New Customers Today", "0", newCustomersTodayLabel);
 
-        // 6. Total collections (today)
         BigDecimal totalColl = todayPayments.stream()
                 .map(PaymentDTO::getAmountReceived)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        totalCollectionsLabel.setText(String.format("%.2f", totalColl));
+        updateStat("Total Collections (Today)", String.format("%.2f", totalColl), totalCollectionsLabel);
 
-        // 7. Number of loans disbursed (today)
-        loansDisbursedLabel.setText(String.valueOf(todayLoans.size()));
+        updateStat("Loans Disbursed (Today)", String.valueOf(todayLoans.size()), loansDisbursedLabel);
 
-        // 8. Total amount disbursed (today)
         BigDecimal totalDisbursedToday = todayLoans.stream()
                 .map(LoanDTO::getPrincipal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        totalAmountDisbursedLabel.setText(String.format("%.2f", totalDisbursedToday));
+        updateStat("Total Amount Disbursed (Today)", String.format("%.2f", totalDisbursedToday), totalAmountDisbursedLabel);
 
-        // 9. Principal Balance (Total outstanding principal)
         BigDecimal principalBalance = allLoans.stream()
                 .map(LoanDTO::getOutstandingBalance)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        principalBalanceLabel.setText(String.format("%.2f", principalBalance));
+        updateStat("Principal Balance", String.format("%.2f", principalBalance), principalBalanceLabel);
 
-        // 10. Total loan portfolio (Total principal ever disbursed)
         BigDecimal totalPortfolio = allLoans.stream()
                 .map(LoanDTO::getPrincipal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        totalLoanPortfolioLabel.setText(String.format("%.2f", totalPortfolio));
+        updateStat("Total Loan Portfolio", String.format("%.2f", totalPortfolio), totalLoanPortfolioLabel);
 
-        // 11-18 Placeholders for more complex accounting fields
-        openingCashLabel.setText("0.00");
-        principalCollectedLabel.setText(String.format("%.2f", totalColl.multiply(new BigDecimal("0.8")))); // Approx
-        interestCollectedLabel.setText(String.format("%.2f", totalColl.multiply(new BigDecimal("0.2")))); // Approx
-        processingFeesLabel.setText("0.00");
-        bankDepositsLabel.setText("0.00");
-        totalExpensesLabel.setText("0.00");
-        loanDisbursementsLabel.setText(String.format("%.2f", totalDisbursedToday));
-        checkoutCashLabel.setText(String.format("%.2f", totalColl.subtract(totalDisbursedToday)));
+        updateStat("Opening Cash", "0.00", openingCashLabel);
+        updateStat("Principal Collected", String.format("%.2f", totalColl.multiply(new BigDecimal("0.8"))), principalCollectedLabel);
+        updateStat("Interest Collected", String.format("%.2f", totalColl.multiply(new BigDecimal("0.2"))), interestCollectedLabel);
+        updateStat("Processing Fees", "0.00", processingFeesLabel);
+        updateStat("Bank Deposits", "0.00", bankDepositsLabel);
+        updateStat("Total Expenses", "0.00", totalExpensesLabel);
+        updateStat("Loan Disbursements", String.format("%.2f", totalDisbursedToday), loanDisbursementsLabel);
+        updateStat("Checkout Cash", String.format("%.2f", totalColl.subtract(totalDisbursedToday)), checkoutCashLabel);
+    }
+
+    private void updateStat(String key, String value, Label label) {
+        statsMap.put(key, value);
+        if (label != null) label.setText(value);
     }
 
     @FXML
     private void handlePrintPdf() {
-        System.out.println("Printing PDF summary...");
-    }
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save PDF Report");
+        fileChooser.setInitialFileName("DailyReport_" + LocalDate.now() + ".pdf");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
+        File file = fileChooser.showSaveDialog(null);
 
-    @FXML
-    private void handleSendEmail() {
-        reportService.sendDailyReport(LocalDate.now());
+        if (file != null) {
+            try (PdfWriter writer = new PdfWriter(new FileOutputStream(file));
+                 PdfDocument pdf = new PdfDocument(writer);
+                 Document document = new Document(pdf)) {
+
+                document.add(new Paragraph("Daily Summary Report - " + LocalDate.now()).setBold().setFontSize(18));
+                document.add(new Paragraph(" "));
+
+                Table table = new Table(2);
+                for (Map.Entry<String, String> entry : statsMap.entrySet()) {
+                    table.addCell(entry.getKey());
+                    table.addCell(entry.getValue());
+                }
+                document.add(table);
+                UIHelper.showInfo("Success", "PDF report generated successfully.");
+            } catch (Exception e) {
+                UIHelper.showError("Error", "Failed to generate PDF: " + e.getMessage());
+            }
+        }
     }
 
     @FXML
     private void handleExportExcel() {
-        System.out.println("Exporting Excel summary...");
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Excel Report");
+        fileChooser.setInitialFileName("DailyReport_" + LocalDate.now() + ".xlsx");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Excel Files", "*.xlsx"));
+        File file = fileChooser.showSaveDialog(null);
+
+        if (file != null) {
+            try (Workbook workbook = new XSSFWorkbook();
+                 FileOutputStream fileOut = new FileOutputStream(file)) {
+                Sheet sheet = workbook.createSheet("Daily Summary");
+                int rowNum = 0;
+                for (Map.Entry<String, String> entry : statsMap.entrySet()) {
+                    Row row = sheet.createRow(rowNum++);
+                    row.createCell(0).setCellValue(entry.getKey());
+                    row.createCell(1).setCellValue(entry.getValue());
+                }
+                workbook.write(fileOut);
+                UIHelper.showInfo("Success", "Excel report exported successfully.");
+            } catch (IOException e) {
+                UIHelper.showError("Error", "Failed to export Excel: " + e.getMessage());
+            }
+        }
+    }
+
+    @FXML
+    private void handleSendEmail() {
+        Dialog<EmailOptions> dialog = new Dialog<>();
+        dialog.setTitle("Send Email Report");
+        dialog.setHeaderText("Select email recipient and details to include");
+
+        ButtonType sendButtonType = new ButtonType("Send", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(sendButtonType, ButtonType.CANCEL);
+
+        VBox content = new VBox(10);
+        TextField emailField = new TextField();
+        emailField.setPromptText("Recipient Email");
+        
+        Label optionsLabel = new Label("Select stats to include:");
+        VBox optionsBox = new VBox(5);
+        Map<CheckBox, String> checkBoxes = new LinkedHashMap<>();
+        for (String key : statsMap.keySet()) {
+            CheckBox cb = new CheckBox(key);
+            cb.setSelected(true);
+            checkBoxes.put(cb, key);
+            optionsBox.getChildren().add(cb);
+        }
+        
+        ScrollPane scrollPane = new ScrollPane(optionsBox);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setPrefHeight(200);
+
+        content.getChildren().addAll(new Label("To:"), emailField, optionsLabel, scrollPane);
+        dialog.getDialogPane().setContent(content);
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == sendButtonType) {
+                List<String> selectedKeys = new ArrayList<>();
+                for (Map.Entry<CheckBox, String> entry : checkBoxes.entrySet()) {
+                    if (entry.getKey().isSelected()) {
+                        selectedKeys.add(entry.getValue());
+                    }
+                }
+                return new EmailOptions(emailField.getText(), selectedKeys);
+            }
+            return null;
+        });
+
+        Optional<EmailOptions> result = dialog.showAndWait();
+        result.ifPresent(options -> {
+            if (options.recipient == null || options.recipient.isBlank()) {
+                UIHelper.showError("Error", "Recipient email is required.");
+                return;
+            }
+            
+            StringBuilder body = new StringBuilder("Daily Summary Report - " + LocalDate.now() + "\n\n");
+            for (String key : options.selectedKeys) {
+                body.append(key).append(": ").append(statsMap.get(key)).append("\n");
+            }
+
+            EmailDetails details = new EmailDetails();
+            details.setRecipient(options.recipient);
+            details.setSubject("Daily Summary Report - " + LocalDate.now());
+            details.setBody(body.toString());
+
+            String status = emailsService.sendSimpleMail(details);
+            if (status.contains("Error")) {
+                UIHelper.showError("Email Failed", status);
+            } else {
+                UIHelper.showInfo("Email Sent", status);
+            }
+        });
+    }
+
+    private static class EmailOptions {
+        String recipient;
+        List<String> selectedKeys;
+        EmailOptions(String recipient, List<String> selectedKeys) {
+            this.recipient = recipient;
+            this.selectedKeys = selectedKeys;
+        }
     }
 
     @FXML

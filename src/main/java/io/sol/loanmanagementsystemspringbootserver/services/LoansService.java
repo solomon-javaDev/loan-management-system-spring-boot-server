@@ -2,18 +2,17 @@ package io.sol.loanmanagementsystemspringbootserver.services;
 
 import io.sol.loanmanagementsystemspringbootserver.dtos.LoanDTO;
 import io.sol.loanmanagementsystemspringbootserver.mappers.DTOMapper;
-import io.sol.loanmanagementsystemspringbootserver.repositories.EmployeeRepository;
+import io.sol.loanmanagementsystemspringbootserver.entities.*;
+import io.sol.loanmanagementsystemspringbootserver.mailing.EmailDetails;
+import io.sol.loanmanagementsystemspringbootserver.mailing.EmailsService;
+import io.sol.loanmanagementsystemspringbootserver.repositories.*;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
-import io.sol.loanmanagementsystemspringbootserver.entities.Customer;
-import io.sol.loanmanagementsystemspringbootserver.entities.Employee;
-import io.sol.loanmanagementsystemspringbootserver.entities.Loan;
-import io.sol.loanmanagementsystemspringbootserver.entities.LoanStatus;
-import io.sol.loanmanagementsystemspringbootserver.repositories.CustomerRepository;
-import io.sol.loanmanagementsystemspringbootserver.repositories.LoansRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -30,11 +29,22 @@ public class LoansService {
     private final LoansRepository loanRepository;
     private final CustomerRepository customerRepository;
     private final EmployeeRepository employeeRepository;
+    private final LoanParameterChangeRepository changeRepository;
+    private final EmailsService emailsService;
+    private final SystemSettingService settingService;
 
-    public LoansService(LoansRepository loanRepository, CustomerRepository customerRepository, EmployeeRepository employeeRepository) {
+    public LoansService(LoansRepository loanRepository, 
+                        CustomerRepository customerRepository, 
+                        EmployeeRepository employeeRepository,
+                        LoanParameterChangeRepository changeRepository,
+                        EmailsService emailsService,
+                        SystemSettingService settingService) {
         this.loanRepository = loanRepository;
         this.employeeRepository = employeeRepository;
         this.customerRepository = customerRepository;
+        this.changeRepository = changeRepository;
+        this.emailsService = emailsService;
+        this.settingService = settingService;
     }
 
     public Result<List<LoanDTO>> getAllLoans() {
@@ -102,6 +112,7 @@ public class LoansService {
     }
 
 
+    @Transactional
     public Result<LoanDTO> updateLoan(LoanDTO loanDto) {
         if (loanDto == null || loanDto.getId() <= 0) {
             return Result.invalid("Select a loan from the table before updating.", null);
@@ -114,6 +125,14 @@ public class LoansService {
 
         return loanRepository.findById(loanDto.getId())
                 .map(existingLoan -> {
+                    List<LoanParameterChange> changes = new ArrayList<>();
+                    
+                    trackChange(changes, existingLoan, "startDate", existingLoan.getStartDate(), loanDto.getStartDate());
+                    trackChange(changes, existingLoan, "principal", existingLoan.getPrincipal(), loanDto.getPrincipal());
+                    trackChange(changes, existingLoan, "interestRate", existingLoan.getInterestRate(), loanDto.getInterestRate());
+                    trackChange(changes, existingLoan, "fees", existingLoan.getFees(), loanDto.getFees());
+                    trackChange(changes, existingLoan, "tenor", existingLoan.getTenor(), loanDto.getTenor());
+
                     existingLoan.setStartDate(loanDto.getStartDate());
                     existingLoan.setMaturityDate(loanDto.getMaturityDate());
                     existingLoan.setFullPaidDate(loanDto.getFullPaidDate());
@@ -128,10 +147,48 @@ public class LoansService {
                         Optional<Employee> officer = employeeRepository.findById(loanDto.getFieldOfficerId());
                         officer.ifPresent(existingLoan::setFieldOfficer);
                     }
-                    // Relations update if needed, but usually IDs stay the same
-                    return Result.success("Loan updated successfully.", DTOMapper.toDTO(loanRepository.save(existingLoan)));
+                    
+                    Loan saved = loanRepository.save(existingLoan);
+                    if (!changes.isEmpty()) {
+                        changeRepository.saveAll(changes);
+                        sendAdminAlert(saved, changes);
+                    }
+                    
+                    return Result.success("Loan updated successfully.", DTOMapper.toDTO(saved));
                 })
                 .orElseGet(() -> Result.notFound("Loan not found.", null));
+    }
+
+    private void trackChange(List<LoanParameterChange> changes, Loan loan, String param, Object oldVal, Object newVal) {
+        if (oldVal == null && newVal == null) return;
+        if (oldVal != null && oldVal.equals(newVal)) return;
+        
+        LoanParameterChange change = new LoanParameterChange();
+        change.setLoan(loan);
+        change.setParameterName(param);
+        change.setOldValue(String.valueOf(oldVal));
+        change.setNewValue(String.valueOf(newVal));
+        change.setChangedBy("System/User"); // In a real system, get from security context
+        changes.add(change);
+    }
+
+    private void sendAdminAlert(Loan loan, List<LoanParameterChange> changes) {
+        String adminEmails = settingService.getSetting("report.emails", "");
+        if (adminEmails.isBlank()) return;
+
+        StringBuilder sb = new StringBuilder("Loan Parameter Change Alert\n\n");
+        sb.append("Loan ID: ").append(loan.getId()).append("\n");
+        sb.append("Customer: ").append(loan.getCustomer().getFirstName()).append(" ").append(loan.getCustomer().getLastName()).append("\n\n");
+        sb.append("Changes:\n");
+        for (LoanParameterChange c : changes) {
+            sb.append("- ").append(c.getParameterName()).append(": ").append(c.getOldValue()).append(" -> ").append(c.getNewValue()).append("\n");
+        }
+
+        EmailDetails details = new EmailDetails();
+        details.setRecipient(adminEmails);
+        details.setSubject("ALERT: Loan Parameter Change - ID " + loan.getId());
+        details.setBody(sb.toString());
+        emailsService.sendSimpleMail(details);
     }
 
     public Result<Void> deleteLoan(Integer id) {

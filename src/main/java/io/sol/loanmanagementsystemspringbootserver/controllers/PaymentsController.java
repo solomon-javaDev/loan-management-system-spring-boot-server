@@ -8,6 +8,7 @@ import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
 import io.sol.loanmanagementsystemspringbootserver.services.LoansService;
 import io.sol.loanmanagementsystemspringbootserver.services.PaymentsService;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UiControlUtilities;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -227,7 +228,7 @@ public class PaymentsController {
 
         BigDecimal amount = parseBigDecimal(amountRecieved.getText());
         Result<PaymentDTO> result = paymentsService.savePayment(date.getValue(), amount, selectedLoan.getId());
-        messageLabel.setText(result.message());
+        UIHelper.updateStatusLabel(messageLabel, result);
         if (result.isSuccess()) {
             loadData();
             handleClearForm();
@@ -241,7 +242,7 @@ public class PaymentsController {
 
         BigDecimal amount = parseBigDecimal(amountRecieved.getText());
         Result<PaymentDTO> result = paymentsService.updatePayment(selected.getId(), date.getValue(), amount);
-        messageLabel.setText(result.message());
+        UIHelper.updateStatusLabel(messageLabel, result);
         if (result.isSuccess()) {
             loadData();
             handleClearForm();
@@ -254,7 +255,7 @@ public class PaymentsController {
         if (selected == null) return;
 
         Result<Void> result = paymentsService.deletePayment(selected.getId());
-        messageLabel.setText(result.message());
+        UIHelper.updateStatusLabel(messageLabel, result);
         if (result.isSuccess()) {
             loadData();
             handleClearForm();
