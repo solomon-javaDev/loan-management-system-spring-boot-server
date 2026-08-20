@@ -11,7 +11,7 @@
                 <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
             </padding>
             <top>
-                <VBox spacing="12.0" BorderPane.alignment="CENTER">
+                <VBox prefHeight="318.0" prefWidth="784.0" spacing="12.0" BorderPane.alignment="CENTER">
                     <children>
                         <GridPane hgap="10" vgap="8">
                             <columnConstraints>
@@ -66,7 +66,7 @@
                 </VBox>
             </top>
             <center>
-                <TableView fx:id="loansTable" BorderPane.alignment="CENTER">
+                <TableView fx:id="loansTable" prefHeight="108.0" prefWidth="784.0" BorderPane.alignment="CENTER">
                     <columns>
                         <TableColumn fx:id="idColumn" prefWidth="60.0" text="LOAN ID" />
                        <TableColumn fx:id="customerNameColumn" prefWidth="120.0" text="CUSTOMER NAME" />

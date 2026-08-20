@@ -102,6 +102,9 @@ public class PaymentsController {
     private TableColumn<PaymentDTO, BigDecimal> amountColumn;
 
     @FXML
+    private TableColumn<PaymentDTO, BigDecimal> remainingColumn;
+
+    @FXML
     private TableColumn<PaymentDTO, String> loanRefColumn;
 
     @FXML
@@ -153,6 +156,7 @@ public class PaymentsController {
     private void configureTable() {
         dateColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
         amountColumn.setCellValueFactory(new PropertyValueFactory<>("amountReceived"));
+        remainingColumn.setCellValueFactory(new PropertyValueFactory<>("remainingBalance"));
 
         customerColumn.setCellValueFactory(cellData -> {
             PaymentDTO payment = cellData.getValue();

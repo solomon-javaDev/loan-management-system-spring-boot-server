@@ -77,6 +77,7 @@
                 <TableColumn fx:id="dateColumn" prefWidth="75.0" text="DATE" />
                 <TableColumn fx:id="customerColumn" prefWidth="136.0" text="CUSTOMER NAME" />
                   <TableColumn fx:id="amountColumn" prefWidth="136.0" text="AMOUNT" />
+                  <TableColumn fx:id="remainingColumn" prefWidth="136.0" text="REMAINING" />
                   <TableColumn fx:id="loanRefColumn" prefWidth="136.0" text="LOAN REFERENCE" />
               </columns>
             </TableView>

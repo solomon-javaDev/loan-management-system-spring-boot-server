@@ -6,6 +6,9 @@ import io.sol.loanmanagementsystemspringbootserver.entities.Employee;
 import io.sol.loanmanagementsystemspringbootserver.entities.Loan;
 import io.sol.loanmanagementsystemspringbootserver.entities.Payment;
 
+import java.math.BigDecimal;
+import java.util.List;
+
 /**
  * Utility class that provides methods to map entities to Data Transfer Objects (DTOs) and vice versa.
  *
@@ -264,6 +267,20 @@ public class DTOMapper {
         if (payment.getLoan() != null) {
             dto.setLoanId(payment.getLoan().getId());
             dto.setLoanReference(payment.getLoan().getReference());
+
+            // Calculate remaining balance as of this payment date
+            BigDecimal balanceAtPayment = payment.getLoan().getTotalDue();
+            List<Payment> payments = payment.getLoan().getPayments();
+            if (payments != null) {
+                // Sum all payments for this loan up to (and including) this payment's date/id
+                BigDecimal paidUpTo = payments.stream()
+                    .filter(p -> p.getDate().isBefore(payment.getDate()) ||
+                                (p.getDate().isEqual(payment.getDate()) && (p.getId() == null || payment.getId() == null || p.getId() <= payment.getId())))
+                    .map(Payment::getAmountReceived)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                dto.setRemainingBalance(balanceAtPayment.subtract(paidUpTo));
+            }
+
             if (payment.getLoan().getCustomer() != null) {
                 dto.setCustomerId(payment.getLoan().getCustomer().getId());
                 dto.setCustomerName(payment.getLoan().getCustomer().getLastName());
