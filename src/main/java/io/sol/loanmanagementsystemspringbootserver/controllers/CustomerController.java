@@ -7,6 +7,7 @@ import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import javafx.collections.FXCollections;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -35,7 +36,19 @@ public class CustomerController {
     private TextField otherNamesField;
 
     @FXML
-    private TextField emailField;
+    private TextField ninField;
+
+    @FXML
+    private TextField guarantorNameField;
+
+    @FXML
+    private TextField guarantorPhoneField;
+
+    @FXML
+    private TextField guarantorNinField;
+
+    @FXML
+    private TextField customerSearchField;
 
     @FXML
     private TextField telephoneField;
@@ -75,7 +88,10 @@ public class CustomerController {
     private TableColumn<CustomerDTO, String> otherNamesColumn;
 
     @FXML
-    private TableColumn<CustomerDTO, String> emailColumn;
+    private TableColumn<CustomerDTO, String> ninColumn;
+
+    @FXML
+    private TableColumn<CustomerDTO, String> guarantorColumn;
 
     @FXML
     private TableColumn<CustomerDTO, String> telephoneColumn;
@@ -92,6 +108,8 @@ public class CustomerController {
     @FXML
     private Label messageLabel;
 
+    private FilteredList<CustomerDTO> filteredCustomers;
+
     public CustomerController(CustomerService customerService) {
         this.customerService = customerService;
     }
@@ -100,6 +118,7 @@ public class CustomerController {
     public void initialize() {
         configureTable();
         loadCustomers();
+        customerSearchField.textProperty().addListener((obs, oldValue, newValue) -> applyCustomerFilter(newValue));
 
         customersTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, selectedCustomer) -> {
             if (selectedCustomer != null) {
@@ -129,7 +148,10 @@ public class CustomerController {
         createDTO.setFirstName(customer.getFirstName());
         createDTO.setLastName(customer.getLastName());
         createDTO.setOtherNames(customer.getOtherNames());
-        createDTO.setEmail(customer.getEmail());
+        createDTO.setNin(customer.getNin());
+        createDTO.setGuarantorName(customer.getGuarantorName());
+        createDTO.setGuarantorPhone(customer.getGuarantorPhone());
+        createDTO.setGuarantorNin(customer.getGuarantorNin());
         createDTO.setTelephone(customer.getTelephone());
         createDTO.setAddress(customer.getAddress());
 
@@ -190,7 +212,8 @@ public class CustomerController {
         firstNameColumn.setCellValueFactory(new PropertyValueFactory<>("firstName"));
         lastNameColumn.setCellValueFactory(new PropertyValueFactory<>("lastName"));
         otherNamesColumn.setCellValueFactory(new PropertyValueFactory<>("otherNames"));
-        emailColumn.setCellValueFactory(new PropertyValueFactory<>("email"));
+        ninColumn.setCellValueFactory(new PropertyValueFactory<>("nin"));
+        guarantorColumn.setCellValueFactory(new PropertyValueFactory<>("guarantorName"));
         telephoneColumn.setCellValueFactory(new PropertyValueFactory<>("telephone"));
         addressColumn.setCellValueFactory(new PropertyValueFactory<>("address"));
         numberOfLoans.setCellValueFactory(cellData -> {
@@ -204,7 +227,27 @@ public class CustomerController {
 
     private void loadCustomers() {
         Result<java.util.List<CustomerDTO>> result = customerService.getAllCustomers();
-        customersTable.setItems(FXCollections.observableArrayList(result.value()));
+        filteredCustomers = new FilteredList<>(FXCollections.observableArrayList(result.value()), customer -> true);
+        customersTable.setItems(filteredCustomers);
+    }
+
+    private void applyCustomerFilter(String searchText) {
+        if (filteredCustomers == null) return;
+        String query = searchText == null ? "" : searchText.trim().toLowerCase();
+        filteredCustomers.setPredicate(customer -> query.isEmpty()
+                || contains(customer.getFirstName(), query)
+                || contains(customer.getLastName(), query)
+                || contains(customer.getOtherNames(), query)
+                || contains(customer.getAccountNumber(), query)
+                || contains(customer.getTelephone(), query)
+                || contains(customer.getNin(), query)
+                || contains(customer.getGuarantorName(), query)
+                || contains(customer.getGuarantorPhone(), query)
+                || contains(customer.getGuarantorNin(), query));
+    }
+
+    private boolean contains(String value, String query) {
+        return value != null && value.toLowerCase().contains(query);
     }
 
     private CustomerDTO buildCustomerFromForm() {
@@ -212,7 +255,10 @@ public class CustomerController {
         customer.setFirstName(firstNameField.getText() == null ? "" : firstNameField.getText().trim());
         customer.setLastName(lastNameField.getText() == null ? "" : lastNameField.getText().trim());
         customer.setOtherNames(otherNamesField.getText() == null ? "" : otherNamesField.getText().trim());
-        customer.setEmail(emailField.getText() == null ? "" : emailField.getText().trim());
+        customer.setNin(ninField.getText() == null ? "" : ninField.getText().trim());
+        customer.setGuarantorName(guarantorNameField.getText().trim());
+        customer.setGuarantorPhone(guarantorPhoneField.getText().trim());
+        customer.setGuarantorNin(guarantorNinField.getText().trim());
         customer.setTelephone(telephoneField.getText() == null ? "" : telephoneField.getText().trim());
         customer.setAddress(addressField.getText()== null ?  " " : addressField.getText().trim());
         return customer;
@@ -223,7 +269,10 @@ public class CustomerController {
         firstNameField.setText(customer.getFirstName());
         lastNameField.setText(customer.getLastName());
         otherNamesField.setText(customer.getOtherNames());
-        emailField.setText(customer.getEmail());
+        ninField.setText(customer.getNin());
+        guarantorNameField.setText(customer.getGuarantorName());
+        guarantorPhoneField.setText(customer.getGuarantorPhone());
+        guarantorNinField.setText(customer.getGuarantorNin());
         telephoneField.setText(customer.getTelephone());
         addressField.setText(customer.getAddress());
     }
@@ -233,7 +282,10 @@ public class CustomerController {
         firstNameField.clear();
         lastNameField.clear();
         otherNamesField.clear();
-        emailField.clear();
+        ninField.clear();
+        guarantorNameField.clear();
+        guarantorPhoneField.clear();
+        guarantorNinField.clear();
         telephoneField.clear();
         addressField.clear();;
          customersTable.getSelectionModel().clearSelection();

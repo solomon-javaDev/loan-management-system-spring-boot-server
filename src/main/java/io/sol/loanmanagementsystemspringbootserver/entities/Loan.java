@@ -40,6 +40,12 @@ public class Loan {
     @Column(nullable = false)
     private BigDecimal fees;
 
+    @Column(nullable = false)
+    private BigDecimal surchargeRate = BigDecimal.ZERO;
+
+    @Column(nullable = false)
+    private BigDecimal surchargeAmount = BigDecimal.ZERO;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private LoanStatus status;
@@ -114,7 +120,15 @@ public class Loan {
     }
 
     public BigDecimal getTotalDue(){
-        return this.principal.add(this.principal.multiply(this.interestRate));
+        return this.principal.add(this.principal.multiply(this.interestRate)).add(getSurchargeAmount());
+    }
+
+    public BigDecimal calculateSurcharge(LocalDate asAt) {
+        if (asAt == null || maturityDate == null || !asAt.isAfter(maturityDate)) {
+            return BigDecimal.ZERO;
+        }
+        long daysLate = java.time.temporal.ChronoUnit.DAYS.between(maturityDate, asAt);
+        return principal.multiply(surchargeRate).multiply(BigDecimal.valueOf(daysLate));
     }
 
     public List<Payment> getPayments() {
@@ -213,6 +227,22 @@ public class Loan {
 
     public void setFees(BigDecimal fees) {
         this.fees = fees;
+    }
+
+    public BigDecimal getSurchargeRate() {
+        return surchargeRate;
+    }
+
+    public void setSurchargeRate(BigDecimal surchargeRate) {
+        this.surchargeRate = surchargeRate == null ? BigDecimal.ZERO : surchargeRate;
+    }
+
+    public BigDecimal getSurchargeAmount() {
+        return surchargeAmount == null ? BigDecimal.ZERO : surchargeAmount;
+    }
+
+    public void setSurchargeAmount(BigDecimal surchargeAmount) {
+        this.surchargeAmount = surchargeAmount == null ? BigDecimal.ZERO : surchargeAmount;
     }
 
     public LoanStatus getStatus() {

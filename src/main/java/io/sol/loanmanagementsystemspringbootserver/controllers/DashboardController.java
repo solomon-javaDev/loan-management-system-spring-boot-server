@@ -157,4 +157,22 @@ public class DashboardController {
         }
     }
 
+    @FXML
+    public void showFinanceView(){
+        try {
+            mainContent.getChildren().setAll(stageManager.loadView("/ui/dashboard/FinanceView.fxml"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
+    public void showUsersView(){
+        try {
+            mainContent.getChildren().setAll(stageManager.loadView("/ui/dashboard/UsersView.fxml"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

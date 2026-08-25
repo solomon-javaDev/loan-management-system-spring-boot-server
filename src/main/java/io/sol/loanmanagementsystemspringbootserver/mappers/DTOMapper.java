@@ -39,9 +39,13 @@ public class DTOMapper {
         dto.setLastName(customer.getLastName());
         dto.setOtherNames(customer.getOtherNames());
         dto.setCustomerName(customer.getCustomerName());
-        dto.setEmail(customer.getEmail());
+        dto.setNin(customer.getNin());
+        dto.setGuarantorName(customer.getGuarantorName());
+        dto.setGuarantorPhone(customer.getGuarantorPhone());
+        dto.setGuarantorNin(customer.getGuarantorNin());
         dto.setTelephone(customer.getTelephone());
         dto.setAddress(customer.getAddress());
+        dto.setSavingsBalance(customer.getSavingsBalance());
         return dto;
     }
 
@@ -51,7 +55,10 @@ public class DTOMapper {
         customer.setFirstName(dto.getFirstName());
         customer.setLastName(dto.getLastName());
         customer.setOtherNames(dto.getOtherNames());
-        customer.setEmail(dto.getEmail());
+        customer.setNin(dto.getNin());
+        customer.setGuarantorName(dto.getGuarantorName());
+        customer.setGuarantorPhone(dto.getGuarantorPhone());
+        customer.setGuarantorNin(dto.getGuarantorNin());
         customer.setTelephone(dto.getTelephone());
         customer.setAddress(dto.getAddress());
         return customer;
@@ -66,9 +73,13 @@ public class DTOMapper {
         dto.setLastName(customer.getLastName());
         dto.setOtherNames(customer.getOtherNames());
         dto.setCustomerName(customer.getCustomerName());
-        dto.setEmail(customer.getEmail());
+        dto.setNin(customer.getNin());
+        dto.setGuarantorName(customer.getGuarantorName());
+        dto.setGuarantorPhone(customer.getGuarantorPhone());
+        dto.setGuarantorNin(customer.getGuarantorNin());
         dto.setTelephone(customer.getTelephone());
         dto.setAddress(customer.getAddress());
+        dto.setSavingsBalance(customer.getSavingsBalance());
         return dto;
     }
 
@@ -77,7 +88,10 @@ public class DTOMapper {
 
         CustomerCreateDTO customerCreateDTO = new CustomerCreateDTO();
         customerCreateDTO.setAddress(customer.getAddress());
-        customerCreateDTO.setEmail(customer.getEmail());
+        customerCreateDTO.setNin(customer.getNin());
+        customerCreateDTO.setGuarantorName(customer.getGuarantorName());
+        customerCreateDTO.setGuarantorPhone(customer.getGuarantorPhone());
+        customerCreateDTO.setGuarantorNin(customer.getGuarantorNin());
         customerCreateDTO.setFirstName(customer.getFirstName());
         customerCreateDTO.setLastName(customer.getLastName());
         customerCreateDTO.setOtherNames(customer.getOtherNames());
@@ -95,9 +109,13 @@ public class DTOMapper {
         dto.setLastName(customer.getLastName());
         dto.setOtherNames(customer.getOtherNames());
         dto.setCustomerName(customer.getCustomerName());
-        dto.setEmail(customer.getEmail());
+        dto.setNin(customer.getNin());
+        dto.setGuarantorName(customer.getGuarantorName());
+        dto.setGuarantorPhone(customer.getGuarantorPhone());
+        dto.setGuarantorNin(customer.getGuarantorNin());
         dto.setTelephone(customer.getTelephone());
         dto.setAddress(customer.getAddress());
+        dto.setSavingsBalance(BigDecimal.ZERO);
         return dto;
     }
     public static Customer toEntity(CustomerDTO dto) {
@@ -109,9 +127,13 @@ public class DTOMapper {
         customer.setLastName(dto.getLastName());
         customer.setOtherNames(dto.getOtherNames());
         customer.setCustomerName(dto.getCustomerName());
-        customer.setEmail(dto.getEmail());
+        customer.setNin(dto.getNin());
+        customer.setGuarantorName(dto.getGuarantorName());
+        customer.setGuarantorPhone(dto.getGuarantorPhone());
+        customer.setGuarantorNin(dto.getGuarantorNin());
         customer.setTelephone(dto.getTelephone());
         customer.setAddress(dto.getAddress());
+        customer.setSavingsBalance(dto.getSavingsBalance());
         return customer;
     }
 
@@ -129,6 +151,8 @@ public class DTOMapper {
         dto.setTenor(loan.getTenor());
         dto.setCollateral(loan.getCollateral());
         dto.setFees(loan.getFees());
+        dto.setSurchargeRate(loan.getSurchargeRate());
+        dto.setSurchargeAmount(loan.getSurchargeAmount());
         dto.setStatus(loan.getStatus());
 
         if (loan.getFieldOfficer() != null) {
@@ -183,6 +207,8 @@ public class DTOMapper {
         dto.setTenor(loan.getTenor());
         dto.setCollateral(loan.getCollateral());
         dto.setFees(loan.getFees());
+        dto.setSurchargeRate(loan.getSurchargeRate());
+        dto.setSurchargeAmount(loan.getSurchargeAmount());
         dto.setStatus(loan.getStatus());
 
         if (loan.getFieldOfficer() != null) {

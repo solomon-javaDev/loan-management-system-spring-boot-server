@@ -16,6 +16,8 @@ public class LoanResponseDTO implements Serializable {
     private int tenor;
     private String collateral;
     private BigDecimal fees;
+    private BigDecimal surchargeRate;
+    private BigDecimal surchargeAmount;
     private LoanStatus status;
     private Integer fieldOfficerId;
     private String fieldOfficerName;
@@ -56,6 +58,12 @@ public class LoanResponseDTO implements Serializable {
 
     public BigDecimal getFees() { return fees; }
     public void setFees(BigDecimal fees) { this.fees = fees; }
+
+    public BigDecimal getSurchargeRate() { return surchargeRate; }
+    public void setSurchargeRate(BigDecimal surchargeRate) { this.surchargeRate = surchargeRate; }
+
+    public BigDecimal getSurchargeAmount() { return surchargeAmount; }
+    public void setSurchargeAmount(BigDecimal surchargeAmount) { this.surchargeAmount = surchargeAmount; }
 
     public LoanStatus getStatus() { return status; }
     public void setStatus(LoanStatus status) { this.status = status; }

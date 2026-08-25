@@ -26,14 +26,20 @@
                   <Label text="Other names" GridPane.columnIndex="0" GridPane.rowIndex="3" />
                   <TextField fx:id="otherNamesField" GridPane.columnIndex="1" GridPane.rowIndex="3" />
 
-                  <Label text="Email" GridPane.columnIndex="0" GridPane.rowIndex="4" />
-                  <TextField fx:id="emailField" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                  <Label text="Customer NIN" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                  <TextField fx:id="ninField" GridPane.columnIndex="1" GridPane.rowIndex="4" />
 
                   <Label text="Telephone" GridPane.columnIndex="0" GridPane.rowIndex="5" />
                   <Label layoutX="10.0" layoutY="33.0" text="Account Number" />
                   <TextField fx:id="telephoneField" GridPane.columnIndex="1" GridPane.rowIndex="5" />
                   <Label layoutX="10.0" layoutY="147.0" text="Address" GridPane.rowIndex="6" />
                   <TextField fx:id="addressField" layoutX="140.0" layoutY="143.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                  <Label text="Guarantor name" GridPane.rowIndex="7" />
+                  <TextField fx:id="guarantorNameField" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+                  <Label text="Guarantor phone" GridPane.rowIndex="8" />
+                  <TextField fx:id="guarantorPhoneField" GridPane.columnIndex="1" GridPane.rowIndex="8" />
+                  <Label text="Guarantor NIN" GridPane.rowIndex="9" />
+                  <TextField fx:id="guarantorNinField" GridPane.columnIndex="1" GridPane.rowIndex="9" />
                   <TextField fx:id="accountNumberField" layoutX="140.0" layoutY="29.0" GridPane.columnIndex="1">
                      <padding>
                         <Insets bottom="5.0" />
@@ -48,8 +54,13 @@
                   <RowConstraints />
                   <RowConstraints />
                   <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
                </rowConstraints>
             </GridPane>
+
+            <TextField fx:id="customerSearchField" promptText="Search customers, loans, account number, telephone or NIN" />
 
             <HBox spacing="10.0">
                <children>
@@ -66,7 +77,8 @@
                   <TableColumn fx:id="firstNameColumn" prefWidth="120.0" text="First Name" />
                   <TableColumn fx:id="lastNameColumn" prefWidth="120.0" text="Last Name" />
                   <TableColumn fx:id="otherNamesColumn" prefWidth="120.0" text="Other Names" />
-                  <TableColumn fx:id="emailColumn" prefWidth="180.0" text="Email" />
+                  <TableColumn fx:id="ninColumn" prefWidth="150.0" text="Customer NIN" />
+                  <TableColumn fx:id="guarantorColumn" prefWidth="180.0" text="Guarantor" />
                   <TableColumn fx:id="numberOfLoans" prefWidth="75.0" text="Loans" />
                   <TableColumn fx:id="telephoneColumn" prefWidth="120.0" text="Telephone" />
                   <TableColumn fx:id="addressColumn" prefWidth="180.0" text="Address" />

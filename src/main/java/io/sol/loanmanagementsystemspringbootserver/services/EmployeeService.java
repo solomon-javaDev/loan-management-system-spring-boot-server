@@ -8,6 +8,7 @@ import io.sol.loanmanagementsystemspringbootserver.entities.Role;
 import io.sol.loanmanagementsystemspringbootserver.repositories.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,10 +25,12 @@ public class EmployeeService {
 
 
     private EmployeeRepository employeeRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public EmployeeService(EmployeeRepository employeeRepository){
+     public EmployeeService(EmployeeRepository employeeRepository, PasswordEncoder passwordEncoder){
        this.employeeRepository = employeeRepository;
+         this.passwordEncoder = passwordEncoder;
     }
 
     public Result<List<EmployeeDTO>> getEmployeeByRole(Role role){
@@ -38,5 +41,23 @@ public class EmployeeService {
         }
 
         return Result.notFound("No employees found with " + role + " role, Please add them", null);
+    }
+
+    public Result<EmployeeDTO> createEmployee(EmployeeDTO employeeDTO) {
+        if (employeeDTO == null || employeeDTO.getUsername() == null || employeeDTO.getUsername().isBlank()) {
+            return Result.invalid("Username is required", null);
+        }
+        if (employeeDTO.getPassword() == null || employeeDTO.getPassword().isBlank()) {
+            return Result.invalid("Password is required", null);
+        }
+        Employee employee = DTOMapper.toEntity(employeeDTO);
+        employee.setPassword(passwordEncoder.encode(employeeDTO.getPassword()));
+        Employee saved = employeeRepository.save(employee);
+        return Result.success("Employee created successfully", DTOMapper.toDTO(saved));
+    }
+
+    public Result<List<EmployeeDTO>> getAllEmployees() {
+        return Result.success("All employees retrieved", 
+            employeeRepository.findAll().stream().map(DTOMapper::toDTO).collect(Collectors.toList()));
     }
 }

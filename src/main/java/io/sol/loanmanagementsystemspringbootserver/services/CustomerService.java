@@ -39,6 +39,10 @@ public class CustomerService {
             return Result.invalid("Last name is required", null);
         }
 
+        if(isBlank(customerDto.getNin())){
+            return Result.invalid("NIN is required", null);
+        }
+
         if(customerDto.getTelephone().isEmpty()){
             return Result.invalid("Telephone is required", null);
         }
@@ -78,12 +82,16 @@ public class CustomerService {
 
         return repository.findById(customerDto.getId())
                 .map(existingCustomer -> {
-                    existingCustomer.setEmail(customerDto.getEmail());
+                    existingCustomer.setNin(customerDto.getNin());
+                    existingCustomer.setGuarantorName(customerDto.getGuarantorName());
+                    existingCustomer.setGuarantorPhone(customerDto.getGuarantorPhone());
+                    existingCustomer.setGuarantorNin(customerDto.getGuarantorNin());
                     existingCustomer.setFirstName(customerDto.getFirstName());
                     existingCustomer.setLastName(customerDto.getLastName());
                     existingCustomer.setTelephone(customerDto.getTelephone());
                     existingCustomer.setOtherNames(customerDto.getOtherNames());
                     existingCustomer.setAddress(customerDto.getAddress());
+                    existingCustomer.setSavingsBalance(customerDto.getSavingsBalance());
                     Customer saved = repository.save(existingCustomer);
                     return Result.success("Customer updated successfully.", DTOMapper.toResponseDTO(saved));
                 })
@@ -97,6 +105,13 @@ public class CustomerService {
 
         repository.deleteById(customerDto.getId());
         return Result.success("Customer deleted successfully.", null);
+    }
+
+    public Result<CustomerDTO> getCustomerByNin(String nin) {
+        return repository.findByNin(nin)
+                .map(DTOMapper::toDTO)
+                .map(dto -> Result.success("Customer found.", dto))
+                .orElseGet(() -> Result.notFound("Customer with NIN " + nin + " not found.", null));
     }
 
     public Result<Customer> restoreCustomer(int id){

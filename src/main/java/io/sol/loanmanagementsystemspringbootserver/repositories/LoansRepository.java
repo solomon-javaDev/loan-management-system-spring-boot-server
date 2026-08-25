@@ -9,4 +9,5 @@ import java.util.List;
 public interface LoansRepository extends JpaRepository<Loan, Integer> {
     List<Loan> findByStatus(LoanStatus status);
     List<Loan> findByStartDate(LocalDate date);
+    List<Loan> findByStatusIn(List<LoanStatus> statuses);
 }

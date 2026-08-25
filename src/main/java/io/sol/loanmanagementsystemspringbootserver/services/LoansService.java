@@ -7,12 +7,14 @@ import io.sol.loanmanagementsystemspringbootserver.mailing.EmailDetails;
 import io.sol.loanmanagementsystemspringbootserver.mailing.EmailsService;
 import io.sol.loanmanagementsystemspringbootserver.repositories.*;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -238,5 +240,24 @@ public class LoansService {
         }
 
         return Result.success("", loan);
+    }
+    @Scheduled(cron = "0 0 1 * * ?") // Every day at 1 AM
+    @Transactional
+    public void updateOverdueLoansSurcharges() {
+        LocalDate today = LocalDate.now();
+        List<Loan> activeLoans = loanRepository.findByStatusIn(Arrays.asList(LoanStatus.ACTIVE, LoanStatus.DEFAULTED));
+
+        for (Loan loan : activeLoans) {
+            if (loan.getMaturityDate() != null && today.isAfter(loan.getMaturityDate())) {
+                BigDecimal surcharge = loan.calculateSurcharge(today);
+                if (surcharge.compareTo(BigDecimal.ZERO) > 0) {
+                    loan.setSurchargeAmount(surcharge);
+                    if (loan.getStatus() == LoanStatus.ACTIVE) {
+                        loan.setStatus(LoanStatus.DEFAULTED);
+                    }
+                    loanRepository.save(loan);
+                }
+            }
+        }
     }
 }

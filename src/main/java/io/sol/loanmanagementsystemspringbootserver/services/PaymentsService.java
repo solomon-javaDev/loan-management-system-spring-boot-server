@@ -50,9 +50,31 @@ public class PaymentsService {
              updateLoanStatus(loan, savedPayment.getDate());
              loansService.saveLoanEntity(loan);
 
+             String receipt = generateReceiptText(savedPayment);
+             System.out.println("Generated Receipt:\n" + receipt);
+
              String message = "Successful payment" + (loan.getStatus() == LoanStatus.CLOSED ? ", loan fully paid and cleared." : "");
              return Result.success(message, DTOMapper.toDTO(savedPayment));
         }).orElse(Result.notFound("Loan not found", null));
+    }
+
+    public String generateReceiptText(Payment payment) {
+        Loan loan = payment.getLoan();
+        StringBuilder sb = new StringBuilder();
+        sb.append("-----------------------------------\n");
+        sb.append("   COMPANY NAME: ").append("SOL LOANS").append("\n"); // Placeholder for company name
+        sb.append("   DATE: ").append(payment.getDate()).append("\n");
+        sb.append("   AMOUNT PAID: ").append(payment.getAmountReceived()).append("\n");
+        sb.append("   LOAN BALANCE: ").append(loan.getOutstandingBalance()).append("\n");
+        
+        long daysSkipped = 0;
+        if (loan.getMaturityDate() != null && LocalDate.now().isAfter(loan.getMaturityDate())) {
+            daysSkipped = java.time.temporal.ChronoUnit.DAYS.between(loan.getMaturityDate(), LocalDate.now());
+        }
+        sb.append("   DAYS SKIPPED: ").append(daysSkipped).append("\n");
+        sb.append("   ISSUER SIGNATURE: ________________\n");
+        sb.append("-----------------------------------\n");
+        return sb.toString();
     }
 
     @Transactional

@@ -1,7 +1,6 @@
 package io.sol.loanmanagementsystemspringbootserver.entities;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.SQLDelete;
@@ -37,8 +36,8 @@ public class Customer {
     private String customerName;
 
     @Column(unique = true)
-    @Email(message = "Please submit an email")
-    private String email;
+    @NotBlank(message = "NIN is required")
+    private String nin;
 
     @Column
     @NotBlank(message = "Telephone number is required")
@@ -46,6 +45,15 @@ public class Customer {
 
     @Column
     private String address;
+
+    private String guarantorName;
+
+    private String guarantorPhone;
+
+    private String guarantorNin;
+    
+    @Column(precision = 19, scale = 4)
+    private java.math.BigDecimal savingsBalance = java.math.BigDecimal.ZERO;
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Loan> loans = new ArrayList<>();
@@ -78,12 +86,12 @@ public class Customer {
 
     }
 
-    public Customer(String firstName, String lastName, String otherNames, String email, String telephone, String address) {
+    public Customer(String firstName, String lastName, String otherNames, String nin, String telephone, String address) {
         this.customerName = firstName + " " + lastName + " " + otherNames;
         this.firstName = firstName;
         this.lastName = lastName;
         this.otherNames = otherNames;
-        this.email = email;
+        this.nin = nin;
         this.telephone = telephone;
         this.address = address;
     }
@@ -110,6 +118,7 @@ public class Customer {
 
     public void setFirstName(String firstName) {
         this.firstName = firstName;
+        refreshCustomerName();
     }
 
     public String getLastName() {
@@ -118,6 +127,7 @@ public class Customer {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
+        refreshCustomerName();
     }
 
     public String getOtherNames() {
@@ -126,14 +136,15 @@ public class Customer {
 
     public void setOtherNames(String otherNames) {
         this.otherNames = otherNames;
+        refreshCustomerName();
     }
 
-    public String getEmail() {
-        return email;
+    public String getNin() {
+        return nin;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setNin(String nin) {
+        this.nin = nin;
     }
 
     public String getTelephone() {
@@ -152,6 +163,30 @@ public class Customer {
         this.address = address;
     }
 
+    public String getGuarantorName() {
+        return guarantorName;
+    }
+
+    public void setGuarantorName(String guarantorName) {
+        this.guarantorName = guarantorName;
+    }
+
+    public String getGuarantorPhone() {
+        return guarantorPhone;
+    }
+
+    public void setGuarantorPhone(String guarantorPhone) {
+        this.guarantorPhone = guarantorPhone;
+    }
+
+    public String getGuarantorNin() {
+        return guarantorNin;
+    }
+
+    public void setGuarantorNin(String guarantorNin) {
+        this.guarantorNin = guarantorNin;
+    }
+
     public String getAccountNumber() {
         return accountNumber;
     }
@@ -166,5 +201,20 @@ public class Customer {
 
     public void setAccountNumber(String accountNumber) {
         this.accountNumber = accountNumber;
+    }
+
+    public java.math.BigDecimal getSavingsBalance() {
+        return savingsBalance;
+    }
+
+    public void setSavingsBalance(java.math.BigDecimal savingsBalance) {
+        this.savingsBalance = savingsBalance;
+    }
+
+    private void refreshCustomerName() {
+        this.customerName = String.join(" ",
+                firstName == null ? "" : firstName,
+                lastName == null ? "" : lastName,
+                otherNames == null ? "" : otherNames).trim().replaceAll(" +", " ");
     }
 }

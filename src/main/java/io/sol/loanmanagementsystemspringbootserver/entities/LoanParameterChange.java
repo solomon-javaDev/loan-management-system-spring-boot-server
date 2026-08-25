@@ -27,4 +27,15 @@ public class LoanParameterChange {
     public LoanParameterChange() {
         this.changeTimestamp = LocalDateTime.now();
     }
+
+    public void setLoan(Loan loan) { this.loan = loan; }
+    public Loan getLoan() { return loan; }
+    public void setParameterName(String parameterName) { this.parameterName = parameterName; }
+    public String getParameterName() { return parameterName; }
+    public void setOldValue(String oldValue) { this.oldValue = oldValue; }
+    public String getOldValue() { return oldValue; }
+    public void setNewValue(String newValue) { this.newValue = newValue; }
+    public String getNewValue() { return newValue; }
+    public void setChangedBy(String changedBy) { this.changedBy = changedBy; }
+    public String getChangedBy() { return changedBy; }
 }

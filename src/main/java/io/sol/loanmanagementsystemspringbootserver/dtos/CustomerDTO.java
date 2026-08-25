@@ -9,9 +9,13 @@ public class CustomerDTO implements Serializable {
     private String lastName;
     private String otherNames;
     private String customerName;
-    private String email;
+    private String nin;
     private String telephone;
     private String address;
+    private String guarantorName;
+    private String guarantorPhone;
+    private String guarantorNin;
+    private java.math.BigDecimal savingsBalance;
     private int loanCount;
 
     public CustomerDTO() {}
@@ -34,8 +38,8 @@ public class CustomerDTO implements Serializable {
     public String getCustomerName() { return customerName; }
     public void setCustomerName(String customerName) { this.customerName = customerName; }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public String getNin() { return nin; }
+    public void setNin(String nin) { this.nin = nin; }
 
     public String getTelephone() { return telephone; }
     public void setTelephone(String telephone) { this.telephone = telephone; }
@@ -43,8 +47,20 @@ public class CustomerDTO implements Serializable {
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
 
+    public String getGuarantorName() { return guarantorName; }
+    public void setGuarantorName(String guarantorName) { this.guarantorName = guarantorName; }
+
+    public String getGuarantorPhone() { return guarantorPhone; }
+    public void setGuarantorPhone(String guarantorPhone) { this.guarantorPhone = guarantorPhone; }
+
+    public String getGuarantorNin() { return guarantorNin; }
+    public void setGuarantorNin(String guarantorNin) { this.guarantorNin = guarantorNin; }
+
     public int getLoanCount() { return loanCount; }
     public void setLoanCount(int loanCount) { this.loanCount = loanCount; }
+
+    public java.math.BigDecimal getSavingsBalance() { return savingsBalance; }
+    public void setSavingsBalance(java.math.BigDecimal savingsBalance) { this.savingsBalance = savingsBalance; }
 
     @Override
     public String toString() {

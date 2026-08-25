@@ -76,6 +76,8 @@
                         <Insets left="5.0" top="5.0" />
                      </padding>
                   </Button>
+                  <Button contentDisplay="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showFinanceView" text="FINANCE" textAlignment="CENTER" VBox.vgrow="ALWAYS" />
+                  <Button contentDisplay="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showUsersView" text="USERS" textAlignment="CENTER" VBox.vgrow="ALWAYS" />
                </children>
             </VBox>
          </left>
