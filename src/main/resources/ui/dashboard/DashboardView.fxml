@@ -13,12 +13,6 @@
                <children>
                   <Label fx:id="dashboardLabel" prefHeight="47.0" prefWidth="93.0" text="LMS VERSION 1.0" />
                   <TextField fx:id="searchBar" prefHeight="55.0" prefWidth="400.0" promptText="Search" HBox.hgrow="ALWAYS" />
-                  <MenuButton alignment="CENTER" mnemonicParsing="false" prefHeight="52.0" prefWidth="82.0" text="OPTIONS" HBox.hgrow="ALWAYS">
-                    <items>
-                      <MenuItem mnemonicParsing="false" text="Action 1" />
-                      <MenuItem mnemonicParsing="false" text="Action 2" />
-                    </items>
-                  </MenuButton>
                </children>
                <cursor>
                   <Cursor fx:constant="OPEN_HAND" />
@@ -76,8 +70,14 @@
                         <Insets left="5.0" top="5.0" />
                      </padding>
                   </Button>
-                  <Button contentDisplay="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showFinanceView" text="FINANCE" textAlignment="CENTER" VBox.vgrow="ALWAYS" />
-                  <Button contentDisplay="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showUsersView" text="USERS" textAlignment="CENTER" VBox.vgrow="ALWAYS" />
+                  <Button contentDisplay="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showFinanceView" text="FINANCE" textAlignment="CENTER">
+                     <VBox.margin>
+                        <Insets left="5.0" top="5.0" />
+                     </VBox.margin></Button>
+                  <Button contentDisplay="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showUsersView" text="USERS" textAlignment="CENTER" VBox.vgrow="ALWAYS">
+                     <VBox.margin>
+                        <Insets left="5.0" top="5.0" />
+                     </VBox.margin></Button>
                </children>
             </VBox>
          </left>
@@ -95,7 +95,10 @@
                       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                   </GridPane>
-               </children></StackPane>
+               </children>
+               <opaqueInsets>
+                  <Insets left="5.0" top="5.0" />
+               </opaqueInsets></StackPane>
          </center>
          <bottom>
             <HBox fx:id="footerBar" alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="20.0" prefWidth="600.0" spacing="15.0" BorderPane.alignment="CENTER">

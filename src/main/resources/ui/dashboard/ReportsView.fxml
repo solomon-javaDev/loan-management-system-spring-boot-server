@@ -24,11 +24,8 @@
                   <Label fx:id="messageLabel" text="ERROR" />
                </children></VBox>
          </bottom>
-         <left>
-            <VBox fx:id="dailySummaryBox" prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER" />
-         </left>
          <top>
-            <HBox spacing="10" alignment="CENTER_LEFT" BorderPane.alignment="CENTER">
+            <HBox alignment="CENTER_LEFT" spacing="10" BorderPane.alignment="CENTER">
                <children>
                   <Label text="Time Range:" />
                   <ComboBox fx:id="timeRangeCombo" prefWidth="150.0" />
