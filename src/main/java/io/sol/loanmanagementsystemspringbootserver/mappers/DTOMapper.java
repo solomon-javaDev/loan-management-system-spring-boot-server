@@ -80,6 +80,8 @@ public class DTOMapper {
         dto.setTelephone(customer.getTelephone());
         dto.setAddress(customer.getAddress());
         dto.setSavingsBalance(customer.getSavingsBalance());
+        dto.setActive(customer.isActive());
+        dto.setFieldOfficer(toDTO(customer.getFieldOfficer()));
         return dto;
     }
 
@@ -134,6 +136,8 @@ public class DTOMapper {
         customer.setTelephone(dto.getTelephone());
         customer.setAddress(dto.getAddress());
         customer.setSavingsBalance(dto.getSavingsBalance());
+        customer.setActive(dto.isActive());
+        customer.setFieldOfficer(toEntity(dto.getFieldOfficer()));
         return customer;
     }
 
@@ -355,6 +359,7 @@ public class DTOMapper {
         dto.setEmail(employee.getEmail());
         dto.setRole(employee.getRole());
         dto.setUsername(employee.getUsername());
+        dto.setActive(employee.isActive());
         return dto;
     }
 
@@ -371,6 +376,7 @@ public class DTOMapper {
         employee.setEmail(dto.getEmail());
         employee.setRole(dto.getRole());
         employee.setUsername(dto.getUsername());
+        employee.setActive(dto.isActive());
         return employee;
     }
 }

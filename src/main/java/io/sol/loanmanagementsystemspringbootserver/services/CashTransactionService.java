@@ -33,4 +33,18 @@ public class CashTransactionService {
     public Result<List<CashTransaction>> getTransactions(LocalDateTime start, LocalDateTime end) {
         return Result.success("Cash transactions retrieved", repository.findByDateBetween(start, end));
     }
+
+    public BigDecimal getTotalCapital() {
+        return repository.findAll().stream()
+                .filter(t -> t.getType() == io.sol.loanmanagementsystemspringbootserver.entities.CashTransactionType.CAPITAL_IN)
+                .map(io.sol.loanmanagementsystemspringbootserver.entities.CashTransaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public BigDecimal getTotalCashOut() {
+        return repository.findAll().stream()
+                .filter(t -> t.getType() == io.sol.loanmanagementsystemspringbootserver.entities.CashTransactionType.CASH_OUT)
+                .map(io.sol.loanmanagementsystemspringbootserver.entities.CashTransaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
 }

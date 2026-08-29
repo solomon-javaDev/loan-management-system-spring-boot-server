@@ -4,58 +4,71 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="500.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.sol.loanmanagementsystemspringbootserver.controllers.LoansController">
+<AnchorPane prefHeight="700.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.sol.loanmanagementsystemspringbootserver.controllers.LoansController">
     <children>
-        <BorderPane prefHeight="500.0" prefWidth="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-            <padding>
-                <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
-            </padding>
-            <top>
-            <ScrollPane BorderPane.alignment="CENTER">
+        <!-- A SplitPane allows the user to drag and resize the form vs table spaces dynamically -->
+        <SplitPane dividerPositions="0.55" orientation="VERTICAL" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <items>
+            <ScrollPane fitToWidth="true">
                <content>
-                      <VBox prefHeight="318.0" prefWidth="784.0" spacing="12.0">
+      
+                      <!-- TOP HALF: The Entry Form Container -->
+                      <VBox prefHeight="481.0" prefWidth="631.0" spacing="12.0">
+                          <padding>
+                              <Insets bottom="12.0" left="12.0" right="12.0" top="12.0" />
+                          </padding>
                           <children>
-                              <GridPane hgap="10" vgap="8">
+                              <GridPane hgap="10.0" vgap="10.0">
                                   <columnConstraints>
-                                      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="140.0" />
-                                      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="220.0" />
+                                      <ColumnConstraints hgrow="NEVER" minWidth="140.0" prefWidth="140.0" />
+                                      <ColumnConstraints hgrow="ALWAYS" minWidth="200.0" />
                                   </columnConstraints>
                                   <rowConstraints>
-                                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                      <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                      <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                      <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                      <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                      <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                      <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                      <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                      <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                      <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                      <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                   </rowConstraints>
                                   <children>
-                                      <Label text="DATE TAKEN" />
-                                      <Label text="MATURITY DATE" GridPane.rowIndex="1" />
-                                      <Label text="PRINCIPAL" GridPane.rowIndex="3" />
-                                      <Label text="INTEREST RATE" GridPane.rowIndex="4" />
-                                      <Label text="TENOR (DAYS)" GridPane.rowIndex="5" />
-                                      <Label text="COLLATERAL" GridPane.rowIndex="6" />
-                                      <Label text="FEES" GridPane.rowIndex="7" />
-                                      <Label text="STATUS" GridPane.rowIndex="8" />
-                                      <Label text="FIELD OFFICER" GridPane.rowIndex="9" />
-                                      <DatePicker fx:id="startDatePicker" prefHeight="25.0" prefWidth="427.0" GridPane.columnIndex="1" />
-                                      <DatePicker fx:id="maturityDatePicker" prefHeight="25.0" prefWidth="427.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                      <Label text="DATE TAKEN" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                      <DatePicker fx:id="startDatePicker" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+      
+                                      <Label text="MATURITY DATE" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                      <DatePicker fx:id="maturityDatePicker" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+      
+                                      <Label text="CUSTOMER NAME" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                      <ComboBox fx:id="customerList" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+      
+                                      <Label text="PRINCIPAL" GridPane.columnIndex="0" GridPane.rowIndex="3" />
                                       <TextField fx:id="principalField" promptText="Enter loan amount" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+      
+                                      <Label text="INTEREST RATE" GridPane.columnIndex="0" GridPane.rowIndex="4" />
                                       <TextField fx:id="interestRateField" promptText="Between 0 and 1 (e.g. 0.05 for 5%)" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+      
+                                      <Label text="TENOR (DAYS)" GridPane.columnIndex="0" GridPane.rowIndex="5" />
                                       <TextField fx:id="tenorField" promptText="Enter number of days (e.g. 30)" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+      
+                                      <Label text="COLLATERAL" GridPane.columnIndex="0" GridPane.rowIndex="6" />
                                       <TextField fx:id="collateralField" promptText="Describe collateral" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+      
+                                      <Label text="FEES" GridPane.columnIndex="0" GridPane.rowIndex="7" />
                                       <TextField fx:id="feesField" promptText="Enter additional fees" GridPane.columnIndex="1" GridPane.rowIndex="7" />
-                                      <ComboBox fx:id="statusField" prefHeight="25.0" prefWidth="427.0" GridPane.columnIndex="1" GridPane.rowIndex="8" />
-                              <Label layoutX="10.0" layoutY="321.0" text="CUSTOMER NAME" GridPane.rowIndex="2" />
-                              <ComboBox fx:id="fieldOfficerField" prefHeight="25.0" prefWidth="426.0" GridPane.columnIndex="1" GridPane.hgrow="SOMETIMES" GridPane.rowIndex="9" GridPane.vgrow="ALWAYS" />
-                              <ComboBox fx:id="customerList" prefHeight="25.0" prefWidth="425.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+      
+                                      <Label text="STATUS" GridPane.columnIndex="0" GridPane.rowIndex="8" />
+                                      <ComboBox fx:id="statusField" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="8" />
+      
+                                      <Label text="FIELD OFFICER" GridPane.columnIndex="0" GridPane.rowIndex="9" />
+                                      <ComboBox fx:id="fieldOfficerField" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="9" />
                                   </children>
                               </GridPane>
-                              <HBox spacing="10">
+      
+                              <HBox spacing="10.0">
                                   <children>
                                       <Button fx:id="saveButton" mnemonicParsing="false" onMouseClicked="#handleSaveLoan" text="SAVE" />
                                       <Button fx:id="updateButton" mnemonicParsing="false" onMouseClicked="#handleUpdateLoan" text="UPDATE" />
@@ -63,30 +76,34 @@
                                       <Button fx:id="clearButton" mnemonicParsing="false" onMouseClicked="#handleClearLoanForm" text="CLEAR" />
                                   </children>
                               </HBox>
+      
                               <Label fx:id="messageLabel" text="message" textFill="#b22222" />
-                            <TableView fx:id="loansTable" prefHeight="108.0" prefWidth="784.0">
-                                <columns>
-                                    <TableColumn fx:id="idColumn" prefWidth="60.0" text="LOAN ID" />
-                                   <TableColumn fx:id="customerNameColumn" prefWidth="120.0" text="CUSTOMER NAME" />
-                                    <TableColumn fx:id="startDateColumn" prefWidth="100.0" text="DATE TAKEN" />
-                                    <TableColumn fx:id="maturityDateColumn" prefWidth="100.0" text="MATURITY" />
-                                    <TableColumn fx:id="fullPaidDateColumn" prefWidth="100.0" text="Fully Paid - Date" />
-                  
-                                    <TableColumn fx:id="principalColumn" prefWidth="100.0" text="PRINCIPAL" />
-                                    <TableColumn fx:id="interestRateColumn" prefWidth="90.0" text="RATE" />
-                                    <TableColumn fx:id="tenorColumn" prefWidth="70.0" text="TENOR" />
-                                    <TableColumn fx:id="collateralColumn" prefWidth="100.0" text="COLLATERAL" />
-                                    <TableColumn fx:id="feesColumn" prefWidth="80.0" text="FEES" />
-                                    <TableColumn fx:id="statusColumn" prefWidth="90.0" text="STATUS" />
-                                    <TableColumn fx:id="fieldOfficerColumn" prefWidth="120.0" text="FIELD OFFICER" />
-                              <TableColumn fx:id="fullPayment" prefWidth="90.0" text="FULL PAYMENT" />
-                                </columns>
-                            </TableView>
                           </children>
                       </VBox>
                </content>
             </ScrollPane>
-            </top>
-        </BorderPane>
+
+                <!-- BOTTOM HALF: The Table Container -->
+                <!-- TableView automatically builds vertical/horizontal scrolls when filled -->
+                <TableView fx:id="loansTable">
+                    <columns>
+                        <TableColumn fx:id="idColumn" prefWidth="60.0" text="LOAN ID" />
+                        <TableColumn fx:id="customerNameColumn" prefWidth="120.0" text="CUSTOMER NAME" />
+                        <TableColumn fx:id="startDateColumn" prefWidth="100.0" text="DATE TAKEN" />
+                        <TableColumn fx:id="maturityDateColumn" prefWidth="100.0" text="MATURITY" />
+                        <TableColumn fx:id="fullPaidDateColumn" prefWidth="100.0" text="Fully Paid - Date" />
+                        <TableColumn fx:id="principalColumn" prefWidth="100.0" text="PRINCIPAL" />
+                        <TableColumn fx:id="interestRateColumn" prefWidth="90.0" text="RATE" />
+                        <TableColumn fx:id="tenorColumn" prefWidth="70.0" text="TENOR" />
+                        <TableColumn fx:id="collateralColumn" prefWidth="100.0" text="COLLATERAL" />
+                        <TableColumn fx:id="feesColumn" prefWidth="80.0" text="FEES" />
+                        <TableColumn fx:id="statusColumn" prefWidth="90.0" text="STATUS" />
+                        <TableColumn fx:id="fieldOfficerColumn" prefWidth="120.0" text="FIELD OFFICER" />
+                        <TableColumn fx:id="fullPayment" prefWidth="90.0" text="FULL PAYMENT" />
+                    </columns>
+                </TableView>
+
+            </items>
+        </SplitPane>
     </children>
 </AnchorPane>

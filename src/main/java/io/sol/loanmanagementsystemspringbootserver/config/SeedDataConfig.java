@@ -66,11 +66,25 @@ public class SeedDataConfig {
 
 
                     List<Employee> field_officers = new ArrayList<>();
-                    field_officers.add(new Employee("Solomon", "Twist", 20000, "solomon@twist.com", Role.FIELD_OFFICER));
-                    field_officers.add(new Employee("Nisha", "Twist", 20300, "nisha@twist.com", Role.FIELD_OFFICER));
-                    field_officers.add(new Employee("Hansa", "Gans", 20000, "hans@gans.com", Role.FIELD_OFFICER));
-                    field_officers.add(new Employee("Hasifa", "Muus", 12000, "has@has.com", Role.FIELD_OFFICER));
-                    field_officers.add(new Employee("Wendy", "Glav", 20000, "wens@wen.com", Role.FIELD_OFFICER));
+                    Employee sol = new Employee("Solomon", "Twist", 20000, "solomon@twist.com", Role.FIELD_OFFICER, "0789847372");
+                    sol.setPassword(passwordEncoder.encode("0000"));
+                    field_officers.add(sol);
+                    
+                    Employee nisha = new Employee("Nisha", "Twist", 20300, "nisha@twist.com", Role.FIELD_OFFICER, "085958332");
+                    nisha.setPassword(passwordEncoder.encode("0000"));
+                    field_officers.add(nisha);
+                    
+                    Employee hansa = new Employee("Hansa", "Gans", 20000, "hans@gans.com", Role.FIELD_OFFICER, "0758437722");
+                    hansa.setPassword(passwordEncoder.encode("0000"));
+                    field_officers.add(hansa);
+                    
+                    Employee hasifa = new Employee("Hasifa", "Muus", 12000, "has@has.com", Role.FIELD_OFFICER, "089483722");
+                    hasifa.setPassword(passwordEncoder.encode("0000"));
+                    field_officers.add(hasifa);
+                    
+                    Employee wendy = new Employee("Wendy", "Glav", 20000, "wens@wen.com", Role.FIELD_OFFICER, "093728923");
+                    wendy.setPassword(passwordEncoder.encode("0000"));
+                    field_officers.add(wendy);
 
                     employeeRepository.saveAll(field_officers);
 

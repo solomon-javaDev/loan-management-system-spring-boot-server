@@ -17,6 +17,8 @@ public class CustomerDTO implements Serializable {
     private String guarantorNin;
     private java.math.BigDecimal savingsBalance;
     private int loanCount;
+    private boolean active = true;
+    private EmployeeDTO fieldOfficer;
 
     public CustomerDTO() {}
 
@@ -61,6 +63,22 @@ public class CustomerDTO implements Serializable {
 
     public java.math.BigDecimal getSavingsBalance() { return savingsBalance; }
     public void setSavingsBalance(java.math.BigDecimal savingsBalance) { this.savingsBalance = savingsBalance; }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public EmployeeDTO getFieldOfficer() {
+        return fieldOfficer;
+    }
+
+    public void setFieldOfficer(EmployeeDTO fieldOfficer) {
+        this.fieldOfficer = fieldOfficer;
+    }
 
     @Override
     public String toString() {

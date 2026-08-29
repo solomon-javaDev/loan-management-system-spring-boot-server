@@ -92,6 +92,12 @@ public class CustomerService {
                     existingCustomer.setOtherNames(customerDto.getOtherNames());
                     existingCustomer.setAddress(customerDto.getAddress());
                     existingCustomer.setSavingsBalance(customerDto.getSavingsBalance());
+                    existingCustomer.setActive(customerDto.isActive());
+                    if (customerDto.getFieldOfficer() != null) {
+                        existingCustomer.setFieldOfficer(DTOMapper.toEntity(customerDto.getFieldOfficer()));
+                    } else {
+                        existingCustomer.setFieldOfficer(null);
+                    }
                     Customer saved = repository.save(existingCustomer);
                     return Result.success("Customer updated successfully.", DTOMapper.toResponseDTO(saved));
                 })

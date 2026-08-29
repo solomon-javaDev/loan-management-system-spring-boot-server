@@ -1,6 +1,9 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
+import io.sol.loanmanagementsystemspringbootserver.entities.CashTransaction;
+import io.sol.loanmanagementsystemspringbootserver.entities.CashTransactionType;
 import io.sol.loanmanagementsystemspringbootserver.entities.ExpenseCategory;
+import io.sol.loanmanagementsystemspringbootserver.services.CashTransactionService;
 import io.sol.loanmanagementsystemspringbootserver.services.ExpenseCategoryService;
 import io.sol.loanmanagementsystemspringbootserver.services.SystemSettingService;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
@@ -14,6 +17,7 @@ public class SettingsController {
 
     private final SystemSettingService settingService;
     private final ExpenseCategoryService expenseCategoryService;
+    private final CashTransactionService cashTransactionService;
 
     @FXML
     private TextField adminEmailsField;
@@ -33,14 +37,30 @@ public class SettingsController {
     @FXML
     private TextField expenseCategory;
 
-    public SettingsController(SystemSettingService settingService, ExpenseCategoryService expenseCategoryService) {
+    @FXML
+    private Label totalCapitalLabel;
+
+    @FXML
+    private Label totalCashOutLabel;
+
+    @FXML
+    private TextField transactionAmount;
+
+    @FXML
+    private ComboBox<CashTransactionType> transactionType;
+
+    public SettingsController(SystemSettingService settingService, ExpenseCategoryService expenseCategoryService, CashTransactionService cashTransactionService) {
         this.settingService = settingService;
         this.expenseCategoryService = expenseCategoryService;
+        this.cashTransactionService = cashTransactionService;
     }
 
     @FXML
     public void initialize() {
         agingFreq.getItems().addAll("Daily","Every 3 days","Weekly","Monthly");
+        transactionType.getItems().addAll(CashTransactionType.CAPITAL_IN, CashTransactionType.CASH_OUT);
+        
+        refreshCapitalInfo();
         
         String savedEmails = settingService.getSetting("report.emails", "");
         adminEmailsField.setText(savedEmails);
@@ -85,6 +105,38 @@ public class SettingsController {
             expenseCategoryService.saveCategory(expenseCategory1);
             messageLabel.setText("A new expense category has been saved: " + description);
             expenseCategory.clear();
+        }
+    }
+
+    private void refreshCapitalInfo() {
+        totalCapitalLabel.setText(String.format("%.2f", cashTransactionService.getTotalCapital()));
+        totalCashOutLabel.setText(String.format("%.2f", cashTransactionService.getTotalCashOut()));
+    }
+
+    @FXML
+    private void handleRecordTransaction() {
+        try {
+            java.math.BigDecimal amount = new java.math.BigDecimal(transactionAmount.getText());
+            CashTransactionType type = transactionType.getValue();
+            if (type == null) {
+                messageLabel.setText("Select transaction type");
+                return;
+            }
+            CashTransaction tx = new CashTransaction();
+            tx.setAmount(amount);
+            tx.setType(type);
+            tx.setDescription("Capital management transaction: " + type);
+            
+            var result = cashTransactionService.record(tx);
+            if (result.isSuccess()) {
+                messageLabel.setText("Transaction recorded successfully");
+                transactionAmount.clear();
+                refreshCapitalInfo();
+            } else {
+                messageLabel.setText(result.message());
+            }
+        } catch (Exception e) {
+            messageLabel.setText("Invalid amount: " + e.getMessage());
         }
     }
 }

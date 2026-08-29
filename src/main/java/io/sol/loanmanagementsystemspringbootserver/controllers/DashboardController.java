@@ -167,9 +167,9 @@ public class DashboardController {
     }
 
     @FXML
-    public void showUsersView(){
+    public void showEmployeesView(){
         try {
-            mainContent.getChildren().setAll(stageManager.loadView("/ui/dashboard/UsersView.fxml"));
+            mainContent.getChildren().setAll(stageManager.loadView("/ui/dashboard/EmployeesView.fxml"));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

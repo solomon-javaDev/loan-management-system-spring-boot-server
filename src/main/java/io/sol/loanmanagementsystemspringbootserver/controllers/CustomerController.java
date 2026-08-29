@@ -3,7 +3,9 @@ package io.sol.loanmanagementsystemspringbootserver.controllers;
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerCreateDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerResponseDTO;
+import io.sol.loanmanagementsystemspringbootserver.dtos.EmployeeDTO;
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
+import io.sol.loanmanagementsystemspringbootserver.services.EmployeeService;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import javafx.collections.FXCollections;
@@ -25,6 +27,7 @@ import org.springframework.stereotype.Component;
 public class CustomerController {
 
     private final CustomerService customerService;
+    private final EmployeeService employeeService;
 
     @FXML
     private TextField firstNameField;
@@ -106,18 +109,32 @@ public class CustomerController {
     private TableColumn<CustomerDTO, String> addressColumn;
 
     @FXML
+    private TableColumn<CustomerDTO, Boolean> activeColumn;
+
+    @FXML
+    private TableColumn<CustomerDTO, String> fieldOfficerColumn;
+
+    @FXML
+    private ComboBox<EmployeeDTO> fieldOfficerCombo;
+
+    @FXML
+    private CheckBox activeCheckbox;
+
+    @FXML
     private Label messageLabel;
 
     private FilteredList<CustomerDTO> filteredCustomers;
 
-    public CustomerController(CustomerService customerService) {
+    public CustomerController(CustomerService customerService, EmployeeService employeeService) {
         this.customerService = customerService;
+        this.employeeService = employeeService;
     }
 
     @FXML
     public void initialize() {
         configureTable();
         loadCustomers();
+        loadFieldOfficers();
         customerSearchField.textProperty().addListener((obs, oldValue, newValue) -> applyCustomerFilter(newValue));
 
         customersTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, selectedCustomer) -> {
@@ -216,6 +233,11 @@ public class CustomerController {
         guarantorColumn.setCellValueFactory(new PropertyValueFactory<>("guarantorName"));
         telephoneColumn.setCellValueFactory(new PropertyValueFactory<>("telephone"));
         addressColumn.setCellValueFactory(new PropertyValueFactory<>("address"));
+        activeColumn.setCellValueFactory(new PropertyValueFactory<>("active"));
+        fieldOfficerColumn.setCellValueFactory(cellData -> {
+            EmployeeDTO officer = cellData.getValue().getFieldOfficer();
+            return new javafx.beans.property.SimpleStringProperty(officer != null ? officer.toString() : "");
+        });
         numberOfLoans.setCellValueFactory(cellData -> {
             CustomerDTO customer = cellData.getValue();
             if (customer != null) {
@@ -229,6 +251,13 @@ public class CustomerController {
         Result<java.util.List<CustomerDTO>> result = customerService.getAllCustomers();
         filteredCustomers = new FilteredList<>(FXCollections.observableArrayList(result.value()), customer -> true);
         customersTable.setItems(filteredCustomers);
+    }
+
+    private void loadFieldOfficers() {
+        var result = employeeService.getAllEmployees();
+        if (result.isSuccess()) {
+            fieldOfficerCombo.setItems(FXCollections.observableArrayList(result.value()));
+        }
     }
 
     private void applyCustomerFilter(String searchText) {
@@ -261,6 +290,8 @@ public class CustomerController {
         customer.setGuarantorNin(guarantorNinField.getText().trim());
         customer.setTelephone(telephoneField.getText() == null ? "" : telephoneField.getText().trim());
         customer.setAddress(addressField.getText()== null ?  " " : addressField.getText().trim());
+        customer.setActive(activeCheckbox.isSelected());
+        customer.setFieldOfficer(fieldOfficerCombo.getValue());
         return customer;
     }
 
@@ -275,6 +306,8 @@ public class CustomerController {
         guarantorNinField.setText(customer.getGuarantorNin());
         telephoneField.setText(customer.getTelephone());
         addressField.setText(customer.getAddress());
+        activeCheckbox.setSelected(customer.isActive());
+        fieldOfficerCombo.setValue(customer.getFieldOfficer());
     }
 
     private void clearForm() {
@@ -287,7 +320,9 @@ public class CustomerController {
         guarantorPhoneField.clear();
         guarantorNinField.clear();
         telephoneField.clear();
-        addressField.clear();;
+        addressField.clear();
+        activeCheckbox.setSelected(true);
+        fieldOfficerCombo.getSelectionModel().clearSelection();
          customersTable.getSelectionModel().clearSelection();
     }
 }

@@ -51,7 +51,11 @@ public class EmployeeService {
             return Result.invalid("Password is required", null);
         }
         Employee employee = DTOMapper.toEntity(employeeDTO);
-        employee.setPassword(passwordEncoder.encode(employeeDTO.getPassword()));
+        if (employee.getPassword() != null && !employee.getPassword().isEmpty()) {
+            employee.setPassword(passwordEncoder.encode(employee.getPassword()));
+        } else {
+            employee.setPassword(passwordEncoder.encode("0000"));
+        }
         Employee saved = employeeRepository.save(employee);
         return Result.success("Employee created successfully", DTOMapper.toDTO(saved));
     }
@@ -59,5 +63,13 @@ public class EmployeeService {
     public Result<List<EmployeeDTO>> getAllEmployees() {
         return Result.success("All employees retrieved", 
             employeeRepository.findAll().stream().map(DTOMapper::toDTO).collect(Collectors.toList()));
+    }
+
+    public Result<EmployeeDTO> updateEmployeeStatus(Integer id, boolean active) {
+        return employeeRepository.findById(id).map(employee -> {
+            employee.setActive(active);
+            Employee saved = employeeRepository.save(employee);
+            return Result.success("Employee status updated", DTOMapper.toDTO(saved));
+        }).orElse(Result.notFound("Employee not found", null));
     }
 }

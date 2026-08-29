@@ -12,7 +12,7 @@
                <children>
                   <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Customer Management" />
                   <Label fx:id="messageLabel" text="Enter customer details or select an existing record." wrapText="true" />
-      
+
                   <GridPane hgap="10.0" vgap="8.0">
                      <columnConstraints>
                         <ColumnConstraints minWidth="120.0" />
@@ -21,16 +21,16 @@
                      <children>
                         <Label text="First name" GridPane.columnIndex="0" GridPane.rowIndex="1" />
                         <TextField fx:id="firstNameField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-      
+
                         <Label text="Last name" GridPane.columnIndex="0" GridPane.rowIndex="2" />
                         <TextField fx:id="lastNameField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-      
+
                         <Label text="Other names" GridPane.columnIndex="0" GridPane.rowIndex="3" />
                         <TextField fx:id="otherNamesField" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-      
+
                         <Label text="Customer NIN" GridPane.columnIndex="0" GridPane.rowIndex="4" />
                         <TextField fx:id="ninField" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-      
+
                         <Label text="Telephone" GridPane.columnIndex="0" GridPane.rowIndex="5" />
                         <Label layoutX="10.0" layoutY="33.0" text="Account Number" />
                         <TextField fx:id="telephoneField" GridPane.columnIndex="1" GridPane.rowIndex="5" />
@@ -42,6 +42,10 @@
                         <TextField fx:id="guarantorPhoneField" GridPane.columnIndex="1" GridPane.rowIndex="8" />
                         <Label text="Guarantor NIN" GridPane.rowIndex="9" />
                         <TextField fx:id="guarantorNinField" GridPane.columnIndex="1" GridPane.rowIndex="9" />
+                        <Label text="Field Officer" GridPane.rowIndex="10" />
+                        <ComboBox fx:id="fieldOfficerCombo" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="10" />
+                        <Label text="Status" GridPane.rowIndex="11" />
+                        <CheckBox fx:id="activeCheckbox" text="Active" GridPane.columnIndex="1" GridPane.rowIndex="11" />
                         <TextField fx:id="accountNumberField" layoutX="140.0" layoutY="29.0" GridPane.columnIndex="1">
                            <padding>
                               <Insets bottom="5.0" />
@@ -61,9 +65,9 @@
                         <RowConstraints />
                      </rowConstraints>
                   </GridPane>
-      
+
                   <TextField fx:id="customerSearchField" promptText="Search customers, loans, account number, telephone or NIN" />
-      
+
                   <HBox spacing="10.0">
                      <children>
                         <Button fx:id="customerSaveButton" onAction="#handleSaveCustomer" text="Save" />
@@ -72,7 +76,7 @@
                         <Button fx:id="customerClearButton" onAction="#handleClearForm" text="Clear" />
                      </children>
                   </HBox>
-      
+
                   <TableView fx:id="customersTable" VBox.vgrow="ALWAYS">
                      <columns>
                         <TableColumn fx:id="accountNumberColumn" prefWidth="120.0" text="Acc No" />
@@ -84,6 +88,8 @@
                         <TableColumn fx:id="numberOfLoans" prefWidth="75.0" text="Loans" />
                         <TableColumn fx:id="telephoneColumn" prefWidth="120.0" text="Telephone" />
                         <TableColumn fx:id="addressColumn" prefWidth="180.0" text="Address" />
+                        <TableColumn fx:id="activeColumn" prefWidth="75.0" text="Active" />
+                        <TableColumn fx:id="fieldOfficerColumn" prefWidth="150.0" text="Field Officer" />
                      </columns>
                   </TableView>
                </children>

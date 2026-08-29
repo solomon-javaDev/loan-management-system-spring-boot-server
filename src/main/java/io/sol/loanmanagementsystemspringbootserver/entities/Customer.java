@@ -55,6 +55,13 @@ public class Customer {
     @Column(precision = 19, scale = 4)
     private java.math.BigDecimal savingsBalance = java.math.BigDecimal.ZERO;
 
+    @ManyToOne
+    @JoinColumn(name = "field_officer_id")
+    private Employee fieldOfficer;
+
+    @Column(nullable = false)
+    private boolean active = true;
+
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Loan> loans = new ArrayList<>();
 
@@ -209,6 +216,22 @@ public class Customer {
 
     public void setSavingsBalance(java.math.BigDecimal savingsBalance) {
         this.savingsBalance = savingsBalance;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public Employee getFieldOfficer() {
+        return fieldOfficer;
+    }
+
+    public void setFieldOfficer(Employee fieldOfficer) {
+        this.fieldOfficer = fieldOfficer;
     }
 
     private void refreshCustomerName() {

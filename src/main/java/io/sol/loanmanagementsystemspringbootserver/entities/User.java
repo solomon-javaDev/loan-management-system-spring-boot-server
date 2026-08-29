@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "users")
-@Inheritance(strategy = InheritanceType.JOINED)
 public class User {
 
     @Id
