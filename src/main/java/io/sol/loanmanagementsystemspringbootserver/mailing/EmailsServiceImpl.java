@@ -1,5 +1,6 @@
 package io.sol.loanmanagementsystemspringbootserver.mailing;
 
+import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -18,7 +19,7 @@ public class EmailsServiceImpl implements EmailsService {
     }
 
     @Override
-    public String sendSimpleMail(EmailDetails details) {
+    public Result<Object> sendSimpleMail(EmailDetails details) {
         try {
             SimpleMailMessage mailMessage = new SimpleMailMessage();
 
@@ -28,9 +29,9 @@ public class EmailsServiceImpl implements EmailsService {
             mailMessage.setSubject(details.getSubject());
 
             javaMailSender.send(mailMessage);
-            return "Mail Sent Successfully...";
+            return Result.success("Mail Sent Successfully...", null);
         } catch (Exception e) {
-            return "Error while Sending Mail: " + e.getMessage();
+            return Result.notFound("Error while Sending Mail: ", e.getMessage());
         }
     }
 

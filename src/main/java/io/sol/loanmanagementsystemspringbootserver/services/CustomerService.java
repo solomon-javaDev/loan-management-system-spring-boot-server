@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -55,6 +56,13 @@ public class CustomerService {
         customer.setAccountNumber(generateAccountNumber());
         Customer savedCustomer = repository.save(customer);
         return Result.success("Customer saved successfully.", DTOMapper.toResponseDTO(savedCustomer));
+    }
+
+    public List<CustomerDTO> getCustomersDueToday(){
+        //Queries all customers due today, and maps them to clean DTOs
+         return repository.findAllCustomersDue(LocalDate.now()).stream()
+                 .map(DTOMapper::toDTO)
+                 .toList();
     }
 
     public String generateAccountNumber() {

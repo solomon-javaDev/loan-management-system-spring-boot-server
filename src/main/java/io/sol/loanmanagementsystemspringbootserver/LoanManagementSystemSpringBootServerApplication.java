@@ -23,9 +23,9 @@ public class LoanManagementSystemSpringBootServerApplication {
     @Primary // Overrides any other detected configuration sources automatically
     public DataSource dataSource() {
         return DataSourceBuilder.create()
-                .driverClassName("org.postgresql.Driver")
-                .url("jdbc:postgresql://localhost:5432/loan_management_db")
-                .username("postgres")
+                .driverClassName("org.h2.Driver")
+                .url("jdbc:h2:file:~/loan_db;DB_CLOSE_DELAY=-1;MODE=PostgreSQL")
+                .username("sa")
                 .password("milka")
                 .build();
     }

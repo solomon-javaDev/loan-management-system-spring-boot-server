@@ -7,8 +7,10 @@ import io.sol.loanmanagementsystemspringbootserver.mailing.EmailsService;
 import io.sol.loanmanagementsystemspringbootserver.services.*;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import org.apache.poi.ss.usermodel.Row;
@@ -88,6 +90,21 @@ public class HomeController {
     @FXML
     private Label checkoutCashLabel;
 
+    @FXML
+    private TableView<CustomerDTO> dueCustomersTable;
+    @FXML
+    private TableColumn<CustomerDTO, String> customerAccountNumber;
+
+    @FXML
+    private TableColumn<CustomerDTO, String> customerName;
+    @FXML
+    private TableColumn<CustomerDTO, String> customerTelephone;
+    @FXML
+    private TableColumn<CustomerDTO, String> guarantorName;
+    @FXML
+    private TableColumn<CustomerDTO, String> agingDays;
+
+
     public HomeController(LoansService loansService, CustomerService customerService, 
                           PaymentsService paymentsService,
                           ReportService reportService,
@@ -103,6 +120,8 @@ public class HomeController {
 
     @FXML
     public void initialize() {
+
+        fillDueCustomersTable();
         calculateDailyStats();
     }
 
@@ -173,6 +192,17 @@ public class HomeController {
         updateStat("Checkout Cash", String.format("%.2f", totalColl.subtract(totalDisbursedToday)), checkoutCashLabel);
     }
 
+    private void fillDueCustomersTable(){
+        List<CustomerDTO> customerDTOList =  customerService.getCustomersDueToday();
+
+        dueCustomersTable.setItems(FXCollections.observableArrayList(customerDTOList));
+
+        customerAccountNumber.setCellValueFactory(new PropertyValueFactory<>("accountNumber"));
+        customerTelephone.setCellValueFactory(new PropertyValueFactory<>("telephone"));
+        guarantorName.setCellValueFactory(new PropertyValueFactory<>("guarantorName"));
+        customerName.setCellValueFactory(new PropertyValueFactory<>("customerName"));
+
+    }
     private void updateStat(String key, String value, Label label) {
         statsMap.put(key, value);
         if (label != null) label.setText(value);
@@ -293,12 +323,10 @@ public class HomeController {
             details.setSubject("Daily Summary Report - " + LocalDate.now());
             details.setBody(body.toString());
 
-            String status = emailsService.sendSimpleMail(details);
-            if (status.contains("Error")) {
-                UIHelper.showError("Email Failed", status);
-            } else {
-                UIHelper.showInfo("Email Sent", status);
-            }
+            String status = String.valueOf(emailsService.sendSimpleMail(details));
+           if(status.contains("error")){
+               UIHelper.showError("ERROR", "An error ocurred while sending this email");
+           }
         });
     }
 

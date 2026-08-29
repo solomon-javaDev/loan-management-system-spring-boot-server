@@ -3,6 +3,7 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 
 <ScrollPane fitToWidth="true" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.sol.loanmanagementsystemspringbootserver.controllers.HomeController">
    <content>
@@ -98,6 +99,14 @@
                     <Label fx:id="checkoutCashLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" text="0.00" />
                  </VBox>
               </children>
+               <rowConstraints>
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+               </rowConstraints>
             </GridPane>
             
             <HBox spacing="15.0">
@@ -118,6 +127,24 @@
                         <Hyperlink onAction="#handleNavPayments" text="Payments" />
                      </children>
                   </HBox>
+                  <VBox>
+                     <children>
+                        <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="17.0" prefWidth="641.0" text="CUSTOMERS DUE TODAY">
+                           <font>
+                              <Font name="Cambria" size="18.0" />
+                           </font>
+                        </Label>
+                        <TableView fx:id="dueCustomersTable" prefHeight="200.0" prefWidth="200.0">
+                          <columns>
+                            <TableColumn fx:id="customerAccountNumber" prefWidth="138.33331298828125" text="Account Number" />
+                            <TableColumn fx:id="customerName" prefWidth="113.66668701171875" text="Customer Name" />
+                              <TableColumn fx:id="customerTelephone" prefWidth="133.0" text="Telephone" />
+                              <TableColumn fx:id="guarantorName" prefWidth="139.0" text="Guarantor Name" />
+                              <TableColumn fx:id="agingDays" prefWidth="119.33331298828125" text="Aging Days" />
+                          </columns>
+                        </TableView>
+                     </children>
+                  </VBox>
                </children>
             </VBox>
          </children>

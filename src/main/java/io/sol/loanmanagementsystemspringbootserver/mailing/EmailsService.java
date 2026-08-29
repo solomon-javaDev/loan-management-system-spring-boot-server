@@ -1,7 +1,7 @@
 package io.sol.loanmanagementsystemspringbootserver.mailing;
 
+import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 /**
  * Service class that defines methods required for sending emails
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @Component
 public interface EmailsService {
 
-    String sendSimpleMail(EmailDetails details);
+    Result<Object> sendSimpleMail(EmailDetails details);
 
     String sendMailWithAttachment(EmailDetails details);
 
