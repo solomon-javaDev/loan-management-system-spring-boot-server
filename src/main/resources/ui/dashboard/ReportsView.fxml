@@ -38,6 +38,9 @@
                </padding>
             </HBox>
          </top>
+         <right>
+            <VBox fx:id="dailySummaryBox" prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER" />
+         </right>
       </BorderPane>
    </children>
 </AnchorPane>

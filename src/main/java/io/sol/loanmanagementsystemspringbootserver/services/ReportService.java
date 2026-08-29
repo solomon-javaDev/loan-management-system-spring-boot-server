@@ -122,11 +122,14 @@ public class ReportService {
         List<io.sol.loanmanagementsystemspringbootserver.entities.CashTransaction> cashTransactions =
             cashTransactionRepository.findByDateBetween(dayStart, dayEnd);
         BigDecimal cashIn = cashTransactions.stream()
-            .filter(t -> t.getType() != CashTransactionType.CASH_OUT)
+            .filter(t -> t.getType() == CashTransactionType.CAPITAL_INJECTION
+                    || t.getType() == CashTransactionType.LOAN_COLLECTION
+                    || t.getType() == CashTransactionType.SAVINGS_DEPOSIT)
             .map(io.sol.loanmanagementsystemspringbootserver.entities.CashTransaction::getAmount)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal cashOut = cashTransactions.stream()
-            .filter(t -> t.getType() == CashTransactionType.CASH_OUT)
+            .filter(t -> t.getType() == CashTransactionType.BANK_DEPOSIT
+                    || t.getType() == CashTransactionType.EXPENSE)
             .map(io.sol.loanmanagementsystemspringbootserver.entities.CashTransaction::getAmount)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal expenses = expenseRepository.findByDateBetween(dayStart, dayEnd).stream()
@@ -155,7 +158,8 @@ public class ReportService {
                 .filter(transaction -> transaction.getDate() != null && transaction.getDate().isBefore(dateTime))
                 .toList();
         BigDecimal cashMovement = cash.stream()
-            .map(t -> t.getType() == CashTransactionType.CASH_OUT ? t.getAmount().negate() : t.getAmount())
+            .map(t -> (t.getType() == CashTransactionType.BANK_DEPOSIT || t.getType() == CashTransactionType.EXPENSE)
+                    ? t.getAmount().negate() : t.getAmount())
             .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal expenses = expenseRepository.findAll().stream()
             .filter(expense -> expense.getDate() != null && expense.getDate().isBefore(dateTime))
@@ -326,7 +330,7 @@ public class ReportService {
             .map(SavingsTransaction::getAmount)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal cashInput = cashTransactionRepository.findByDateBetween(startTime, endTime).stream()
-            .filter(t -> t.getType() != CashTransactionType.CASH_OUT)
+            .filter(t -> t.getType() != CashTransactionType.EXPENSE)
             .map(CashTransaction::getAmount)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 

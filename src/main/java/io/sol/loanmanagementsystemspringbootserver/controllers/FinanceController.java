@@ -22,9 +22,7 @@ public class FinanceController {
     @FXML private TextField expenseDescription;
     @FXML private ComboBox<ExpenseCategory> expenseCategoryDropDown;
     @FXML private TextField expenseAmount;
-    @FXML private TextField cashDescription;
-    @FXML private TextField cashAmount;
-    @FXML private ComboBox<CashTransactionType> cashType;
+
     @FXML private ComboBox<String> savingsCustomer;
     @FXML private TextField savingsCustomerId;
     @FXML private TextField savingsAmount;
@@ -44,15 +42,16 @@ public class FinanceController {
     @FXML
     public void initialize() {
 
-        uiControlUtilities.configureDropDown(expenseCategoryDropDown, expenseCategoryService.getAllCategories().value(),e-> e.getDescription());
-        cashType.setItems(FXCollections.observableArrayList(CashTransactionType.values()));
-        savingsType.setItems(FXCollections.observableArrayList(SavingsTransactionType.values()));
-        customerService.getAllCustomers().value().forEach(customer ->
-                savingsCustomer.getItems().add(customer.getId() + " - " + customer.getCustomerName()));
-        savingsCustomer.valueProperty().addListener((obs, oldValue, newValue) -> {
-            if (newValue != null) savingsCustomerId.setText(newValue.split(" - ", 2)[0]);
-        });
+            uiControlUtilities.configureDropDown(expenseCategoryDropDown, expenseCategoryService.getAllCategories().value(), e -> e.getDescription());
+            savingsType.setItems(FXCollections.observableArrayList(SavingsTransactionType.values()));
+            customerService.getAllCustomers().value().forEach(customer ->
+                    savingsCustomer.getItems().add(customer.getId() + " - " + customer.getCustomerName()));
+            savingsCustomer.valueProperty().addListener((obs, oldValue, newValue) -> {
+                if (newValue != null) savingsCustomerId.setText(newValue.split(" - ", 2)[0]);
+            });
+
     }
+
 
     @FXML
     private void recordExpense() {
@@ -76,15 +75,6 @@ public class FinanceController {
         expense.setAmount(amount);
 
         show(expenseService.recordExpense(expense).message());
-    }
-
-    @FXML
-    private void recordCash() {
-        CashTransaction transaction = new CashTransaction();
-        transaction.setDescription(cashDescription.getText());
-        transaction.setAmount(parseAmount(cashAmount.getText()));
-        transaction.setType(cashType.getValue());
-        show(cashService.record(transaction).message());
     }
 
     @FXML

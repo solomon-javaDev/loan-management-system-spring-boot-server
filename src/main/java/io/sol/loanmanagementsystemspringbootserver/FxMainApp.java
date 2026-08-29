@@ -1,5 +1,6 @@
 package io.sol.loanmanagementsystemspringbootserver;
 
+import io.sol.loanmanagementsystemspringbootserver.utilities.GlobalExceptionHandler;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -20,10 +21,20 @@ public class FxMainApp extends Application {
         applicationContext = new SpringApplicationBuilder(LoanManagementSystemSpringBootServerApplication.class)
             .headless(false)
             .run(getParameters().getRaw().toArray(new String[0]));
+        //1. Catch exceptions thrown on any background or worker thread
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable)->{
+            GlobalExceptionHandler.handleException(throwable);
+        });
     }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+
+        //2. Catch exceptions thrown on the main JavaFX UI
+        Thread.currentThread().setUncaughtExceptionHandler((thread, throwable)->{
+            GlobalExceptionHandler.handleException(throwable);
+        });
+
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/login/LoginView.fxml"));
         loader.setControllerFactory(applicationContext::getBean);
         Parent root = loader.load();

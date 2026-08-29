@@ -36,15 +36,20 @@ public class CashTransactionService {
 
     public BigDecimal getTotalCapital() {
         return repository.findAll().stream()
-                .filter(t -> t.getType() == io.sol.loanmanagementsystemspringbootserver.entities.CashTransactionType.CAPITAL_IN)
+                .filter(t -> t.getType() == io.sol.loanmanagementsystemspringbootserver.entities.CashTransactionType.CAPITAL_INJECTION)
+                .map(io.sol.loanmanagementsystemspringbootserver.entities.CashTransaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public BigDecimal getTotalOutflow() {
+        return repository.findAll().stream()
+                .filter(t -> t.getType() == io.sol.loanmanagementsystemspringbootserver.entities.CashTransactionType.BANK_DEPOSIT
+                        || t.getType() == io.sol.loanmanagementsystemspringbootserver.entities.CashTransactionType.EXPENSE)
                 .map(io.sol.loanmanagementsystemspringbootserver.entities.CashTransaction::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     public BigDecimal getTotalCashOut() {
-        return repository.findAll().stream()
-                .filter(t -> t.getType() == io.sol.loanmanagementsystemspringbootserver.entities.CashTransactionType.CASH_OUT)
-                .map(io.sol.loanmanagementsystemspringbootserver.entities.CashTransaction::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return getTotalOutflow();
     }
 }

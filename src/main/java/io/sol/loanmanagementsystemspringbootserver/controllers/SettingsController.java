@@ -12,6 +12,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+
 @Component
 public class SettingsController {
 
@@ -58,8 +60,11 @@ public class SettingsController {
     @FXML
     public void initialize() {
         agingFreq.getItems().addAll("Daily","Every 3 days","Weekly","Monthly");
-        transactionType.getItems().addAll(CashTransactionType.CAPITAL_IN, CashTransactionType.CASH_OUT);
-        
+        transactionType.getItems().addAll(
+                CashTransactionType.CAPITAL_INJECTION,
+                CashTransactionType.BANK_DEPOSIT
+        );
+
         refreshCapitalInfo();
         
         String savedEmails = settingService.getSetting("report.emails", "");
@@ -116,17 +121,22 @@ public class SettingsController {
     @FXML
     private void handleRecordTransaction() {
         try {
-            java.math.BigDecimal amount = new java.math.BigDecimal(transactionAmount.getText());
+            BigDecimal amount = new BigDecimal(transactionAmount.getText());
             CashTransactionType type = transactionType.getValue();
             if (type == null) {
                 messageLabel.setText("Select transaction type");
                 return;
             }
+
             CashTransaction tx = new CashTransaction();
             tx.setAmount(amount);
             tx.setType(type);
-            tx.setDescription("Capital management transaction: " + type);
-            
+            tx.setDescription(switch (type) {
+                case CAPITAL_INJECTION -> "Owner capital injection";
+                case BANK_DEPOSIT -> "Bank deposit to vault";
+                default -> null;
+            });
+
             var result = cashTransactionService.record(tx);
             if (result.isSuccess()) {
                 messageLabel.setText("Transaction recorded successfully");
