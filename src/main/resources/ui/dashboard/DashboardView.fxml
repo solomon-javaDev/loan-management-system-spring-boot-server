@@ -12,7 +12,24 @@
             <HBox fx:id="topBar" fillHeight="false" nodeOrientation="LEFT_TO_RIGHT" prefHeight="48.0" prefWidth="600.0" spacing="12.0" BorderPane.alignment="CENTER">
                <children>
                   <Label fx:id="dashboardLabel" prefHeight="47.0" prefWidth="93.0" text="LMS VERSION 1.0" />
-                  <TextField fx:id="searchBar" prefHeight="55.0" prefWidth="400.0" promptText="Search" HBox.hgrow="ALWAYS" />
+                  <HBox alignment="CENTER_LEFT" prefHeight="48.0" prefWidth="270.0">
+                     <children>
+                        <Label fx:id="cashAtHandLabel" text="CASH AT HAND">
+                           <graphic>
+                              <Label text="CASH AT HAND: " />
+                           </graphic>
+                        </Label>
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_LEFT" layoutX="115.0" layoutY="10.0" prefHeight="48.0" prefWidth="270.0">
+                     <children>
+                        <Label fx:id="totalLoanPortifolio" text="portifolio">
+                           <graphic>
+                              <Label text="TOTAL LOAN PORTIFOLIO: " />
+                           </graphic>
+                        </Label>
+                     </children>
+                  </HBox>
                </children>
                <cursor>
                   <Cursor fx:constant="OPEN_HAND" />

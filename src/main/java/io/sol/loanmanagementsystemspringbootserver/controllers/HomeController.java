@@ -72,7 +72,7 @@ public class HomeController {
     @FXML
     private Label principalBalanceLabel; //money in the system
     @FXML
-    private Label totalLoanPortfolioLabel; //the combined balance of all outstanding loans issued
+    private Label totalLoanPortfolioLabel; //the combined balance of all outstanding loans issued and //TODO their interests
     @FXML
     private Label openingCashLabel; //amount present at hand
     @FXML

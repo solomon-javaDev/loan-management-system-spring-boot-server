@@ -53,15 +53,7 @@ public class Employee {
         this.active = true;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Employee)) return false;
-        Employee employee = (Employee) o;
-        return getId() != null && getId().equals(employee.getId());
-    }
-
-    @Override
+      @Override
     public int hashCode() {
         return getClass().hashCode();
     }

@@ -2,12 +2,14 @@ package io.sol.loanmanagementsystemspringbootserver.services;
 
 import io.sol.loanmanagementsystemspringbootserver.dtos.LoanDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.PaymentDTO;
+import io.sol.loanmanagementsystemspringbootserver.entities.RepaymentReceivedEvent;
 import io.sol.loanmanagementsystemspringbootserver.mappers.DTOMapper;
 import io.sol.loanmanagementsystemspringbootserver.entities.Loan;
 import io.sol.loanmanagementsystemspringbootserver.entities.LoanStatus;
 import io.sol.loanmanagementsystemspringbootserver.entities.Payment;
 import io.sol.loanmanagementsystemspringbootserver.repositories.PaymentRepository;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,10 +31,12 @@ public class PaymentsService {
 
     private final PaymentRepository paymentRepository;
     private final LoansService loansService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
-    public PaymentsService(LoansService loansService, PaymentRepository paymentRepository) {
+    public PaymentsService(LoansService loansService, PaymentRepository paymentRepository, ApplicationEventPublisher applicationEventPublisher) {
         this.loansService = loansService;
         this.paymentRepository = paymentRepository;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @Transactional
@@ -49,7 +53,9 @@ public class PaymentsService {
              loan.addPayment(payment);
 
              Payment savedPayment = paymentRepository.save(payment);
-        
+
+             applicationEventPublisher.publishEvent(new RepaymentReceivedEvent(savedPayment.getId(), savedPayment.getAmountReceived()));
+
              updateLoanStatus(loan, savedPayment.getDate());
              loansService.saveLoanEntity(loan);
 

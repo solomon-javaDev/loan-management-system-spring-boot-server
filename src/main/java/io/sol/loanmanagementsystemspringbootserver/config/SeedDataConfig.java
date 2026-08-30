@@ -1,32 +1,65 @@
 package io.sol.loanmanagementsystemspringbootserver.config;
 
+import io.sol.loanmanagementsystemspringbootserver.entities.CapitalAccount;
 import io.sol.loanmanagementsystemspringbootserver.entities.Employee;
 import io.sol.loanmanagementsystemspringbootserver.entities.Role;
 import io.sol.loanmanagementsystemspringbootserver.entities.User;
+import io.sol.loanmanagementsystemspringbootserver.repositories.CapitalAccountsRepository;
 import io.sol.loanmanagementsystemspringbootserver.repositories.EmployeeRepository;
 import io.sol.loanmanagementsystemspringbootserver.repositories.UserRepository;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
+
 @Component
 public class SeedDataConfig implements CommandLineRunner {
 
     private final EmployeeRepository employeeRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final CapitalAccountsRepository capitalAccountsRepository;
+
+    public static final UUID SYSTEM_ACCOUNT_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+
 
     public SeedDataConfig(EmployeeRepository employeeRepository,
                           PasswordEncoder passwordEncoder,
-                          UserRepository userRepository) {
+                          UserRepository userRepository, CapitalAccountsRepository capitalAccountsRepository) {
         this.employeeRepository = employeeRepository;
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
+        this.capitalAccountsRepository = capitalAccountsRepository;
     }
 
     @Override
     public void run(String... args) {
+
+
+// Check if the system capital row already exists from a previous boot session
+        if (!capitalAccountsRepository.existsById(SYSTEM_ACCOUNT_ID)) {
+            System.out.println("🚀 [System Setup] Central Capital Account missing. Initializing standard corporate vault...");
+
+            // 1. Create a fresh zeroed out business entity instance
+            CapitalAccount initialAccount = CapitalAccount.initialiseNewBusiness();
+
+            // 2. Force assign your dedicated matching system identity key //TODO
+
+
+            // 3. Optional: Give yourself starting working capital injection right here if desired
+            initialAccount.injectCapital(new BigDecimal("50000.00")); // e.g., $50,000 starting cash
+
+            // 4. Flush changes to the persistent database file/engine
+            capitalAccountsRepository.save(initialAccount);
+            System.out.println("✅ [System Setup] Central Capital Account successfully created with ID: " + SYSTEM_ACCOUNT_ID);
+        } else {
+            System.out.println("ℹ️ [System Setup] Found existing Central Capital Account. Skipping database initialization.");
+        }
+
         userRepository.findByUsername("admin")
                 .ifPresentOrElse(admin -> {
                     if (isPlainTextPassword(admin.getPassword())) {

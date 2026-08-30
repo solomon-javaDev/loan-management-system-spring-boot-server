@@ -111,6 +111,11 @@ public class ReportService {
         return sb.toString();
     }
 
+    /**
+     *
+     * @param date
+     * @return
+     */
     public Map<String, Object> getDailyCashReport(LocalDate date) {
         List<Payment> dailyPayments = paymentRepository.findByDate(date);
         BigDecimal totalTransactions = dailyPayments.stream()

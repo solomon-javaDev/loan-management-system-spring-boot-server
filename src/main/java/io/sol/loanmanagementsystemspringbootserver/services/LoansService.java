@@ -7,6 +7,7 @@ import io.sol.loanmanagementsystemspringbootserver.mailing.EmailDetails;
 import io.sol.loanmanagementsystemspringbootserver.mailing.EmailsService;
 import io.sol.loanmanagementsystemspringbootserver.repositories.*;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,19 +36,21 @@ public class LoansService {
     private final LoanParameterChangeRepository changeRepository;
     private final EmailsService emailsService;
     private final SystemSettingService settingService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
-    public LoansService(LoansRepository loanRepository, 
-                        CustomerRepository customerRepository, 
+    public LoansService(LoansRepository loanRepository,
+                        CustomerRepository customerRepository,
                         EmployeeRepository employeeRepository,
                         LoanParameterChangeRepository changeRepository,
                         EmailsService emailsService,
-                        SystemSettingService settingService) {
+                        SystemSettingService settingService, ApplicationEventPublisher applicationEventPublisher) {
         this.loanRepository = loanRepository;
         this.employeeRepository = employeeRepository;
         this.customerRepository = customerRepository;
         this.changeRepository = changeRepository;
         this.emailsService = emailsService;
         this.settingService = settingService;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     public Result<List<LoanDTO>> getAllLoans() {
@@ -131,7 +134,7 @@ public class LoansService {
 
         // 4. Explicitly persist the loan entity
         Loan savedLoan = loanRepository.save(loan);
-
+        applicationEventPublisher.publishEvent(new LoanDisbursedEvent(savedLoan.getId(),savedLoan.getPrincipal()));
         return Result.success("Loan attached to customer successfully.", DTOMapper.toDTO(savedLoan));
     }
 

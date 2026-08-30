@@ -1,6 +1,9 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
+import io.sol.loanmanagementsystemspringbootserver.entities.CapitalAccount;
 import io.sol.loanmanagementsystemspringbootserver.services.AutoupdateService;
+import io.sol.loanmanagementsystemspringbootserver.services.CapitalViewService;
+import io.sol.loanmanagementsystemspringbootserver.utilities.CapitalSummaryView;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.utilities.StageManager;
 import io.sol.loanmanagementsystemspringbootserver.services.SearchService;
@@ -45,6 +48,8 @@ public class DashboardController {
     private final SearchService searchService;
     private final StageManager stageManager;
     private final AutoupdateService autoupdateService;
+    private final CapitalAccountRepository capitalAccountRepository;
+    private final CapitalViewService capitalViewService;
     @FXML
     private Label dashboardLabel;
     @FXML
@@ -61,6 +66,12 @@ public class DashboardController {
     private Button reportsButton;
 
     @FXML
+    private Label cashAtHand;
+
+    @FXML
+    private Label totalLoanPortifolio;
+
+    @FXML
     private TextField searchBar;
 
     @FXML
@@ -68,22 +79,26 @@ public class DashboardController {
 
     private final ApplicationContext applicationContext;
 
-    public DashboardController(ApplicationContext applicationContext, SearchService searchService, StageManager stageManager, AutoupdateService autoupdateService) {
+    public DashboardController(ApplicationContext applicationContext, SearchService searchService, StageManager stageManager, AutoupdateService autoupdateService, CapitalAccountRepository capitalAccountRepository, CapitalViewService capitalViewService) {
         this.applicationContext = applicationContext;
         this.searchService = searchService;
         this.stageManager = stageManager;
         this.autoupdateService = autoupdateService;
+        this.capitalAccountRepository = capitalAccountRepository;
+        this.capitalViewService = capitalViewService;
     }
 
     @FXML
     public void initialize() {
+        updateTopBar();
         autoupdateService.checkForUpdatesAsync();
-        searchBar.textProperty().addListener((obs, oldVal, newVal) -> {
-            Result<String> result = searchService.setSearchQuery(newVal);
-            if (result.isFailure()) {
-                UIHelper.showError("Search Error", result.message());
-            }
-        });
+
+    }
+//TODO
+    public void updateTopBar(){
+        CapitalSummaryView view = capitalViewService.getLiveSummary();
+        cashAtHand.setText(String.valueOf(view.cashAtHand()));
+        totalLoanPortifolio.setText(String.valueOf(view.totalLoanPortfolio()));
     }
 
     @FXML

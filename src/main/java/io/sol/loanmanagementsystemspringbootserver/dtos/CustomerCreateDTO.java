@@ -2,13 +2,17 @@
 package io.sol.loanmanagementsystemspringbootserver.dtos;
 
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class CustomerCreateDTO implements Serializable {
     private String firstName;
     private String lastName;
@@ -20,10 +24,6 @@ public class CustomerCreateDTO implements Serializable {
     private String guarantorPhone;
     private String guarantorNin;
     public String accountNumber;
-
-    public CustomerCreateDTO() {
-    }
-
 
     public String getCustomerName() {
         return firstName + " " + lastName;
