@@ -1,5 +1,6 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
+import io.sol.loanmanagementsystemspringbootserver.services.AutoupdateService;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.utilities.StageManager;
 import io.sol.loanmanagementsystemspringbootserver.services.SearchService;
@@ -43,6 +44,7 @@ public class DashboardController {
 
     private final SearchService searchService;
     private final StageManager stageManager;
+    private final AutoupdateService autoupdateService;
     @FXML
     private Label dashboardLabel;
     @FXML
@@ -66,14 +68,16 @@ public class DashboardController {
 
     private final ApplicationContext applicationContext;
 
-    public DashboardController(ApplicationContext applicationContext, SearchService searchService, StageManager stageManager) {
+    public DashboardController(ApplicationContext applicationContext, SearchService searchService, StageManager stageManager, AutoupdateService autoupdateService) {
         this.applicationContext = applicationContext;
         this.searchService = searchService;
         this.stageManager = stageManager;
+        this.autoupdateService = autoupdateService;
     }
 
     @FXML
     public void initialize() {
+        autoupdateService.checkForUpdatesAsync();
         searchBar.textProperty().addListener((obs, oldVal, newVal) -> {
             Result<String> result = searchService.setSearchQuery(newVal);
             if (result.isFailure()) {
