@@ -7,6 +7,7 @@ import io.sol.loanmanagementsystemspringbootserver.entities.Loan;
 import io.sol.loanmanagementsystemspringbootserver.entities.Payment;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -130,9 +131,6 @@ public class DTOMapper {
         customer.setOtherNames(dto.getOtherNames());
         customer.setCustomerName(dto.getCustomerName());
         customer.setNin(dto.getNin());
-        customer.setGuarantorName(dto.getGuarantorName());
-        customer.setGuarantorPhone(dto.getGuarantorPhone());
-        customer.setGuarantorNin(dto.getGuarantorNin());
         customer.setTelephone(dto.getTelephone());
         customer.setAddress(dto.getAddress());
         customer.setSavingsBalance(dto.getSavingsBalance());
@@ -165,7 +163,7 @@ public class DTOMapper {
         }
 
         if (loan.getGuarantor() != null) {
-            dto.setGuarantorId(loan.getGuarantor().getId());
+            dto.setGuarantorId((long) loan.getGuarantor().getId());
             dto.setGuarantorName(loan.getGuarantor().getFirstName() + " " + loan.getGuarantor().getLastName());
         }
 
@@ -221,7 +219,7 @@ public class DTOMapper {
         }
 
         if (loan.getGuarantor() != null) {
-            dto.setGuarantorId(loan.getGuarantor().getId());
+            dto.setGuarantorId((long) loan.getGuarantor().getId());
             dto.setGuarantorName(loan.getGuarantor().getFirstName() + " " + loan.getGuarantor().getLastName());
         }
 
@@ -235,6 +233,7 @@ public class DTOMapper {
         dto.setTotalDue(loan.getTotalDue());
         dto.setFullPayment(loan.getFullPayment());
         dto.setReference(loan.getReference());
+        dto.setAgingDays((int) loan.getAgingDays(LocalDate.now()));
 
         return dto;
     }

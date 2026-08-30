@@ -1,14 +1,24 @@
 package io.sol.loanmanagementsystemspringbootserver.entities;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "loans")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class Loan {
 
     @Id
@@ -54,9 +64,6 @@ public class Loan {
     @JoinColumn(name = "employee_id")
     private Employee fieldOfficer;
 
-    @ManyToOne
-    @JoinColumn(name = "guarantor_id")
-    private Guarantor guarantor;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "customer_id")
@@ -68,31 +75,11 @@ public class Loan {
     @Column(nullable = true)
     private BigDecimal fullPayment;
 
-    public Loan() {
-
-    }
-
-    public Customer getCustomer() {
-        return customer;
-    }
-
-    public void setCustomer(Customer customer) {
-        this.customer = customer;
-    }
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "guarantor_customer_id", nullable = false)
+    private Customer guarantor;
 
 
-    public Loan(LocalDate startDate, LocalDate maturityDate, LocalDate fullPaidDate, BigDecimal principal, BigDecimal interestRate, int tenor, String collateral, BigDecimal fees) {
-        this.startDate = startDate;
-        this.maturityDate = maturityDate;
-        this.fullPaidDate = fullPaidDate;
-        this.principal = principal;
-        this.interestRate = interestRate;
-        this.tenor = tenor;
-        this.collateral = collateral;
-        this.fees = fees;
-
-
-    }
 
     public BigDecimal getDisbursedAmount(){
         return principal.subtract(this.fees);
@@ -131,12 +118,32 @@ public class Loan {
         return principal.multiply(surchargeRate).multiply(BigDecimal.valueOf(daysLate));
     }
 
-    public List<Payment> getPayments() {
-        return payments;
-    }
 
-    public void setPayments(List<Payment> payments) {
-        this.payments = payments;
+    /**
+     * Aging days = number of scheduled daily installments the customer is behind.
+     * Based on coverage: daysPaidFor = totalPaid / dailyInstallment, where
+     * dailyInstallment = scheduledTotal / tenor. A larger-than-expected payment
+     * therefore covers prior missed days and reduces aging.
+     */
+    public long getAgingDays(LocalDate asAt) {
+        if (asAt == null) asAt = LocalDate.now();
+        if (fullPaidDate != null || getOutstandingBalance().compareTo(BigDecimal.ZERO) <= 0) return 0;
+        if (startDate == null || tenor <= 0) return 0;
+
+        LocalDate end = asAt.isBefore(maturityDate) ? asAt : maturityDate;
+        if (end.isBefore(startDate)) return 0;
+
+        long elapsedDays = ChronoUnit.DAYS.between(startDate, end) + 1; // inclusive of both ends
+
+        BigDecimal ir = interestRate == null ? BigDecimal.ZERO : interestRate;
+        BigDecimal scheduledTotal = principal.add(principal.multiply(ir));
+        if (scheduledTotal.compareTo(BigDecimal.ZERO) <= 0) return 0;
+
+        BigDecimal dailyInstallment = scheduledTotal.divide(BigDecimal.valueOf(tenor), 10, RoundingMode.DOWN);
+        BigDecimal daysPaidFor = getTotalPaid().divide(dailyInstallment, 10, RoundingMode.DOWN);
+
+        long aging = elapsedDays - daysPaidFor.longValue();
+        return Math.max(aging, 0);
     }
 
     public void addPayment(Payment payment) {
@@ -155,122 +162,6 @@ public class Loan {
         if (payment.getLoan() == this) {
             payment.setLoan(null);
         }
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public LocalDate getStartDate() {
-        return startDate;
-    }
-
-    public void setStartDate(LocalDate startDate) {
-        this.startDate = startDate;
-    }
-
-    public LocalDate getMaturityDate() {
-        return maturityDate;
-    }
-
-    public void setMaturityDate(LocalDate maturityDate) {
-        this.maturityDate = maturityDate;
-    }
-
-    public LocalDate getFullPaidDate() {
-        return fullPaidDate;
-    }
-
-    public void setFullPaidDate(LocalDate fullPaidDate) {
-        this.fullPaidDate = fullPaidDate;
-    }
-
-    public BigDecimal getPrincipal() {
-        return principal;
-    }
-
-    public void setPrincipal(BigDecimal principal) {
-        this.principal = principal;
-    }
-
-    public BigDecimal getInterestRate() {
-        return interestRate;
-    }
-
-    public void setInterestRate(BigDecimal interestRate) {
-        this.interestRate = interestRate;
-    }
-
-    public int getTenor() {
-        return tenor;
-    }
-
-    public void setTenor(int tenor) {
-        this.tenor = tenor;
-    }
-
-    public String getCollateral() {
-        return collateral;
-    }
-
-    public void setCollateral(String collateral) {
-        this.collateral = collateral;
-    }
-
-    public BigDecimal getFees() {
-        return fees;
-    }
-
-    public void setFees(BigDecimal fees) {
-        this.fees = fees;
-    }
-
-    public BigDecimal getSurchargeRate() {
-        return surchargeRate;
-    }
-
-    public void setSurchargeRate(BigDecimal surchargeRate) {
-        this.surchargeRate = surchargeRate == null ? BigDecimal.ZERO : surchargeRate;
-    }
-
-    public BigDecimal getSurchargeAmount() {
-        return surchargeAmount == null ? BigDecimal.ZERO : surchargeAmount;
-    }
-
-    public void setSurchargeAmount(BigDecimal surchargeAmount) {
-        this.surchargeAmount = surchargeAmount == null ? BigDecimal.ZERO : surchargeAmount;
-    }
-
-    public LoanStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(LoanStatus status) {
-        this.status = status;
-    }
-
-    public Employee getFieldOfficer() {
-        return fieldOfficer;
-    }
-
-    public void setFieldOfficer(Employee fieldOfficer) {
-        this.fieldOfficer = fieldOfficer;
-    }
-
-    public Guarantor getGuarantor() {
-        return guarantor;
-    }
-
-    public void setGuarantor(Guarantor guarantor) {
-        this.guarantor = guarantor;
-    }
-
-    public BigDecimal getFullPayment() {
-        return fullPayment;
     }
 
 

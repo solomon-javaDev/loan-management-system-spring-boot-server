@@ -60,31 +60,31 @@ public class HomeController {
     @FXML
     private Label customersPaidTodayLabel;
     @FXML
-    private Label collectionRateLabel;
+    private Label collectionRateLabel; //a percentage of the days collections that has been done
     @FXML
-    private Label newCustomersTodayLabel;
+    private Label newCustomersTodayLabel;//customers registered today
     @FXML
-    private Label totalCollectionsLabel;
+    private Label totalCollectionsLabel;//money collected as loan repayments
     @FXML
-    private Label loansDisbursedLabel;
+    private Label loansDisbursedLabel; //number of loans given out today
     @FXML
-    private Label totalAmountDisbursedLabel;
+    private Label totalAmountDisbursedLabel;//money issued out as loans
     @FXML
-    private Label principalBalanceLabel;
+    private Label principalBalanceLabel; //money in the system
     @FXML
-    private Label totalLoanPortfolioLabel;
+    private Label totalLoanPortfolioLabel; //the combined balance of all outstanding loans issued
     @FXML
-    private Label openingCashLabel;
+    private Label openingCashLabel; //amount present at hand
     @FXML
-    private Label principalCollectedLabel;
+    private Label principalCollectedLabel; //describes the amount of principal amounts collected, i.e, without looking at the interest yet
     @FXML
-    private Label interestCollectedLabel;
+    private Label interestCollectedLabel;//describes the amount collected as interest todya
     @FXML
-    private Label processingFeesLabel;
+    private Label processingFeesLabel; //describes the amount of money taken from the principal as a fee
     @FXML
-    private Label bankDepositsLabel;
+    private Label bankDepositsLabel; //expense showing how much has been deposited into the bank
     @FXML
-    private Label totalExpensesLabel;
+    private Label totalExpensesLabel; //total expenses in a day
     @FXML
     private Label loanDisbursementsLabel;
     @FXML
@@ -103,6 +103,9 @@ public class HomeController {
     private TableColumn<CustomerDTO, String> guarantorName;
     @FXML
     private TableColumn<CustomerDTO, String> agingDays;
+
+    private Map<String, String> statsMap = new LinkedHashMap<>();
+
 
 
     public HomeController(LoansService loansService, CustomerService customerService, 
@@ -125,7 +128,6 @@ public class HomeController {
         calculateDailyStats();
     }
 
-    private Map<String, String> statsMap = new LinkedHashMap<>();
 
     private void calculateDailyStats() {
         LocalDate today = LocalDate.now();
@@ -201,6 +203,7 @@ public class HomeController {
         customerTelephone.setCellValueFactory(new PropertyValueFactory<>("telephone"));
         guarantorName.setCellValueFactory(new PropertyValueFactory<>("guarantorName"));
         customerName.setCellValueFactory(new PropertyValueFactory<>("customerName"));
+        agingDays.setCellValueFactory(new PropertyValueFactory<>("agingDays"));
 
     }
     private void updateStat(String key, String value, Label label) {

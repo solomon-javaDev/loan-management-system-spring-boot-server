@@ -29,6 +29,7 @@ public class LoanDTO implements Serializable {
     private BigDecimal outstandingBalance;
     private BigDecimal totalDue;
     private String reference;
+    private int agingDays;
 
     public LoanDTO() {}
 
@@ -105,6 +106,9 @@ public class LoanDTO implements Serializable {
 
     public String getReference() { return reference; }
     public void setReference(String reference) { this.reference = reference; }
+
+    public int getAgingDays() { return agingDays; }
+    public void setAgingDays(int agingDays) { this.agingDays = agingDays; }
 
     @Override
     public String toString() {

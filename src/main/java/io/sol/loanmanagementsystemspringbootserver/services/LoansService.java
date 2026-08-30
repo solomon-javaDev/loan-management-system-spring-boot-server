@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -96,6 +97,25 @@ public class LoansService {
             return Result.invalid("This customer already has an active or pending loan. Issue a new loan only after the existing loan is settled or closed.", null);
         }
 
+        if (loanDto.getGuarantorId() == null) {
+            return Result.invalid("A guarantor is required for this loan.", null);
+        }
+
+        Optional<Customer> guarantorOptional = customerRepository.findById(Math.toIntExact(loanDto.getGuarantorId()));
+        if (guarantorOptional.isEmpty()) {
+            return Result.notFound("Selected guarantor not found.", null);
+        }
+
+        Customer guarantor = guarantorOptional.get();
+        if (guarantor.getId() == customer.getId()) {
+            return Result.invalid("The guarantor cannot be the same customer taking the loan.", null);
+        }
+
+        Result<LoanDTO> guarantorValidation = validateGuarantorExposure(customer, guarantor, loanDto.getPrincipal());
+        if (guarantorValidation.isFailure()) {
+            return guarantorValidation;
+        }
+
         Loan loan = DTOMapper.toEntity(loanDto);
         if (loanDto.getFieldOfficerId() != null) {
             Optional<Employee> officer = employeeRepository.findById(loanDto.getFieldOfficerId());
@@ -103,6 +123,8 @@ public class LoansService {
                 loan.setFieldOfficer(officer.get());
             }
         }
+        loan.setCustomer(customer);
+        loan.setGuarantor(guarantor);
 
         // 3. Sync the bidirectional object graph
         customer.addLoan(loan);
@@ -125,8 +147,27 @@ public class LoansService {
             return validationResult;
         }
 
-        return loanRepository.findById(loanDto.getId())
+        if (loanDto.getGuarantorId() == null) {
+            return Result.invalid("A guarantor is required for this loan.", null);
+        }
+
+        return (Result<LoanDTO>) loanRepository.findById(loanDto.getId())
                 .map(existingLoan -> {
+                    Optional<Customer> guarantorOptional = customerRepository.findById(Math.toIntExact(loanDto.getGuarantorId()));
+                    if (guarantorOptional.isEmpty()) {
+                        return Result.notFound("Selected guarantor not found.", null);
+                    }
+
+                    Customer guarantor = guarantorOptional.get();
+                    if (existingLoan.getCustomer() != null && guarantor.getId() == existingLoan.getCustomer().getId()) {
+                        return Result.invalid("The guarantor cannot be the same customer taking the loan.", null);
+                    }
+
+                    Result<LoanDTO> guarantorValidation = validateGuarantorExposure(existingLoan.getCustomer(), guarantor, loanDto.getPrincipal());
+                    if (guarantorValidation.isFailure()) {
+                        return guarantorValidation;
+                    }
+
                     List<LoanParameterChange> changes = new ArrayList<>();
                     
                     trackChange(changes, existingLoan, "startDate", existingLoan.getStartDate(), loanDto.getStartDate());
@@ -144,6 +185,7 @@ public class LoansService {
                     existingLoan.setCollateral(loanDto.getCollateral());
                     existingLoan.setFees(loanDto.getFees());
                     existingLoan.setStatus(loanDto.getStatus() != null ? loanDto.getStatus() : LoanStatus.PENDING);
+                    existingLoan.setGuarantor(guarantor);
 
                     if (loanDto.getFieldOfficerId() != null) {
                         Optional<Employee> officer = employeeRepository.findById(loanDto.getFieldOfficerId());
@@ -159,6 +201,25 @@ public class LoansService {
                     return Result.success("Loan updated successfully.", DTOMapper.toDTO(saved));
                 })
                 .orElseGet(() -> Result.notFound("Loan not found.", null));
+    }
+
+    private Result<LoanDTO> validateGuarantorExposure(Customer customer, Customer guarantor, BigDecimal loanPrincipal) {
+        if (guarantor == null) {
+            return Result.invalid("A guarantor is required for this loan.", null);
+        }
+
+        if (customer != null && customer.getId() == guarantor.getId()) {
+            return Result.invalid("The guarantor cannot be the same customer taking the loan.", null);
+        }
+
+        if (!guarantor.canGuarantee(loanPrincipal)) {
+            return Result.invalid(
+                    "Guarantor is not eligible: they must have no outstanding loan, or their savings must cover their own loan(s) and this new loan.",
+                    null
+            );
+        }
+
+        return Result.success("", null);
     }
 
     private void trackChange(List<LoanParameterChange> changes, Loan loan, String param, Object oldVal, Object newVal) {
@@ -247,8 +308,17 @@ public class LoansService {
         LocalDate today = LocalDate.now();
         List<Loan> activeLoans = loanRepository.findByStatusIn(Arrays.asList(LoanStatus.ACTIVE, LoanStatus.DEFAULTED));
 
+        BigDecimal configuredRate;
+        try {
+            configuredRate = new BigDecimal(settingService.getSetting("loan.surcharge.rate", "0"))
+                    .divide(BigDecimal.valueOf(100), 10, RoundingMode.DOWN);
+        } catch (NumberFormatException e) {
+            configuredRate = BigDecimal.ZERO;
+        }
+
         for (Loan loan : activeLoans) {
             if (loan.getMaturityDate() != null && today.isAfter(loan.getMaturityDate())) {
+                loan.setSurchargeRate(configuredRate);
                 BigDecimal surcharge = loan.calculateSurcharge(today);
                 if (surcharge.compareTo(BigDecimal.ZERO) > 0) {
                     loan.setSurchargeAmount(surcharge);

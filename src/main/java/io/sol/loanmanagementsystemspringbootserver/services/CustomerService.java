@@ -6,11 +6,13 @@ import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerResponseDTO;
 import io.sol.loanmanagementsystemspringbootserver.mappers.DTOMapper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.entities.Customer;
+import io.sol.loanmanagementsystemspringbootserver.entities.LoanStatus;
 import io.sol.loanmanagementsystemspringbootserver.repositories.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -59,14 +61,23 @@ public class CustomerService {
     }
 
     public List<CustomerDTO> getCustomersDueToday(){
-        //Queries all customers due today, and maps them to clean DTOs
-         return repository.findAllCustomersDue(LocalDate.now()).stream()
-                 .map(DTOMapper::toDTO)
-                 .toList();
+        //Customers due today, mapped to DTOs with their aging days (max across active loans)
+        LocalDate today = LocalDate.now();
+        return repository.findAllCustomersDue(today).stream()
+                .map(c -> {
+                    CustomerDTO dto = DTOMapper.toDTO(c);
+                    int aging = c.getLoans().stream()
+                            .filter(l -> l.getStatus() == LoanStatus.ACTIVE)
+                            .mapToInt(l -> (int) l.getAgingDays(today))
+                            .max().orElse(0);
+                    dto.setAgingDays(aging);
+                    return dto;
+                })
+                .toList();
     }
 
     public String generateAccountNumber() {
-        long count = repository.count();
+        long count = repository.countAllIncludingDeleted();
         return String.format("055%08d", count + 1);
     }
 
@@ -83,6 +94,15 @@ public class CustomerService {
     }
 
     @Transactional
+    public Result<List<CustomerDTO>> getEligibleGuarantors(BigDecimal principal) {
+        List<CustomerDTO> eligible = repository.findAll().stream()
+                .filter(c -> c.canGuarantee(principal))
+                .map(DTOMapper::toDTO)
+                .collect(Collectors.toList());
+        return Result.success("Eligible guarantors loaded.", eligible);
+    }
+
+    @Transactional
     public Result<CustomerResponseDTO> updateCustomer(CustomerDTO customerDto) {
         if (customerDto == null || customerDto.getId() <= 0) {
             return Result.invalid("Select a customer from the table before updating.", null);
@@ -91,9 +111,6 @@ public class CustomerService {
         return repository.findById(customerDto.getId())
                 .map(existingCustomer -> {
                     existingCustomer.setNin(customerDto.getNin());
-                    existingCustomer.setGuarantorName(customerDto.getGuarantorName());
-                    existingCustomer.setGuarantorPhone(customerDto.getGuarantorPhone());
-                    existingCustomer.setGuarantorNin(customerDto.getGuarantorNin());
                     existingCustomer.setFirstName(customerDto.getFirstName());
                     existingCustomer.setLastName(customerDto.getLastName());
                     existingCustomer.setTelephone(customerDto.getTelephone());
@@ -125,10 +142,12 @@ public class CustomerService {
         return repository.findByNin(nin)
                 .map(DTOMapper::toDTO)
                 .map(dto -> Result.success("Customer found.", dto))
-                .orElseGet(() -> Result.notFound("Customer with NIN " + nin + " not found.", null));
+                .orElseGet(() -> Result.notFound("Customer with NIN " + nin + " not found.", new CustomerDTO()));
     }
 
     public Result<Customer> restoreCustomer(int id){
+        //TODO I have to add to the view a choice for restoring a deleted customer
+        //TODO That will require as well adding methods to query the soft deleted customers
         Optional<Customer> customer = repository.findById(id);
 
         if(customer.isPresent()){

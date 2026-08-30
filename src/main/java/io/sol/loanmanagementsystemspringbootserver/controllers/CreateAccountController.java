@@ -1,10 +1,5 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
-import io.sol.loanmanagementsystemspringbootserver.entities.Role;
-import io.sol.loanmanagementsystemspringbootserver.entities.User;
-import javafx.fxml.FXML;
-import org.springframework.stereotype.Component;
-
 public class CreateAccountController {
 
 

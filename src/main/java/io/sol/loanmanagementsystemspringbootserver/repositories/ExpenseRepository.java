@@ -1,6 +1,7 @@
 package io.sol.loanmanagementsystemspringbootserver.repositories;
 
 import io.sol.loanmanagementsystemspringbootserver.entities.Expense;
+import io.sol.loanmanagementsystemspringbootserver.entities.ExpenseCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,7 +15,7 @@ import java.util.List;
 @Repository
 public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     List<Expense> findByDateBetween(LocalDateTime start, LocalDateTime end);
-    List<Expense> findByCategory(String category);
+    List<Expense> findByCategory(ExpenseCategory category);
 
     @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e WHERE e.date >= :start AND e.date < :end")
     BigDecimal sumAmountByDateRange(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);

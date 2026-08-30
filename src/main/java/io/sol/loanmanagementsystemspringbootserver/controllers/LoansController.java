@@ -3,6 +3,7 @@ package io.sol.loanmanagementsystemspringbootserver.controllers;
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.EmployeeDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.LoanDTO;
+import io.sol.loanmanagementsystemspringbootserver.entities.Customer;
 import io.sol.loanmanagementsystemspringbootserver.entities.LoanStatus;
 import io.sol.loanmanagementsystemspringbootserver.entities.Role;
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
@@ -136,6 +137,9 @@ public class LoansController {
     private Button clearButton;
 
     @FXML
+    private ComboBox<CustomerDTO> guarantorDropDown;
+
+    @FXML
     private Label messageLabel;
 
     public LoansController(LoansService loansService, EmployeeService employeeService, CustomerService customerService, UiControlUtilities uiControlUtilities) {
@@ -157,12 +161,16 @@ public class LoansController {
         uiControlUtilities.configureDropDown(fieldOfficerField, employeeService.getEmployeeByRole(Role.FIELD_OFFICER).value(),
                 e -> e.getFirstName() + " " + e.getLastName()
                 );
+        uiControlUtilities.configureDropDown(guarantorDropDown, customerService.getEligibleGuarantors(null).value(),
+                c -> c.getFirstName() + " " + c.getLastName()
+        );
 
         statusField.setItems(FXCollections.observableArrayList(LoanStatus.values()));
         statusField.setValue(LoanStatus.PENDING);
 
         maturityDatePicker.valueProperty().addListener((obs, oldValue, newValue) -> computeTenorFromDates());
         startDatePicker.valueProperty().addListener((obs, oldValue, newValue) -> computeTenorFromDates());
+        principalField.textProperty().addListener((obs, oldValue, newValue) -> refreshGuarantorOptions());
 
         saveButton.disableProperty().bind(loansTable.getSelectionModel().selectedItemProperty().isNotNull());
         updateButton.disableProperty().bind(loansTable.getSelectionModel().selectedItemProperty().isNull());
@@ -186,7 +194,14 @@ public class LoansController {
     }
 
 
-        private LoanDTO buildLoanFromForm() {
+        private void refreshGuarantorOptions() {
+        BigDecimal principal = parseBigDecimal(principalField.getText());
+        uiControlUtilities.configureDropDown(guarantorDropDown,
+                customerService.getEligibleGuarantors(principal).value(),
+                c -> c.getFirstName() + " " + c.getLastName());
+    }
+
+    private LoanDTO buildLoanFromForm() {
         LoanDTO loan = new LoanDTO();
         loan.setStartDate(startDatePicker.getValue());
         loan.setMaturityDate(maturityDatePicker.getValue());
@@ -203,6 +218,10 @@ public class LoansController {
         if (customerList.getValue() != null) {
             loan.setCustomerId(customerList.getValue().getId());
             loan.setCustomerName(customerList.getValue().getCustomerName());
+        }
+        if (guarantorDropDown.getValue() != null) {
+            loan.setGuarantorId((long) guarantorDropDown.getValue().getId());
+            loan.setGuarantorName(guarantorDropDown.getValue().getCustomerName());
         }
         return loan;
     }
@@ -234,6 +253,15 @@ public class LoansController {
                 .ifPresent(c -> customerList.setValue(c));
         } else {
             customerList.getSelectionModel().clearSelection();
+        }
+
+        if (loan.getGuarantorId() != null) {
+            guarantorDropDown.getItems().stream()
+                .filter(c -> c.getId() == loan.getGuarantorId().intValue())
+                .findFirst()
+                .ifPresent(c -> guarantorDropDown.setValue(c));
+        } else {
+            guarantorDropDown.getSelectionModel().clearSelection();
         }
     }
 
@@ -358,8 +386,9 @@ public class LoansController {
         collateralField.clear();
         feesField.clear();
         statusField.setValue(LoanStatus.PENDING);
-        fieldOfficerField.getSelectionModel().clearSelection(); // Reset dropdown state
-        loansTable.getSelectionModel().clearSelection();
+        fieldOfficerField.getSelectionModel().clearSelection();
+        customerList.getSelectionModel().clearSelection();
+        guarantorDropDown.getSelectionModel().clearSelection();
         loansTable.getSelectionModel().clearSelection();
     }
 

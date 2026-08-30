@@ -36,16 +36,8 @@
                         <TextField fx:id="telephoneField" GridPane.columnIndex="1" GridPane.rowIndex="5" />
                         <Label layoutX="10.0" layoutY="147.0" text="Address" GridPane.rowIndex="6" />
                         <TextField fx:id="addressField" layoutX="140.0" layoutY="143.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
-                        <Label text="Guarantor name" GridPane.rowIndex="7" />
-                        <TextField fx:id="guarantorNameField" GridPane.columnIndex="1" GridPane.rowIndex="7" />
-                        <Label text="Guarantor phone" GridPane.rowIndex="8" />
-                        <TextField fx:id="guarantorPhoneField" GridPane.columnIndex="1" GridPane.rowIndex="8" />
-                        <Label text="Guarantor NIN" GridPane.rowIndex="9" />
-                        <TextField fx:id="guarantorNinField" GridPane.columnIndex="1" GridPane.rowIndex="9" />
-                        <Label text="Field Officer" GridPane.rowIndex="10" />
-                        <ComboBox fx:id="fieldOfficerCombo" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="10" />
-                        <Label text="Status" GridPane.rowIndex="11" />
-                        <CheckBox fx:id="activeCheckbox" text="Active" GridPane.columnIndex="1" GridPane.rowIndex="11" />
+                        <Label text="Status" GridPane.rowIndex="7" />
+                        <CheckBox fx:id="activeCheckbox" text="Active" GridPane.columnIndex="1" GridPane.rowIndex="7" />
                         <TextField fx:id="accountNumberField" layoutX="140.0" layoutY="29.0" GridPane.columnIndex="1">
                            <padding>
                               <Insets bottom="5.0" />
@@ -54,8 +46,6 @@
                      </children>
                      <rowConstraints>
                         <RowConstraints minHeight="10.0" prefHeight="30.0" />
-                        <RowConstraints />
-                        <RowConstraints />
                         <RowConstraints />
                         <RowConstraints />
                         <RowConstraints />
@@ -84,12 +74,10 @@
                         <TableColumn fx:id="lastNameColumn" prefWidth="120.0" text="Last Name" />
                         <TableColumn fx:id="otherNamesColumn" prefWidth="120.0" text="Other Names" />
                         <TableColumn fx:id="ninColumn" prefWidth="150.0" text="Customer NIN" />
-                        <TableColumn fx:id="guarantorColumn" prefWidth="180.0" text="Guarantor" />
                         <TableColumn fx:id="numberOfLoans" prefWidth="75.0" text="Loans" />
                         <TableColumn fx:id="telephoneColumn" prefWidth="120.0" text="Telephone" />
                         <TableColumn fx:id="addressColumn" prefWidth="180.0" text="Address" />
                         <TableColumn fx:id="activeColumn" prefWidth="75.0" text="Active" />
-                        <TableColumn fx:id="fieldOfficerColumn" prefWidth="150.0" text="Field Officer" />
                      </columns>
                   </TableView>
                </children>

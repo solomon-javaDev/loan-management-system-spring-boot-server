@@ -34,6 +34,9 @@ public class SettingsController {
     private ComboBox<String> agingFreq;
 
     @FXML
+    private TextField surchargeRateField;
+
+    @FXML
     private Label messageLabel;
 
     @FXML
@@ -78,6 +81,9 @@ public class SettingsController {
         
         String agingF = settingService.getSetting("report.aging.freq", "Daily");
         agingFreq.setValue(agingF);
+
+        String surcharge = settingService.getSetting("loan.surcharge.rate", "0");
+        surchargeRateField.setText(surcharge);
     }
 
     @FXML
@@ -87,7 +93,8 @@ public class SettingsController {
             settingService.saveSetting("report.enabled", String.valueOf(dailyReportCheckbox.isSelected()));
             settingService.saveSetting("report.time", dailyTimeField.getText());
             settingService.saveSetting("report.aging.freq", agingFreq.getValue());
-            
+            settingService.saveSetting("loan.surcharge.rate", surchargeRateField.getText().trim());
+
             UIHelper.updateStatusLabel(messageLabel, Result.success("Settings saved successfully.", null));
         } catch (Exception e) {
             UIHelper.updateStatusLabel(messageLabel, Result.invalid("Error saving settings: " + e.getMessage(), null));

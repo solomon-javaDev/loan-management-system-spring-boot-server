@@ -15,18 +15,20 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.Stage;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The PaymentsController class is responsible for managing the user interface interactions
  * related to payment operations in the application. It is a part of the UI layer and interacts
  * with various services to perform payment-related actions such as saving, updating, deleting,
  * and filtering payment records.
- *
  * Responsibilities of this controller include:
  * - Configuring and initializing UI components such as tables, dropdowns, and other controls.
  * - Handling user actions and binding data to UI components.
@@ -39,11 +41,9 @@ import java.util.List;
  * - LoansService: For retrieving and managing loan-related data.
  * - PaymentsService: For performing operations related to payments, such as fetching, saving,
  *   updating, and deleting payment records.
- *
- * The class uses FXML annotations to map UI components, ensuring seamless interaction with the
+ * * The class uses FXML annotations to map UI components, ensuring seamless interaction with the
  * JavaFX framework.
- *
- * Key Features:
+ * * Key Features:
  * - TableView for displaying a list of payments with columns for date, customer, amount, and loan reference.
  * - Dropdowns for selecting customers and loans.
  * - Basic CRUD operations for payments.
@@ -228,11 +228,22 @@ public class PaymentsController {
 
         BigDecimal amount = parseBigDecimal(amountRecieved.getText());
         Result<PaymentDTO> result = paymentsService.savePayment(date.getValue(), amount, selectedLoan.getId());
+
+        Map<String, String> paymentMap = new LinkedHashMap<>();
+        paymentMap.put("Date - ", String.valueOf(result.value().getDate()));
+        paymentMap.put("Amount paid - ", String.valueOf(result.value().getAmountReceived()));
+        paymentMap.put("Loan balance - ", String.valueOf(result.value().getRemainingBalance()));
+        paymentMap.put("Days Skipped  - ", null); //TODO I still need to identify a way of getting aging days into the different DTOS, including the customerDTO
+        paymentMap.put("Signature of receiver - ", null);
+
+        UIHelper.exportToPdf("Payment receipt -", "PAYMENT FOR LOAN", paymentMap, (Stage) paymentsTable.getScene().getWindow());
         UIHelper.updateStatusLabel(messageLabel, result);
+
         if (result.isSuccess()) {
             loadData();
             handleClearForm();
         }
+        
     }
 
     @FXML

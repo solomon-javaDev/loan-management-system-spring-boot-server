@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -71,5 +72,28 @@ public class EmployeeService {
             Employee saved = employeeRepository.save(employee);
             return Result.success("Employee status updated", DTOMapper.toDTO(saved));
         }).orElse(Result.notFound("Employee not found", null));
+    }
+
+    public Result<EmployeeDTO> upDateEmployee(EmployeeDTO selectedEmployee) {
+        Optional<Employee> employee = employeeRepository.findByFirstName(selectedEmployee.getFirstName());
+
+        if(employee.isEmpty()){
+            return Result.notFound("The employee provided is not present in the database", selectedEmployee);
+
+        }else{
+            return Result.success("The employee has been updated", DTOMapper.toDTO(employeeRepository.save(DTOMapper.toEntity(selectedEmployee))));
+        }
+    }
+
+    public Result<Void> deleteEmployee(EmployeeDTO selectedEmployee){
+        Optional<Employee> employee = employeeRepository.findByFirstName(selectedEmployee.getFirstName());
+
+        if(employee.isPresent()){
+            employeeRepository.delete(DTOMapper.toEntity(selectedEmployee));
+            return Result.success("Employee deleted", null);
+        }
+        else{
+            return Result.notFound("The employee is non existent", null);
+        }
     }
 }

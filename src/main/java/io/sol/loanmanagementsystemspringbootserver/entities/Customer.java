@@ -3,13 +3,22 @@ package io.sol.loanmanagementsystemspringbootserver.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @SQLDelete(sql = "update Customer SET deleted = true where id = ?")
+@SQLRestriction("deleted = false")
+@Setter @Getter
+@AllArgsConstructor
 public class Customer {
 
     @Id
@@ -80,13 +89,6 @@ public class Customer {
         loan.setCustomer(null);
     }
 
-    public List<Loan> getLoans() {
-        return loans;
-    }
-
-    public void setLoans(List<Loan> loans) {
-        this.loans = loans;
-    }
 
     public Customer() {
         this.customerName = firstName + " " + lastName + " " + otherNames;
@@ -103,135 +105,42 @@ public class Customer {
         this.address = address;
     }
 
-    public String getCustomerName() {
-        return customerName;
-    }
 
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
 
     public void setFirstName(String firstName) {
         this.firstName = firstName;
         refreshCustomerName();
     }
 
-    public String getLastName() {
-        return lastName;
-    }
 
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-        refreshCustomerName();
-    }
-
-    public String getOtherNames() {
-        return otherNames;
-    }
 
     public void setOtherNames(String otherNames) {
         this.otherNames = otherNames;
         refreshCustomerName();
     }
 
-    public String getNin() {
-        return nin;
-    }
 
-    public void setNin(String nin) {
-        this.nin = nin;
-    }
 
-    public String getTelephone() {
-        return telephone;
-    }
+  
 
-    public void setTelephone(String telephone) {
-        this.telephone = telephone;
-    }
+    /**
+     * Eligibility rule for a guarantor: a customer qualifies if they currently have no
+     * outstanding (active/pending) loan, OR their savings balance is enough to cover their
+     * own outstanding loan(s) plus the new loan principal they would guarantee.
+     */
+    public boolean canGuarantee(BigDecimal newLoanPrincipal) {
+        BigDecimal exposure = loans.stream()
+                .filter(l -> l != null && (l.getStatus() == LoanStatus.ACTIVE || l.getStatus() == LoanStatus.PENDING))
+                .map(Loan::getOutstandingBalance)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-     public String getAddress() {
-        return address;
-    }
+        if (exposure.compareTo(BigDecimal.ZERO) == 0) {
+            return true;
+        }
 
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getGuarantorName() {
-        return guarantorName;
-    }
-
-    public void setGuarantorName(String guarantorName) {
-        this.guarantorName = guarantorName;
-    }
-
-    public String getGuarantorPhone() {
-        return guarantorPhone;
-    }
-
-    public void setGuarantorPhone(String guarantorPhone) {
-        this.guarantorPhone = guarantorPhone;
-    }
-
-    public String getGuarantorNin() {
-        return guarantorNin;
-    }
-
-    public void setGuarantorNin(String guarantorNin) {
-        this.guarantorNin = guarantorNin;
-    }
-
-    public String getAccountNumber() {
-        return accountNumber;
-    }
-
-    public boolean isDeleted() {
-        return deleted;
-    }
-
-    public void setDeleted(boolean deleted) {
-        this.deleted = deleted;
-    }
-
-    public void setAccountNumber(String accountNumber) {
-        this.accountNumber = accountNumber;
-    }
-
-    public java.math.BigDecimal getSavingsBalance() {
-        return savingsBalance;
-    }
-
-    public void setSavingsBalance(java.math.BigDecimal savingsBalance) {
-        this.savingsBalance = savingsBalance;
-    }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
-    }
-
-    public Employee getFieldOfficer() {
-        return fieldOfficer;
-    }
-
-    public void setFieldOfficer(Employee fieldOfficer) {
-        this.fieldOfficer = fieldOfficer;
+        BigDecimal required = exposure.add(newLoanPrincipal == null ? BigDecimal.ZERO : newLoanPrincipal);
+        BigDecimal savings = savingsBalance == null ? BigDecimal.ZERO : savingsBalance;
+        return required.compareTo(savings) <= 0;
     }
 
     private void refreshCustomerName() {

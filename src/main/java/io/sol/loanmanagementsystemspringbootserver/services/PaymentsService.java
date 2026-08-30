@@ -13,8 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static java.time.temporal.ChronoUnit.DAYS;
 
 /**
  * Service class responsible for handling payment operations and related functionalities.
@@ -69,7 +72,7 @@ public class PaymentsService {
         
         long daysSkipped = 0;
         if (loan.getMaturityDate() != null && LocalDate.now().isAfter(loan.getMaturityDate())) {
-            daysSkipped = java.time.temporal.ChronoUnit.DAYS.between(loan.getMaturityDate(), LocalDate.now());
+            daysSkipped = DAYS.between(loan.getMaturityDate(), LocalDate.now());
         }
         sb.append("   DAYS SKIPPED: ").append(daysSkipped).append("\n");
         sb.append("   ISSUER SIGNATURE: ________________\n");
@@ -137,7 +140,7 @@ public class PaymentsService {
         return loansService.getLoanEntityById(loanId).map(loan -> 
              Result.success("Payments for loan loaded", 
                 loan.getPayments().stream().map(p -> DTOMapper.toDTO(p)).collect(Collectors.toList()))
-        ).orElse(Result.notFound("Loan not found", null));
+        ).orElse(Result.notFound("Loan not found", new ArrayList<>()));
     }
 
     @Transactional(readOnly = true)

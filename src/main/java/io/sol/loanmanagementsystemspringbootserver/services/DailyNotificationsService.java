@@ -5,6 +5,7 @@ import io.sol.loanmanagementsystemspringbootserver.entities.Employee;
 import io.sol.loanmanagementsystemspringbootserver.entities.Role;
 import io.sol.loanmanagementsystemspringbootserver.repositories.CustomerRepository;
 import io.sol.loanmanagementsystemspringbootserver.repositories.EmployeeRepository;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -13,10 +14,13 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
+import io.sol.loanmanagementsystemspringbootserver.entities.LoanStatus;
+
 @Service
-public class DailyNotificationsService {
+public class DailyNotificationsService implements CommandLineRunner {
     private final CustomerRepository repository;
     private final JavaMailSender javaMailSender;
     private final EmployeeRepository employeeRepository;
@@ -27,6 +31,17 @@ public class DailyNotificationsService {
         this.javaMailSender = javaMailSender;
         this.employeeRepository = employeeRepository;
         this.mailSender = mailSender;
+    }
+
+    @Override
+    public void run(String... args) {
+        // Catch-up: if the PC was off at 6 AM, send the missed officer emails on app open.
+        // Guarded so a mail/network failure can't abort application startup.
+        try {
+            sendMorningCollection();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Scheduled(cron = "0 0 6 * *  ?")
@@ -48,6 +63,12 @@ public class DailyNotificationsService {
                 continue;
             }
 
+            dueCustomers.sort(Comparator.comparingInt(
+                    (Customer c) -> c.getLoans().stream()
+                            .filter(l -> l.getStatus() == LoanStatus.ACTIVE || l.getStatus() == LoanStatus.DEFAULTED)
+                            .mapToInt(l -> (int) l.getAgingDays(today))
+                            .max().orElse(0)).reversed());
+
             sendMailToOfficer(email, dueCustomers);
         }
     }
@@ -63,8 +84,11 @@ public class DailyNotificationsService {
         body.append("Here is your collections list");
 
         for(Customer c: dueCustomers){
+            int aging = c.getLoans().stream()
+                    .filter(l -> l.getStatus() == LoanStatus.ACTIVE || l.getStatus() == LoanStatus.DEFAULTED)
+                    .mapToInt(l -> (int) l.getAgingDays(LocalDate.now())).max().orElse(0);
             body.append("- ").append(c.getFirstName()).append(" ").append(c.getLastName())
-                    .append(" (Tel: ").append(c.getTelephone()).append(")\n");
+                    .append(" (Tel: ").append(c.getTelephone()).append(") | Aging: ").append(aging).append(" days\n");
         }
 
         message.setText(body.toString());

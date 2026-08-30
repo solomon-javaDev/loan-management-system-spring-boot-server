@@ -101,7 +101,7 @@ public class ReportService {
             dueLoans.forEach(loan -> sb.append(loan.getCustomer().getCustomerName())
                     .append(" | ").append(loan.getCustomer().getTelephone())
                     .append(" | Balance: ").append(loan.getOutstandingBalance())
-                    .append(" | Aging days: ").append(getDaysOverdue(loan, (LocalDate) data.get("date")))
+                     .append(" | Aging days: ").append(loan.getAgingDays((LocalDate) data.get("date")))
                     .append("\n"));
         }
 
@@ -224,20 +224,17 @@ public class ReportService {
     public Map<String, BigDecimal> getAgingAnalysis(LocalDate asAt) {
         List<Loan> activeLoans = loansRepository.findAll().stream()
                 .filter(l -> l.getOutstandingBalance().compareTo(BigDecimal.ZERO) > 0)
-                .collect(Collectors.toList());
+                .toList();
 
         BigDecimal bucket30 = BigDecimal.ZERO;
         BigDecimal bucket60 = BigDecimal.ZERO;
         BigDecimal bucket90 = BigDecimal.ZERO;
 
         for (Loan loan : activeLoans) {
-            // Simple logic: if maturity date is passed, it's overdue
-            if (loan.getMaturityDate().isBefore(asAt)) {
-                long daysOverdue = getDaysOverdue(loan, asAt);
-                if (daysOverdue > 90) bucket90 = bucket90.add(loan.getOutstandingBalance());
-                else if (daysOverdue > 60) bucket60 = bucket60.add(loan.getOutstandingBalance());
-                else if (daysOverdue > 30) bucket30 = bucket30.add(loan.getOutstandingBalance());
-            }
+            long aging = loan.getAgingDays(asAt);
+            if (aging > 90) bucket90 = bucket90.add(loan.getOutstandingBalance());
+            else if (aging > 60) bucket60 = bucket60.add(loan.getOutstandingBalance());
+            else if (aging > 30) bucket30 = bucket30.add(loan.getOutstandingBalance());
         }
 
         Map<String, BigDecimal> report = new HashMap<>();
@@ -252,13 +249,6 @@ public class ReportService {
                 .filter(loan -> loan.getOutstandingBalance().compareTo(BigDecimal.ZERO) > 0)
                 .filter(loan -> date.equals(loan.getMaturityDate()))
                 .toList();
-    }
-
-    private long getDaysOverdue(Loan loan, LocalDate asAt) {
-        if (loan.getMaturityDate() == null || !asAt.isAfter(loan.getMaturityDate())) {
-            return 0;
-        }
-        return java.time.temporal.ChronoUnit.DAYS.between(loan.getMaturityDate(), asAt);
     }
 
     public Map<String, Double> getFieldOfficerWorkRate() {
@@ -292,7 +282,7 @@ public class ReportService {
         // 4. Loans Given Out (Today)
         List<Loan> todayLoans = loansRepository.findAll().stream()
                 .filter(l -> date.equals(l.getStartDate()))
-                .collect(Collectors.toList());
+                .toList();
         data.put("todayLoans", todayLoans.stream().map(DTOMapper::toDTO).collect(Collectors.toList()));
         
         BigDecimal totalDisbursed = todayLoans.stream()

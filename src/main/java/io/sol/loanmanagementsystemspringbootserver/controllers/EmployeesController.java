@@ -1,9 +1,10 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
 import io.sol.loanmanagementsystemspringbootserver.dtos.EmployeeDTO;
-import io.sol.loanmanagementsystemspringbootserver.entities.Employee;
 import io.sol.loanmanagementsystemspringbootserver.entities.Role;
+import io.sol.loanmanagementsystemspringbootserver.repositories.EmployeeRepository;
 import io.sol.loanmanagementsystemspringbootserver.services.EmployeeService;
+import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UiControlUtilities;
 import javafx.fxml.FXML;
@@ -31,6 +32,7 @@ public class EmployeesController {
     @FXML private TableColumn<EmployeeDTO, String> firstNameColumn;
     @FXML private TableColumn<EmployeeDTO, String> lastNameColumn;
     @FXML private TableColumn<EmployeeDTO, String> emailColumn;
+    @FXML private TableColumn<EmployeeDTO, String> passwordColumn;
     @FXML private TableColumn<EmployeeDTO, String> telephoneColumn;
     @FXML private TableColumn<EmployeeDTO, String> salaryColumn;
     @FXML private TableColumn<EmployeeDTO, String> roleColumn;
@@ -85,6 +87,16 @@ public class EmployeesController {
         if (result.isSuccess()) {
             loadEmployees();
         }
+    }
+
+    @FXML
+    private void handleUpdateEmployee(){
+        EmployeeDTO selectedEmployee = employeesTable.getSelectionModel().getSelectedItem();
+        if(selectedEmployee == null){
+            UIHelper.showInfo("EMPTY SELECTION", "There's no employee selected yet");
+        }
+
+        Result<EmployeeDTO> result = employeeService.upDateEmployee(selectedEmployee);
     }
 
     @FXML

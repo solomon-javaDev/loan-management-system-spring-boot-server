@@ -25,7 +25,7 @@ public class UserService {
 
         return userRepository.findById(id)
                 .map(user -> Result.success("User loaded successfully.", user))
-                .orElseGet(() -> Result.notFound("User not found.", null));
+                .orElseGet(() -> Result.notFound("User not found.", new User()));
     }
 
     public Result<User> findByUsername(String username) {
