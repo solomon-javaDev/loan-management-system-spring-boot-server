@@ -54,4 +54,8 @@ public class SavingsService {
     public Result<List<SavingsTransaction>> getTransactions(LocalDateTime start, LocalDateTime end) {
         return Result.success("Savings transactions retrieved", transactionRepository.findByDateBetween(start, end));
     }
+
+    public Result<List<SavingsTransaction>> getAllTransactions() {
+        return Result.success("Savings transactions retrieved", transactionRepository.findAll());
+    }
 }
