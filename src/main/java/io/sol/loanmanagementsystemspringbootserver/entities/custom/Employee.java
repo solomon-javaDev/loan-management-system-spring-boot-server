@@ -1,5 +1,6 @@
-package io.sol.loanmanagementsystemspringbootserver.entities;
+package io.sol.loanmanagementsystemspringbootserver.entities.custom;
 
+import io.sol.loanmanagementsystemspringbootserver.entities.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

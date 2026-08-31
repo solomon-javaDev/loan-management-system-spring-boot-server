@@ -1,13 +1,16 @@
-package io.sol.loanmanagementsystemspringbootserver.entities;
+package io.sol.loanmanagementsystemspringbootserver.entities.Finance;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "expense_categories")
 @AllArgsConstructor
 @NoArgsConstructor
+@Setter @Getter
 public class ExpenseCategory {
 
     @Id
@@ -21,19 +24,5 @@ public class ExpenseCategory {
         this.description = description;
     }
 
-    public long getId() {
-        return id;
-    }
 
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
 }

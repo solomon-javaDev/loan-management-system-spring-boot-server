@@ -1,11 +1,10 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
 import io.sol.loanmanagementsystemspringbootserver.dtos.*;
-import io.sol.loanmanagementsystemspringbootserver.entities.LoanStatus;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.LoanStatus;
 import io.sol.loanmanagementsystemspringbootserver.mailing.EmailDetails;
 import io.sol.loanmanagementsystemspringbootserver.mailing.EmailsService;
 import io.sol.loanmanagementsystemspringbootserver.services.*;
-import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -49,7 +48,6 @@ public class HomeController {
     private final LoansService loansService;
     private final CustomerService customerService;
     private final PaymentsService paymentsService;
-    private final ReportService reportService;
     private final EmailsService emailsService;
     private final DashboardController dashboardController;
 
@@ -110,13 +108,11 @@ public class HomeController {
 
     public HomeController(LoansService loansService, CustomerService customerService, 
                           PaymentsService paymentsService,
-                          ReportService reportService,
                           EmailsService emailsService,
                           @Lazy DashboardController dashboardController) {
         this.loansService = loansService;
         this.customerService = customerService;
         this.paymentsService = paymentsService;
-        this.reportService = reportService;
         this.emailsService = emailsService;
         this.dashboardController = dashboardController;
     }
@@ -195,15 +191,7 @@ public class HomeController {
     }
 
     private void fillDueCustomersTable(){
-        List<CustomerDTO> customerDTOList =  customerService.getCustomersDueToday();
 
-        dueCustomersTable.setItems(FXCollections.observableArrayList(customerDTOList));
-
-        customerAccountNumber.setCellValueFactory(new PropertyValueFactory<>("accountNumber"));
-        customerTelephone.setCellValueFactory(new PropertyValueFactory<>("telephone"));
-        guarantorName.setCellValueFactory(new PropertyValueFactory<>("guarantorName"));
-        customerName.setCellValueFactory(new PropertyValueFactory<>("customerName"));
-        agingDays.setCellValueFactory(new PropertyValueFactory<>("agingDays"));
 
     }
     private void updateStat(String key, String value, Label label) {

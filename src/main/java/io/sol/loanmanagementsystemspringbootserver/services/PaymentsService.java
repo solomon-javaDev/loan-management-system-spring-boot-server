@@ -1,12 +1,10 @@
 package io.sol.loanmanagementsystemspringbootserver.services;
 
-import io.sol.loanmanagementsystemspringbootserver.dtos.LoanDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.PaymentDTO;
-import io.sol.loanmanagementsystemspringbootserver.entities.RepaymentReceivedEvent;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Loan;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.LoanStatus;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Payment;
 import io.sol.loanmanagementsystemspringbootserver.mappers.DTOMapper;
-import io.sol.loanmanagementsystemspringbootserver.entities.Loan;
-import io.sol.loanmanagementsystemspringbootserver.entities.LoanStatus;
-import io.sol.loanmanagementsystemspringbootserver.entities.Payment;
 import io.sol.loanmanagementsystemspringbootserver.repositories.PaymentRepository;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import org.springframework.context.ApplicationEventPublisher;
@@ -54,7 +52,6 @@ public class PaymentsService {
 
              Payment savedPayment = paymentRepository.save(payment);
 
-             applicationEventPublisher.publishEvent(new RepaymentReceivedEvent(savedPayment.getId(), savedPayment.getAmountReceived()));
 
              updateLoanStatus(loan, savedPayment.getDate());
              loansService.saveLoanEntity(loan);

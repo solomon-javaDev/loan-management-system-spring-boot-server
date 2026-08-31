@@ -1,4 +1,4 @@
-package io.sol.loanmanagementsystemspringbootserver.entities;
+package io.sol.loanmanagementsystemspringbootserver.entities.Finance;
 
 public enum LoanStatus {
     PENDING,

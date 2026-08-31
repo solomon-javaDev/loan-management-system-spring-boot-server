@@ -1,10 +1,10 @@
 package io.sol.loanmanagementsystemspringbootserver.mappers;
 
 import io.sol.loanmanagementsystemspringbootserver.dtos.*;
-import io.sol.loanmanagementsystemspringbootserver.entities.Customer;
-import io.sol.loanmanagementsystemspringbootserver.entities.Employee;
-import io.sol.loanmanagementsystemspringbootserver.entities.Loan;
-import io.sol.loanmanagementsystemspringbootserver.entities.Payment;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Loan;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Payment;
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.Customer;
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.Employee;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -378,4 +378,5 @@ public class DTOMapper {
         employee.setActive(dto.isActive());
         return employee;
     }
-}
+
+  }

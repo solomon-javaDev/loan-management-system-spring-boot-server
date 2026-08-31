@@ -1,6 +1,6 @@
 package io.sol.loanmanagementsystemspringbootserver.repositories;
 
-import io.sol.loanmanagementsystemspringbootserver.entities.ExpenseCategory;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.ExpenseCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,6 +1,6 @@
 package io.sol.loanmanagementsystemspringbootserver.repositories;
 
-import io.sol.loanmanagementsystemspringbootserver.entities.Employee;
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.Employee;
 import io.sol.loanmanagementsystemspringbootserver.entities.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 

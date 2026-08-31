@@ -1,13 +1,8 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
-import io.sol.loanmanagementsystemspringbootserver.entities.CapitalAccount;
 import io.sol.loanmanagementsystemspringbootserver.services.AutoupdateService;
-import io.sol.loanmanagementsystemspringbootserver.services.CapitalViewService;
-import io.sol.loanmanagementsystemspringbootserver.utilities.CapitalSummaryView;
-import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.utilities.StageManager;
 import io.sol.loanmanagementsystemspringbootserver.services.SearchService;
-import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -31,7 +26,6 @@ import java.io.IOException;
  * The DashboardController class serves as the main controller for the dashboard of the
  * application. It provides functionality to navigate between different views of the
  * application and manage interactions with the user interface components.
- *
  * This controller is responsible for:
  * - Managing and switching between various dashboard views such as Customers, Loans,
  *   Applications, Payments, Settings, and Reports.
@@ -45,11 +39,9 @@ import java.io.IOException;
 @Component
 public class DashboardController {
 
-    private final SearchService searchService;
     private final StageManager stageManager;
     private final AutoupdateService autoupdateService;
-    private final CapitalAccountRepository capitalAccountRepository;
-    private final CapitalViewService capitalViewService;
+
     @FXML
     private Label dashboardLabel;
     @FXML
@@ -79,14 +71,11 @@ public class DashboardController {
 
     private final ApplicationContext applicationContext;
 
-    public DashboardController(ApplicationContext applicationContext, SearchService searchService, StageManager stageManager, AutoupdateService autoupdateService, CapitalAccountRepository capitalAccountRepository, CapitalViewService capitalViewService) {
+    public DashboardController(ApplicationContext applicationContext, StageManager stageManager, AutoupdateService autoupdateService) {
         this.applicationContext = applicationContext;
-        this.searchService = searchService;
         this.stageManager = stageManager;
         this.autoupdateService = autoupdateService;
-        this.capitalAccountRepository = capitalAccountRepository;
-        this.capitalViewService = capitalViewService;
-    }
+           }
 
     @FXML
     public void initialize() {
@@ -96,9 +85,7 @@ public class DashboardController {
     }
 //TODO
     public void updateTopBar(){
-        CapitalSummaryView view = capitalViewService.getLiveSummary();
-        cashAtHand.setText(String.valueOf(view.cashAtHand()));
-        totalLoanPortifolio.setText(String.valueOf(view.totalLoanPortfolio()));
+
     }
 
     @FXML

@@ -3,7 +3,7 @@ package io.sol.loanmanagementsystemspringbootserver.controllers;
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.LoanDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.PaymentDTO;
-import io.sol.loanmanagementsystemspringbootserver.entities.LoanStatus;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.LoanStatus;
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
 import io.sol.loanmanagementsystemspringbootserver.services.LoansService;
 import io.sol.loanmanagementsystemspringbootserver.services.PaymentsService;

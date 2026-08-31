@@ -3,8 +3,7 @@ package io.sol.loanmanagementsystemspringbootserver.controllers;
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.EmployeeDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.LoanDTO;
-import io.sol.loanmanagementsystemspringbootserver.entities.Customer;
-import io.sol.loanmanagementsystemspringbootserver.entities.LoanStatus;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.LoanStatus;
 import io.sol.loanmanagementsystemspringbootserver.entities.Role;
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
 import io.sol.loanmanagementsystemspringbootserver.services.EmployeeService;
@@ -17,7 +16,6 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.util.StringConverter;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -161,9 +159,6 @@ public class LoansController {
         uiControlUtilities.configureDropDown(fieldOfficerField, employeeService.getEmployeeByRole(Role.FIELD_OFFICER).value(),
                 e -> e.getFirstName() + " " + e.getLastName()
                 );
-        uiControlUtilities.configureDropDown(guarantorDropDown, customerService.getEligibleGuarantors(null).value(),
-                c -> c.getFirstName() + " " + c.getLastName()
-        );
 
         statusField.setItems(FXCollections.observableArrayList(LoanStatus.values()));
         statusField.setValue(LoanStatus.PENDING);
@@ -196,9 +191,7 @@ public class LoansController {
 
         private void refreshGuarantorOptions() {
         BigDecimal principal = parseBigDecimal(principalField.getText());
-        uiControlUtilities.configureDropDown(guarantorDropDown,
-                customerService.getEligibleGuarantors(principal).value(),
-                c -> c.getFirstName() + " " + c.getLastName());
+
     }
 
     private LoanDTO buildLoanFromForm() {

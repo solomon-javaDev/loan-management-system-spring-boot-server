@@ -1,6 +1,7 @@
 package io.sol.loanmanagementsystemspringbootserver.dtos;
 
-import io.sol.loanmanagementsystemspringbootserver.entities.LoanStatus;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.LoanStatus;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;

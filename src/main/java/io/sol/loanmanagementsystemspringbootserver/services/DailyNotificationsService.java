@@ -1,8 +1,8 @@
 package io.sol.loanmanagementsystemspringbootserver.services;
 
-import io.sol.loanmanagementsystemspringbootserver.entities.Customer;
-import io.sol.loanmanagementsystemspringbootserver.entities.Employee;
 import io.sol.loanmanagementsystemspringbootserver.entities.Role;
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.Customer;
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.Employee;
 import io.sol.loanmanagementsystemspringbootserver.repositories.CustomerRepository;
 import io.sol.loanmanagementsystemspringbootserver.repositories.EmployeeRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -13,22 +13,19 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import io.sol.loanmanagementsystemspringbootserver.entities.LoanStatus;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.LoanStatus;
 
 @Service
 public class DailyNotificationsService implements CommandLineRunner {
     private final CustomerRepository repository;
-    private final JavaMailSender javaMailSender;
     private final EmployeeRepository employeeRepository;
     private final MailSender mailSender;
 
-    public DailyNotificationsService(CustomerRepository repository, JavaMailSender javaMailSender, EmployeeRepository employeeRepository, MailSender mailSender) {
+    public DailyNotificationsService(CustomerRepository repository, EmployeeRepository employeeRepository, MailSender mailSender) {
         this.repository = repository;
-        this.javaMailSender = javaMailSender;
         this.employeeRepository = employeeRepository;
         this.mailSender = mailSender;
     }

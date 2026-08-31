@@ -1,5 +1,7 @@
-package io.sol.loanmanagementsystemspringbootserver.entities;
+package io.sol.loanmanagementsystemspringbootserver.entities.Finance;
 
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.Customer;
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.Employee;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

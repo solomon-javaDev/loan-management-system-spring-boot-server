@@ -1,6 +1,6 @@
 package io.sol.loanmanagementsystemspringbootserver.services;
 
-import io.sol.loanmanagementsystemspringbootserver.entities.Expense;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Expense;
 import io.sol.loanmanagementsystemspringbootserver.repositories.ExpenseRepository;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import org.springframework.beans.factory.annotation.Autowired;

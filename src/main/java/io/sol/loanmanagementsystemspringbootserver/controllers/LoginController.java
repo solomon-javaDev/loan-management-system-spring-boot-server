@@ -1,11 +1,10 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
-import io.sol.loanmanagementsystemspringbootserver.entities.Role;
 import io.sol.loanmanagementsystemspringbootserver.repositories.UserRepository;
 import io.sol.loanmanagementsystemspringbootserver.services.ActivityLoggingService;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.utilities.StageManager;
-import io.sol.loanmanagementsystemspringbootserver.entities.User;
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.User;
 import io.sol.loanmanagementsystemspringbootserver.services.AuthenticationService;
 import org.springframework.context.ApplicationContext;
 import javafx.fxml.FXML;

@@ -1,6 +1,6 @@
 package io.sol.loanmanagementsystemspringbootserver.services;
 
-import io.sol.loanmanagementsystemspringbootserver.entities.ExpenseCategory;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.ExpenseCategory;
 import io.sol.loanmanagementsystemspringbootserver.repositories.ExpenseCategoryRepository;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import org.springframework.stereotype.Service;

@@ -5,7 +5,6 @@ import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerResponseDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.EmployeeDTO;
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
-import io.sol.loanmanagementsystemspringbootserver.services.EmployeeService;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import javafx.collections.FXCollections;
@@ -27,7 +26,6 @@ import org.springframework.stereotype.Component;
 public class CustomerController {
 
     private final CustomerService customerService;
-    private final EmployeeService employeeService;
 
     @FXML
     private TextField firstNameField;
@@ -110,9 +108,8 @@ public class CustomerController {
 
     private FilteredList<CustomerDTO> filteredCustomers;
 
-    public CustomerController(CustomerService customerService, EmployeeService employeeService) {
+    public CustomerController(CustomerService customerService) {
         this.customerService = customerService;
-        this.employeeService = employeeService;
     }
 
     @FXML

@@ -1,5 +1,6 @@
-package io.sol.loanmanagementsystemspringbootserver.entities;
+package io.sol.loanmanagementsystemspringbootserver.entities.Finance;
 
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.User;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

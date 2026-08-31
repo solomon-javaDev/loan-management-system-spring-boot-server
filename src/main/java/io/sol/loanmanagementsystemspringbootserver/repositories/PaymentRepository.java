@@ -1,6 +1,6 @@
 package io.sol.loanmanagementsystemspringbootserver.repositories;
 
-import io.sol.loanmanagementsystemspringbootserver.entities.Payment;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Payment;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

@@ -1,10 +1,10 @@
 package io.sol.loanmanagementsystemspringbootserver.services;
 
 import io.sol.loanmanagementsystemspringbootserver.dtos.EmployeeDTO;
+import io.sol.loanmanagementsystemspringbootserver.entities.Role;
 import io.sol.loanmanagementsystemspringbootserver.mappers.DTOMapper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
-import io.sol.loanmanagementsystemspringbootserver.entities.Employee;
-import io.sol.loanmanagementsystemspringbootserver.entities.Role;
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.Employee;
 import io.sol.loanmanagementsystemspringbootserver.repositories.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

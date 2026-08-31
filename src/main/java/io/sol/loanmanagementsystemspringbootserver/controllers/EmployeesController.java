@@ -2,7 +2,6 @@ package io.sol.loanmanagementsystemspringbootserver.controllers;
 
 import io.sol.loanmanagementsystemspringbootserver.dtos.EmployeeDTO;
 import io.sol.loanmanagementsystemspringbootserver.entities.Role;
-import io.sol.loanmanagementsystemspringbootserver.repositories.EmployeeRepository;
 import io.sol.loanmanagementsystemspringbootserver.services.EmployeeService;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
