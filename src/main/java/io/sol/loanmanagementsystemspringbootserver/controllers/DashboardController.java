@@ -41,6 +41,8 @@ public class DashboardController {
 
     private final StageManager stageManager;
     private final AutoupdateService autoupdateService;
+    private final io.sol.loanmanagementsystemspringbootserver.services.FinancialStateService financialStateService;
+    private final io.sol.loanmanagementsystemspringbootserver.utilities.UserSession userSession;
 
     @FXML
     private Label dashboardLabel;
@@ -71,21 +73,36 @@ public class DashboardController {
 
     private final ApplicationContext applicationContext;
 
-    public DashboardController(ApplicationContext applicationContext, StageManager stageManager, AutoupdateService autoupdateService) {
+    public DashboardController(ApplicationContext applicationContext, StageManager stageManager, AutoupdateService autoupdateService, io.sol.loanmanagementsystemspringbootserver.services.FinancialStateService financialStateService, io.sol.loanmanagementsystemspringbootserver.utilities.UserSession userSession) {
         this.applicationContext = applicationContext;
         this.stageManager = stageManager;
         this.autoupdateService = autoupdateService;
-           }
+        this.financialStateService = financialStateService;
+        this.userSession = userSession;
+    }
 
     @FXML
     public void initialize() {
         updateTopBar();
         autoupdateService.checkForUpdatesAsync();
-
+        
+        if (settingsButton != null) {
+            settingsButton.setVisible(userSession.isAdmin());
+        }
+        if (reportsButton != null) {
+            // Requirement doesn't explicitly say hide reports from cashier, 
+            // but says "CASHIERS are not allowed entirely to view the settings panel"
+        }
     }
-//TODO
-    public void updateTopBar(){
 
+    public void updateTopBar(){
+        io.sol.loanmanagementsystemspringbootserver.entities.Finance.SystemFinancialState state = financialStateService.getCurrentState();
+        if (cashAtHand != null) {
+            cashAtHand.setText(String.format("%,.2f", state.getCashOnHand()));
+        }
+        if (totalLoanPortifolio != null) {
+            totalLoanPortifolio.setText(String.format("%,.2f", state.getGrossLoanPortfolio()));
+        }
     }
 
     @FXML

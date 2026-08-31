@@ -68,6 +68,13 @@ public class CustomerService {
         return String.format("055%08d", count + 1);
     }
 
+    public Result<CustomerDTO> getCustomerById(int id) {
+        return repository.findById(id)
+                .map(DTOMapper::toDTO)
+                .map(dto -> Result.success("Customer found.", dto))
+                .orElseGet(() -> Result.notFound("Customer not found.", null));
+    }
+
     public Result<List<CustomerDTO>> getAllCustomers() {
         List<Object[]> results = repository.findAllWithLoanCount();
         List<CustomerDTO> dtos = results.stream().map(row -> {

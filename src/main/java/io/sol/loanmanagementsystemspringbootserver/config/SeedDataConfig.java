@@ -1,10 +1,12 @@
 package io.sol.loanmanagementsystemspringbootserver.config;
 
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.SystemFinancialState;
 import io.sol.loanmanagementsystemspringbootserver.entities.Role;
 import io.sol.loanmanagementsystemspringbootserver.entities.custom.Employee;
 import io.sol.loanmanagementsystemspringbootserver.entities.custom.User;
 import io.sol.loanmanagementsystemspringbootserver.repositories.EmployeeRepository;
 import io.sol.loanmanagementsystemspringbootserver.repositories.UserRepository;
+import io.sol.loanmanagementsystemspringbootserver.services.FinancialStateService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -21,21 +23,26 @@ public class SeedDataConfig implements CommandLineRunner {
     private final UserRepository userRepository;
 
     public static final UUID SYSTEM_ACCOUNT_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+    private final FinancialStateService financialStateService;
 
 
     public SeedDataConfig(EmployeeRepository employeeRepository,
                           PasswordEncoder passwordEncoder,
-                          UserRepository userRepository) {
+                          UserRepository userRepository, FinancialStateService financialStateService) {
         this.employeeRepository = employeeRepository;
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
+        this.financialStateService = financialStateService;
     }
 
     @Override
     public void run(String... args) {
 
+        SystemFinancialState initialSystemState = getSystemFinancialState();
 
+        financialStateService.initialiseSystemState(initialSystemState);
 
+        System.out.println("PRINTING ------------- "+financialStateService.getAvailableLiquidity() );
 
         userRepository.findByUsername("admin")
                 .ifPresentOrElse(admin -> {
@@ -70,6 +77,26 @@ public class SeedDataConfig implements CommandLineRunner {
                         employeeRepository.save(e);
                     });
         }
+    }
+
+    private static SystemFinancialState getSystemFinancialState() {
+        SystemFinancialState initialSystemState = new SystemFinancialState();
+        initialSystemState.setOwnerCapital(BigDecimal.valueOf(10000000));
+        initialSystemState.setAvailableLiquidity(BigDecimal.valueOf(10000000));
+        initialSystemState.setCashOnHand(BigDecimal.valueOf(10000000));
+        initialSystemState.setBankBalance(BigDecimal.ZERO);
+        initialSystemState.setTotalCashDisbursedInLoans(BigDecimal.ZERO);
+        initialSystemState.setExpectedCash(BigDecimal.ZERO);
+        initialSystemState.setCustomerSavings(BigDecimal.ZERO);
+        initialSystemState.setGrossLiquidity(BigDecimal.ZERO);
+        initialSystemState.setGrossLoanPortfolio(BigDecimal.ZERO);
+        initialSystemState.setTotalFeesCollected(BigDecimal.ZERO);
+        initialSystemState.setTotalSurchargeCollected(BigDecimal.ZERO);
+        initialSystemState.setNetProfit(BigDecimal.ZERO);
+        initialSystemState.setExpectedCash(BigDecimal.ZERO);
+        initialSystemState.setTotalCollections(BigDecimal.ZERO);
+        initialSystemState.setOutstandingPrincipal(BigDecimal.ZERO);
+        return initialSystemState;
     }
 
     private Employee make(String first, String last, int salary, String email, String phone) {

@@ -37,7 +37,24 @@ public class EmailsServiceImpl implements EmailsService {
 
     @Override
     public String sendMailWithAttachment(EmailDetails details) {
-        // Implementation for attachment if needed in future
-        return "Not implemented yet";
+        try {
+            jakarta.mail.internet.MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+            org.springframework.mail.javamail.MimeMessageHelper mimeMessageHelper = 
+                new org.springframework.mail.javamail.MimeMessageHelper(mimeMessage, true);
+
+            mimeMessageHelper.setFrom(sender);
+            mimeMessageHelper.setTo(details.getRecipient());
+            mimeMessageHelper.setText(details.getBody());
+            mimeMessageHelper.setSubject(details.getSubject());
+
+            if (details.getAttachment() != null) {
+                mimeMessageHelper.addAttachment(details.getAttachmentName(), new org.springframework.core.io.ByteArrayResource(details.getAttachment()));
+            }
+
+            javaMailSender.send(mimeMessage);
+            return "Mail Sent Successfully...";
+        } catch (Exception e) {
+            return "Error while Sending Mail: " + e.getMessage();
+        }
     }
 }

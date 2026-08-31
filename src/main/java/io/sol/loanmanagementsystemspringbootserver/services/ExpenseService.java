@@ -1,10 +1,12 @@
 package io.sol.loanmanagementsystemspringbootserver.services;
 
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Expense;
+import io.sol.loanmanagementsystemspringbootserver.events.ExpenseIncurredEvent;
 import io.sol.loanmanagementsystemspringbootserver.repositories.ExpenseRepository;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,12 +16,14 @@ import java.util.List;
 public class ExpenseService {
 
     private final ExpenseRepository expenseRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
-    @Autowired
-    public ExpenseService(ExpenseRepository expenseRepository) {
+    public ExpenseService(ExpenseRepository expenseRepository, ApplicationEventPublisher applicationEventPublisher) {
         this.expenseRepository = expenseRepository;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
+    @Transactional
     public Result<Expense> recordExpense(Expense expense) {
         if (expense.getAmount() == null || expense.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             return Result.invalid("Amount must be greater than zero", null);
@@ -32,6 +36,13 @@ public class ExpenseService {
         }
 
         Expense saved = expenseRepository.save(expense);
+        
+        applicationEventPublisher.publishEvent(new ExpenseIncurredEvent(
+            saved.getId(),
+            saved.getAmount(),
+            saved.getDate()
+        ));
+
         return Result.success("Expense recorded successfully", saved);
     }
 

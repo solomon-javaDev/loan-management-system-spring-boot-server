@@ -53,11 +53,13 @@ public class LoginController {
     private Button creatAccountButton;
 
     private final AuthenticationService authenticationService;
-    public LoginController(AuthenticationService authenticationService, ApplicationContext applicationContext, StageManager stageManager, ActivityLoggingService activityLoggingService, UserRepository userRepository) {
+    private final io.sol.loanmanagementsystemspringbootserver.utilities.UserSession userSession;
+    public LoginController(AuthenticationService authenticationService, ApplicationContext applicationContext, StageManager stageManager, ActivityLoggingService activityLoggingService, UserRepository userRepository, io.sol.loanmanagementsystemspringbootserver.utilities.UserSession userSession) {
         this.authenticationService = authenticationService;
         this.stageManager = stageManager;
         this.activityLoggingService = activityLoggingService;
         this.userRepository = userRepository;
+        this.userSession = userSession;
     }
 
     @FXML
@@ -95,6 +97,7 @@ public class LoginController {
         messageLabel.setText(authResult.message());
 
         if (authResult.isSuccess()) {
+            userSession.login(authResult.value());
             loadDashboard();
         }
     }

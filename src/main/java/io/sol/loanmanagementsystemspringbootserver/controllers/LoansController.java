@@ -49,6 +49,8 @@ public class LoansController {
     private final EmployeeService employeeService;
     private final CustomerService customerService;
     private final UiControlUtilities uiControlUtilities;
+    private final io.sol.loanmanagementsystemspringbootserver.services.FeeBucketService feeBucketService;
+    private final io.sol.loanmanagementsystemspringbootserver.utilities.UserSession userSession;
 
     @FXML
     private TableView<LoanDTO> loansTable;
@@ -140,11 +142,13 @@ public class LoansController {
     @FXML
     private Label messageLabel;
 
-    public LoansController(LoansService loansService, EmployeeService employeeService, CustomerService customerService, UiControlUtilities uiControlUtilities) {
+    public LoansController(LoansService loansService, EmployeeService employeeService, CustomerService customerService, UiControlUtilities uiControlUtilities, io.sol.loanmanagementsystemspringbootserver.services.FeeBucketService feeBucketService, io.sol.loanmanagementsystemspringbootserver.utilities.UserSession userSession) {
         this.loansService = loansService;
         this.employeeService = employeeService;
         this.customerService = customerService;
         this.uiControlUtilities = uiControlUtilities;
+        this.feeBucketService = feeBucketService;
+        this.userSession = userSession;
     }
 
     @FXML
@@ -165,7 +169,18 @@ public class LoansController {
 
         maturityDatePicker.valueProperty().addListener((obs, oldValue, newValue) -> computeTenorFromDates());
         startDatePicker.valueProperty().addListener((obs, oldValue, newValue) -> computeTenorFromDates());
-        principalField.textProperty().addListener((obs, oldValue, newValue) -> refreshGuarantorOptions());
+        principalField.textProperty().addListener((obs, oldValue, newValue) -> {
+            refreshGuarantorOptions();
+            if (newValue != null && !newValue.isEmpty()) {
+                try {
+                    BigDecimal principal = new BigDecimal(newValue);
+                    BigDecimal fee = feeBucketService.calculateFee(principal);
+                    feesField.setText(fee.toPlainString());
+                } catch (NumberFormatException e) {
+                    // Ignore invalid numbers
+                }
+            }
+        });
 
         saveButton.disableProperty().bind(loansTable.getSelectionModel().selectedItemProperty().isNotNull());
         updateButton.disableProperty().bind(loansTable.getSelectionModel().selectedItemProperty().isNull());
@@ -262,6 +277,7 @@ public class LoansController {
     @FXML
     private void handleSaveLoan() {
         LoanDTO loan = buildLoanFromForm();
+
         if (loan.getCustomerId() == null) {
             UIHelper.showError("Error", "Select a customer first.");
             return;
@@ -285,6 +301,8 @@ public class LoansController {
             loadLoans();
             clearForm();
         }
+
+        clearForm();
     }
 
     @FXML
@@ -327,6 +345,11 @@ public class LoansController {
 
     @FXML
     private void handleDeleteLoan() {
+        if (!userSession.isAdmin()) {
+            messageLabel.setText("Only Admin can delete loans.");
+            return;
+        }
+
         LoanDTO selectedLoan = loansTable.getSelectionModel().getSelectedItem();
         if (selectedLoan == null) {
             messageLabel.setText("Select a loan to delete.");
@@ -400,13 +423,9 @@ public class LoansController {
             return;
         }
 
-        int months = Period.between(start, maturity).getYears() * 12 + Period.between(start, maturity).getMonths();
-        int days = Period.between(start, maturity).getDays();
-        if (days > 0) {
-            months += 1;
-        }
+        long days = java.time.temporal.ChronoUnit.DAYS.between(start, maturity);
 
-        tenorField.setText(String.valueOf(Math.max(months, 0)));
+        tenorField.setText(String.valueOf(Math.max(days, 0)));
         messageLabel.setText("");
     }
 

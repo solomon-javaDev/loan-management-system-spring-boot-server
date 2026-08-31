@@ -21,6 +21,18 @@ public class Payment {
     @Column
     private BigDecimal amountReceived;
 
+    @Column
+    private BigDecimal principalAmount = BigDecimal.ZERO;
+
+    @Column
+    private BigDecimal interestAmount = BigDecimal.ZERO;
+
+    @Column
+    private BigDecimal feeAmount = BigDecimal.ZERO;
+
+    @Column
+    private BigDecimal surchargeAmount = BigDecimal.ZERO;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "loan_id", nullable = false)
     private Loan loan;

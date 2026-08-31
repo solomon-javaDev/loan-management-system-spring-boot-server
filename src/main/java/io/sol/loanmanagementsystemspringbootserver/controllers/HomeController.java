@@ -102,19 +102,22 @@ public class HomeController {
     @FXML
     private TableColumn<CustomerDTO, String> agingDays;
 
-    private Map<String, String> statsMap = new LinkedHashMap<>();
+    private final FinancialStateService financialStateService;
 
+    private Map<String, String> statsMap = new LinkedHashMap<>();
 
 
     public HomeController(LoansService loansService, CustomerService customerService, 
                           PaymentsService paymentsService,
                           EmailsService emailsService,
-                          @Lazy DashboardController dashboardController) {
+                          @Lazy DashboardController dashboardController,
+                          FinancialStateService financialStateService) {
         this.loansService = loansService;
         this.customerService = customerService;
         this.paymentsService = paymentsService;
         this.emailsService = emailsService;
         this.dashboardController = dashboardController;
+        this.financialStateService = financialStateService;
     }
 
     @FXML
@@ -134,7 +137,9 @@ public class HomeController {
         
         List<LoanDTO> todayLoans = allLoans.stream()
                 .filter(l -> today.equals(l.getStartDate()))
-                .toList();
+                .collect(java.util.stream.Collectors.toList());
+
+        io.sol.loanmanagementsystemspringbootserver.entities.Finance.SystemFinancialState state = financialStateService.getCurrentState();
 
         statsMap.clear();
 
@@ -158,10 +163,10 @@ public class HomeController {
 
         updateStat("New Customers Today", "0", newCustomersTodayLabel);
 
-        BigDecimal totalColl = todayPayments.stream()
+        BigDecimal totalCollToday = todayPayments.stream()
                 .map(PaymentDTO::getAmountReceived)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        updateStat("Total Collections (Today)", String.format("%.2f", totalColl), totalCollectionsLabel);
+        updateStat("Total Collections (Today)", String.format("%.2f", totalCollToday), totalCollectionsLabel);
 
         updateStat("Loans Disbursed (Today)", String.valueOf(todayLoans.size()), loansDisbursedLabel);
 
@@ -170,24 +175,16 @@ public class HomeController {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         updateStat("Total Amount Disbursed (Today)", String.format("%.2f", totalDisbursedToday), totalAmountDisbursedLabel);
 
-        BigDecimal principalBalance = allLoans.stream()
-                .map(LoanDTO::getOutstandingBalance)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        updateStat("Principal Balance", String.format("%.2f", principalBalance), principalBalanceLabel);
-
-        BigDecimal totalPortfolio = allLoans.stream()
-                .map(LoanDTO::getPrincipal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        updateStat("Total Loan Portfolio", String.format("%.2f", totalPortfolio), totalLoanPortfolioLabel);
-
-        updateStat("Opening Cash", "0.00", openingCashLabel);
-        updateStat("Principal Collected", String.format("%.2f", totalColl.multiply(new BigDecimal("0.8"))), principalCollectedLabel);
-        updateStat("Interest Collected", String.format("%.2f", totalColl.multiply(new BigDecimal("0.2"))), interestCollectedLabel);
-        updateStat("Processing Fees", "0.00", processingFeesLabel);
-        updateStat("Bank Deposits", "0.00", bankDepositsLabel);
-        updateStat("Total Expenses", "0.00", totalExpensesLabel);
-        updateStat("Loan Disbursements", String.format("%.2f", totalDisbursedToday), loanDisbursementsLabel);
-        updateStat("Checkout Cash", String.format("%.2f", totalColl.subtract(totalDisbursedToday)), checkoutCashLabel);
+        updateStat("Principal Balance", String.format("%.2f", state.getOutstandingPrincipal()), principalBalanceLabel);
+        updateStat("Total Loan Portfolio", String.format("%.2f", state.getGrossLoanPortfolio()), totalLoanPortfolioLabel);
+        updateStat("Opening Cash", String.format("%.2f", state.getCashOnHand().add(totalDisbursedToday).subtract(totalCollToday)), openingCashLabel); // Rough estimate
+        updateStat("Principal Collected", String.format("%.2f", state.getTotalPrincipalCollected()), principalCollectedLabel);
+        updateStat("Interest Collected", String.format("%.2f", state.getInterestReceived()), interestCollectedLabel);
+        updateStat("Processing Fees", String.format("%.2f", state.getTotalFeesCollected()), processingFeesLabel);
+        updateStat("Bank Balance", String.format("%.2f", state.getBankBalance()), bankDepositsLabel);
+        updateStat("Total Expenses", String.format("%.2f", state.getTotalExpenses()), totalExpensesLabel);
+        updateStat("Loan Disbursements (Total)", String.format("%.2f", state.getTotalCashDisbursedInLoans()), loanDisbursementsLabel);
+        updateStat("Cash On Hand", String.format("%.2f", state.getCashOnHand()), checkoutCashLabel);
     }
 
     private void fillDueCustomersTable(){

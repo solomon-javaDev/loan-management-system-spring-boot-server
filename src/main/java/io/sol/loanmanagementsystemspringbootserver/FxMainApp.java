@@ -18,9 +18,18 @@ public class FxMainApp extends Application {
 
     @Override
     public void init() {
+    Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+        GlobalExceptionHandler.handleException(throwable);
+    });
+
+    try {
         applicationContext = new SpringApplicationBuilder(LoanManagementSystemSpringBootServerApplication.class)
-            .headless(false)
-            .run(getParameters().getRaw().toArray(new String[0]));
+                .headless(false)
+                .run(getParameters().getRaw().toArray(new String[0]));
+    } catch (Throwable throwable) {
+        throwable.printStackTrace();
+        throw throwable;
+    }
         //1. Catch exceptions thrown on any background or worker thread
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable)->{
             GlobalExceptionHandler.handleException(throwable);

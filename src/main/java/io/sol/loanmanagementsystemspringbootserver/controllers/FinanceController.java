@@ -1,7 +1,10 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.CashTransaction;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.CashTransactionType;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Expense;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.ExpenseCategory;
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.Customer;
 import io.sol.loanmanagementsystemspringbootserver.services.*;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
@@ -15,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
+import java.util.stream.Collectors;
 
 @Component
 public class FinanceController {
@@ -22,6 +26,7 @@ public class FinanceController {
     private final CustomerService customerService;
     private final UiControlUtilities uiControlUtilities;
     private final ExpenseCategoryService expenseCategoryService;
+    private final CashTransactionService cashTransactionService;
 
     @FXML private TextField expenseDescription;
     @FXML private ComboBox<ExpenseCategory> expenseCategoryDropDown;
@@ -29,6 +34,7 @@ public class FinanceController {
 
     @FXML private ComboBox<String> savingsCustomer;
     @FXML private TextField savingsCustomerId;
+    @FXML private ComboBox<String> savingsType;
     @FXML private TextField savingsAmount;
     @FXML private Label messageLabel;
 
@@ -38,29 +44,41 @@ public class FinanceController {
     @FXML private TableColumn<Expense, String> recordCategoryColumn;
     @FXML private TableColumn<Expense, String> recordAmountColumn;
 
+    @FXML private TableView<CashTransaction> customerSavingsTable;
+    @FXML private TableColumn<CashTransaction, String> savingsDateColumn;
+    @FXML private TableColumn<CashTransaction, String> savingsCustomerNameColumn;
+    @FXML private TableColumn<CashTransaction, String> savingsMovementColumn;
+    @FXML private TableColumn<CashTransaction, String> savingsAmountColumn;
+    @FXML private TableColumn<CashTransaction, String> savingsTotalBalanceColumn;
 
-    public FinanceController(ExpenseService expenseService, CustomerService customerService, UiControlUtilities uiControlUtilities, ExpenseCategoryService expenseCategoryService) {
+
+    public FinanceController(ExpenseService expenseService, CustomerService customerService, 
+                             UiControlUtilities uiControlUtilities, ExpenseCategoryService expenseCategoryService,
+                             CashTransactionService cashTransactionService) {
         this.expenseService = expenseService;
         this.customerService = customerService;
         this.uiControlUtilities = uiControlUtilities;
         this.expenseCategoryService = expenseCategoryService;
+        this.cashTransactionService = cashTransactionService;
     }
 
     @FXML
     public void initialize() {
+        uiControlUtilities.configureDropDown(expenseCategoryDropDown, expenseCategoryService.getAllCategories().value(), e -> e.getDescription());
+        
+        customerService.getAllCustomers().value().forEach(customer ->
+                savingsCustomer.getItems().add(customer.getId() + " - " + customer.getCustomerName()));
+        
+        savingsCustomer.valueProperty().addListener((obs, oldValue, newValue) -> {
+            if (newValue != null) savingsCustomerId.setText(newValue.split(" - ", 2)[0]);
+        });
 
-            uiControlUtilities.configureDropDown(expenseCategoryDropDown, expenseCategoryService.getAllCategories().value(), e -> e.getDescription());
-            customerService.getAllCustomers().value().forEach(customer ->
-                    savingsCustomer.getItems().add(customer.getId() + " - " + customer.getCustomerName()));
-            savingsCustomer.valueProperty().addListener((obs, oldValue, newValue) -> {
-                if (newValue != null) savingsCustomerId.setText(newValue.split(" - ", 2)[0]);
-            });
+        savingsType.getItems().addAll("DEPOSIT", "WITHDRAWAL");
 
-            configureTables();
-            loadExpenses();
-            loadSavings();
+        configureTables();
+        loadExpenses();
+        loadSavings();
     }
-
 
     @FXML
     private void recordExpense() {
@@ -68,31 +86,56 @@ public class FinanceController {
 
         ExpenseCategory selectedCategory = expenseCategoryDropDown.getValue();
         if(selectedCategory == null){
-            show("Selecet a category first");
+            show("Select a category first");
             return;
         }
 
         BigDecimal amount = parseAmount(expenseAmount.getText());
         if(amount == null){
             show("Enter a valid expense amount");
+            return;
         }
 
         expense.setDescription(expenseDescription.getText());
-
         expense.setCategory(selectedCategory);
-
         expense.setAmount(amount);
 
-        String message = expenseService.recordExpense(expense).message();
-        show(message);
+        Result<Expense> result = expenseService.recordExpense(expense);
+        show(result.message());
 
-        UIHelper.showInfo("SUCCESS", message);
-        loadExpenses();
+        if (result.isSuccess()) {
+            UIHelper.showInfo("SUCCESS", result.message());
+            loadExpenses();
+            expenseDescription.clear();
+            expenseAmount.clear();
+        }
     }
 
     @FXML
     private void recordSavings() {
+        String custIdStr = savingsCustomerId.getText();
+        String type = savingsType.getValue();
+        BigDecimal amount = parseAmount(savingsAmount.getText());
 
+        if (custIdStr.isEmpty() || type == null || amount == null) {
+            show("Please fill in all savings fields");
+            return;
+        }
+
+        CashTransaction transaction = new CashTransaction();
+        transaction.setCustomerId(Integer.parseInt(custIdStr));
+        transaction.setAmount(amount);
+        transaction.setType(type.equals("DEPOSIT") ? CashTransactionType.SAVINGS_DEPOSIT : CashTransactionType.SAVINGS_WITHDRAWAL);
+        transaction.setDescription("Savings " + type + " for customer " + custIdStr);
+
+        Result<CashTransaction> result = cashTransactionService.recordTransaction(transaction);
+        show(result.message());
+
+        if (result.isSuccess()) {
+            UIHelper.showInfo("SUCCESS", result.message());
+            loadSavings();
+            savingsAmount.clear();
+        }
     }
 
     private void configureTables() {
@@ -105,18 +148,38 @@ public class FinanceController {
                 c.getValue().getCategory() != null ? c.getValue().getCategory().getDescription() : ""));
         recordAmountColumn.setCellValueFactory(c -> new SimpleStringProperty(formatAmount(c.getValue().getAmount())));
 
-
+        savingsDateColumn.setCellValueFactory(c -> new SimpleStringProperty(
+                c.getValue().getDate() == null ? "" : c.getValue().getDate().format(fmt)));
+        savingsCustomerNameColumn.setCellValueFactory(c -> {
+            Integer id = c.getValue().getCustomerId();
+            if (id == null) return new SimpleStringProperty("");
+            Result<io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO> customerResult = customerService.getCustomerById(id);
+            return new SimpleStringProperty(customerResult.isSuccess() ? customerResult.value().getCustomerName() : "ID: " + id);
+        });
+        savingsMovementColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getType().toString()));
+        savingsAmountColumn.setCellValueFactory(c -> new SimpleStringProperty(formatAmount(c.getValue().getAmount())));
+        savingsTotalBalanceColumn.setCellValueFactory(c -> {
+             // For simplicity in MVP, we might just show the transaction amount or fetch customer balance
+             Integer id = c.getValue().getCustomerId();
+             if (id == null) return new SimpleStringProperty("");
+             Result<io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO> customerResult = customerService.getCustomerById(id);
+             return new SimpleStringProperty(customerResult.isSuccess() ? formatAmount(customerResult.value().getSavingsBalance()) : "");
+        });
     }
 
     private void loadExpenses() {
         expensesTable.setItems(FXCollections.observableArrayList(
                 expenseService.getAllExpenses().value().stream()
                         .sorted((a, b) -> b.getDate().compareTo(a.getDate()))
-                        .toList()));
+                        .collect(Collectors.toList())));
     }
 
     private void loadSavings() {
-
+        customerSavingsTable.setItems(FXCollections.observableArrayList(
+                cashTransactionService.getAllTransactions().stream()
+                        .filter(t -> t.getType() == CashTransactionType.SAVINGS_DEPOSIT || t.getType() == CashTransactionType.SAVINGS_WITHDRAWAL)
+                        .sorted((a, b) -> b.getDate().compareTo(a.getDate()))
+                        .collect(Collectors.toList())));
     }
 
     private BigDecimal parseAmount(String value) {
