@@ -3,10 +3,9 @@ package io.sol.loanmanagementsystemspringbootserver.services;
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerCreateDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerResponseDTO;
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.Customer;
 import io.sol.loanmanagementsystemspringbootserver.mappers.DTOMapper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
-import io.sol.loanmanagementsystemspringbootserver.entities.Customer;
-import io.sol.loanmanagementsystemspringbootserver.entities.LoanStatus;
 import io.sol.loanmanagementsystemspringbootserver.repositories.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -60,21 +59,9 @@ public class CustomerService {
         return Result.success("Customer saved successfully.", DTOMapper.toResponseDTO(savedCustomer));
     }
 
-    public List<CustomerDTO> getCustomersDueToday(){
-        //Customers due today, mapped to DTOs with their aging days (max across active loans)
-        LocalDate today = LocalDate.now();
-        return repository.findAllCustomersDue(today).stream()
-                .map(c -> {
-                    CustomerDTO dto = DTOMapper.toDTO(c);
-                    int aging = c.getLoans().stream()
-                            .filter(l -> l.getStatus() == LoanStatus.ACTIVE)
-                            .mapToInt(l -> (int) l.getAgingDays(today))
-                            .max().orElse(0);
-                    dto.setAgingDays(aging);
-                    return dto;
-                })
-                .toList();
-    }
+//    public List<CustomerDTO> getCustomersDueToday(){
+//
+//    }
 
     public String generateAccountNumber() {
         long count = repository.countAllIncludingDeleted();
@@ -93,14 +80,6 @@ public class CustomerService {
         return Result.success("Customers loaded successfully.", dtos);
     }
 
-    @Transactional
-    public Result<List<CustomerDTO>> getEligibleGuarantors(BigDecimal principal) {
-        List<CustomerDTO> eligible = repository.findAll().stream()
-                .filter(c -> c.canGuarantee(principal))
-                .map(DTOMapper::toDTO)
-                .collect(Collectors.toList());
-        return Result.success("Eligible guarantors loaded.", eligible);
-    }
 
     @Transactional
     public Result<CustomerResponseDTO> updateCustomer(CustomerDTO customerDto) {
