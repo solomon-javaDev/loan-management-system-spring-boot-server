@@ -3,6 +3,7 @@ package io.sol.loanmanagementsystemspringbootserver.services;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.SystemFinancialState;
 import io.sol.loanmanagementsystemspringbootserver.events.FinancialStateUpdatedEvent;
 import io.sol.loanmanagementsystemspringbootserver.repositories.SystemFinancialStateRepository;
+import io.sol.loanmanagementsystemspringbootserver.utilities.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +47,7 @@ public class FinancialStateService {
         updateDerivedValues(state);
         repository.save(state);
         eventPublisher.publishEvent(new FinancialStateUpdatedEvent(state));
+        Logger.logInfo("A loan has been successfully disbursed ");
     }
 
     @Transactional
@@ -70,6 +72,7 @@ public class FinancialStateService {
         updateDerivedValues(state);
         repository.save(state);
         eventPublisher.publishEvent(new FinancialStateUpdatedEvent(state));
+        Logger.logInfo("A repayment has been successful received");
     }
 
     @Transactional
@@ -81,6 +84,7 @@ public class FinancialStateService {
         updateDerivedValues(state);
         repository.save(state);
         eventPublisher.publishEvent(new FinancialStateUpdatedEvent(state));
+        Logger.logInfo("An expense has been made successfully");
     }
 
     @Transactional
@@ -97,6 +101,7 @@ public class FinancialStateService {
         updateDerivedValues(state);
         repository.save(state);
         eventPublisher.publishEvent(new FinancialStateUpdatedEvent(state));
+        Logger.logInfo("A savings transaction has been made successfully");
     }
 
     @Transactional
@@ -113,6 +118,7 @@ public class FinancialStateService {
         updateDerivedValues(state);
         repository.save(state);
         eventPublisher.publishEvent(new FinancialStateUpdatedEvent(state));
+        Logger.logInfo("A capital transaction has been made successfully");
     }
 
     @Transactional
@@ -129,6 +135,7 @@ public class FinancialStateService {
         updateDerivedValues(state);
         repository.save(state);
         eventPublisher.publishEvent(new FinancialStateUpdatedEvent(state));
+        Logger.logInfo("A bank transaction has been made successfully");
     }
 
     private void updateDerivedValues(SystemFinancialState state) {
@@ -150,6 +157,8 @@ public class FinancialStateService {
 
         // cashVariance = actualCash - expectedCash
         state.setCashVariance(state.getActualCash().subtract(state.getExpectedCash()));
+
+        Logger.logInfo("Financial state has been successfully updated");
     }
 
     public BigDecimal getAvailableLiquidity(){
@@ -166,6 +175,7 @@ public class FinancialStateService {
         updateDerivedValues(state);
         repository.save(state);
         eventPublisher.publishEvent(new FinancialStateUpdatedEvent(state));
+        Logger.logInfo("Financial state has been successfully initialised");
     }
 
     @Transactional
@@ -178,5 +188,6 @@ public class FinancialStateService {
         updateDerivedValues(state);
         repository.save(state);
         eventPublisher.publishEvent(new FinancialStateUpdatedEvent(state));
+        Logger.logInfo("New settings have been saved successfully");
     }
 }

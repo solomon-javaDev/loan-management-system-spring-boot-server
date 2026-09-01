@@ -156,6 +156,8 @@ public class LoansController {
         System.out.println("Loaded the loans view");
         configureTable();
 
+        startDatePicker.setValue(LocalDate.now());
+
         uiControlUtilities.configureDropDown(customerList, customerService.getAllCustomers().value(),
                 c -> c.getFirstName() + " " + c.getLastName()
                 );
@@ -392,7 +394,7 @@ public class LoansController {
     }
 
     private void clearForm() {
-        startDatePicker.setValue(null);
+        startDatePicker.setValue(LocalDate.now());
         maturityDatePicker.setValue(null);
         principalField.clear();
         interestRateField.clear();

@@ -1,46 +1,134 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.geometry.*?>
-<?import javafx.scene.chart.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.sol.loanmanagementsystemspringbootserver.controllers.ReportsController">
+<AnchorPane prefHeight="700.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.sol.loanmanagementsystemspringbootserver.controllers.ReportsController">
    <children>
-      <BorderPane prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-         <center>
-            <LineChart fx:id="trendChart" BorderPane.alignment="CENTER">
-              <xAxis>
-                <CategoryAxis side="BOTTOM" />
-              </xAxis>
-              <yAxis>
-                <NumberAxis side="LEFT" />
-              </yAxis>
-            </LineChart>
-         </center>
-         <bottom>
-            <VBox fx:id="agingBox" prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
+      <VBox spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-background-color: #f4f4f4;">
                <children>
-                  <Label fx:id="messageLabel" text="ERROR" />
-               </children></VBox>
-         </bottom>
-         <top>
-            <HBox alignment="CENTER_LEFT" spacing="10" BorderPane.alignment="CENTER">
-               <children>
-                  <Label text="Time Range:" />
-                  <ComboBox fx:id="timeRangeCombo" prefWidth="150.0" />
-                  <Separator orientation="VERTICAL" />
-                  <Button mnemonicParsing="false" onAction="#handleRefresh" text="REFRESH" />
-                  <Button mnemonicParsing="false" onAction="#handleSendDaily" text="SEND DAILY" />
+                  <Label style="-fx-font-size: 20; -fx-font-weight: bold;" text="Reports Dashboard" />
+                  <Region HBox.hgrow="ALWAYS" />
+                  <DatePicker fx:id="reportDatePicker" />
+                  <Button mnemonicParsing="false" onAction="#handleRefresh" text="Refresh Data" />
+                  <Label fx:id="messageLabel" />
                </children>
                <padding>
                   <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                </padding>
             </HBox>
-         </top>
-         <right>
-            <VBox fx:id="dailySummaryBox" prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER" />
-         </right>
-      </BorderPane>
+            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+               <content>
+                  <VBox spacing="20.0">
+                     <padding>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                     </padding>
+                     <children>
+                        <TitledPane text="1. General Report of the Day">
+                           <content>
+                              <VBox spacing="15.0">
+                                 <children>
+                                    <VBox spacing="5.0">
+                                       <children>
+                                          <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                             <children>
+                                                <Label style="-fx-font-weight: bold;" text="Daily Loans" />
+                                                <Button onAction="#handlePrintDailyLoans" text="Print PDF" />
+                                                <Button onAction="#handleEmailDailyLoans" text="Email to Admin" />
+                                             </children>
+                                          </HBox>
+                                          <TableView fx:id="dailyLoansTable" prefHeight="200.0" />
+                                          <HBox spacing="20.0">
+                                             <children>
+                                                <Label fx:id="totalDisbursedLabel" text="Total Disbursed: 0.00" />
+                                                <Label fx:id="totalExpectedInterestLabel" text="Expected Interest: 0.00" />
+                                             </children>
+                                          </HBox>
+                                       </children>
+                                    </VBox>
+                                    <Separator />
+                                    <VBox spacing="5.0">
+                                       <children>
+                                          <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                             <children>
+                                                <Label style="-fx-font-weight: bold;" text="Daily Expenses" />
+                                                <Button onAction="#handlePrintDailyExpenses" text="Print PDF" />
+                                                <Button onAction="#handleEmailDailyExpenses" text="Email to Admin" />
+                                             </children>
+                                          </HBox>
+                                          <TableView fx:id="dailyExpensesTable" prefHeight="200.0" />
+                                          <Label fx:id="totalExpensesLabel" text="Total Expenses: 0.00" />
+                                       </children>
+                                    </VBox>
+                                    <Separator />
+                                    <VBox spacing="5.0">
+                                       <children>
+                                          <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                             <children>
+                                                <Label style="-fx-font-weight: bold;" text="Daily Savings" />
+                                                <Button onAction="#handlePrintDailySavings" text="Print PDF" />
+                                                <Button onAction="#handleEmailDailySavings" text="Email to Admin" />
+                                             </children>
+                                          </HBox>
+                                          <TableView fx:id="dailySavingsTable" prefHeight="200.0" />
+                                          <Label fx:id="totalSavingsLabel" text="Total Savings: 0.00" />
+                                       </children>
+                                    </VBox>
+                                 </children>
+                              </VBox>
+                           </content>
+                        </TitledPane>
+                        <TitledPane text="2. Loan Statements">
+                           <content>
+                              <VBox spacing="10.0">
+                                 <children>
+                                    <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                       <children>
+                                          <Label text="Select Loan:" />
+                                          <ComboBox fx:id="loanComboBox" prefWidth="300.0" promptText="Select a customer's loan" />
+                                          <Button onAction="#handlePrintLoanStatement" text="Print Statement" />
+                                          <Button onAction="#handleEmailLoanStatement" text="Email Statement" />
+                                          <Button onAction="#handleEmailAllStatements" text="Email All Statements to Officers" />
+                                       </children>
+                                    </HBox>
+                                    <TableView fx:id="loanStatementTable" prefHeight="300.0" />
+                                    <HBox spacing="20.0">
+                                       <children>
+                                          <Label fx:id="totalRepaymentsLabel" text="Total Repayments: 0.00" />
+                                          <Label fx:id="remainingBalanceLabel" text="Remaining Balance: 0.00" />
+                                       </children>
+                                    </HBox>
+                                 </children>
+                              </VBox>
+                           </content>
+                        </TitledPane>
+                        <TitledPane text="3. Aging Analysis">
+                           <content>
+                              <VBox spacing="10.0">
+                                 <children>
+                                    <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                       <children>
+                                          <Button onAction="#handlePrintAgingAnalysis" text="Print Aging Analysis" />
+                                          <HBox alignment="CENTER_LEFT" spacing="5.0">
+                                             <children>
+                                                <TextField fx:id="emailField" promptText="Enter email address" />
+                                                <Button onAction="#handleEmailAgingAnalysis" text="Send to Email" />
+                                             </children>
+                                          </HBox>
+                                       </children>
+                                    </HBox>
+                                    <TableView fx:id="agingAnalysisTable" prefHeight="400.0" />
+                                 </children>
+                              </VBox>
+                           </content>
+                        </TitledPane>
+                     </children>
+                  </VBox>
+               </content>
+            </ScrollPane>
+         </children>
+      </VBox>
    </children>
 </AnchorPane>

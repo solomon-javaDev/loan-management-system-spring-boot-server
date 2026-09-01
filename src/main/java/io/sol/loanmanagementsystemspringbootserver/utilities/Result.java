@@ -20,18 +20,22 @@ public sealed interface Result<T> permits Ok, NotFound, Invalid, Unauthorized {
     }
 
     static <T> Result<T> success(String message, T value) {
+        Logger.logInfo(message);
         return new Ok<>(message, value);
     }
 
     static <T> Result<T> notFound(String message, T value) {
+        Logger.logError("Not Found: " + message);
         return new NotFound<>(message, value);
     }
 
     static <T> Result<T> invalid(String message, T value) {
+        Logger.logError("Invalid: " + message);
         return new Invalid<>(message, value);
     }
 
     static <T> Result<T> unauthorized(String message, T value) {
+        Logger.logError("Unauthorized: " + message);
         return new Unauthorized<>(message, value);
     }
 }

@@ -6,16 +6,21 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
+import org.springframework.stereotype.Component;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+@Component
 public class GlobalExceptionHandler {
 
     public static void handleException(Throwable throwable){
+        Logger.logError("Unhandled exception: " + throwable.getMessage());
         if(Platform.isFxApplicationThread()){
             showErrorDialog(throwable);
+
         }else{
+
             Platform.runLater(()-> showErrorDialog(throwable));
         }
     }

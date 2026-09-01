@@ -62,40 +62,39 @@ public class UIHelper {
      * @param ownerWindow
      */
     public static void exportToPdf(String deafultPrefix, String title, Map<String, String> dataMap, Stage ownerWindow){
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Save PDF");
-        fileChooser.setInitialFileName (deafultPrefix + LocalDate.now() + ".pdf");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF files","*.pdf"));
+        File dir = new File("receipts");
+        if (!dir.exists()) dir.mkdir();
+        String timestamp = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        File file = new File(dir, deafultPrefix + "_" + timestamp + ".pdf");
 
-        File file = fileChooser.showSaveDialog(ownerWindow);
+        try(PdfWriter writer = new PdfWriter(new FileOutputStream(file));
+        PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf)){
+            // 1. Add Heading
+            document.add(new Paragraph(title + " - " + java.time.LocalDateTime.now()).setBold().setFontSize(18));
+            document.add(new Paragraph("Report ID: " + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase()));
+            document.add(new Paragraph(" ")); // Spacing
 
-        if(file != null){
-            try(PdfWriter writer = new PdfWriter(new FileOutputStream(file));
-            PdfDocument pdf = new PdfDocument(writer);
-                Document document = new Document(pdf)){
-                // 1. Add Heading
-                document.add(new Paragraph(title + " - " + LocalDate.now()).setBold().setFontSize(18));
-                document.add(new Paragraph(" ")); // Spacing
+            // 2. Dynamically build the table
+            Table table = new Table(2);
+            // Make the table fill out nicely
+            table.useAllAvailableWidth();
 
-                // 2. Dynamically build the table
-                Table table = new Table(2);
-                // Make the table fill out nicely
-                table.useAllAvailableWidth();
+            for (Map.Entry<String, String> entry : dataMap.entrySet()) {
+                table.addCell(entry.getKey() != null ? entry.getKey() : "");
+                table.addCell(entry.getValue() != null ? entry.getValue() : "");
+            }
 
-                for (Map.Entry<String, String> entry : dataMap.entrySet()) {
-                    table.addCell(entry.getKey() != null ? entry.getKey() : "");
-                    table.addCell(entry.getValue() != null ? entry.getValue() : "");
-                }
+            document.add(table);
 
-                document.add(table);
-
-                UIHelper.showInfo("Success", "PDF report generated successfully.");
-            } catch (FileNotFoundException e) {
-                UIHelper.showError("Failed to generate PDF", e.getMessage());
-            } catch (IOException e) {
-                UIHelper.showError("Failed to generate PDF", e.getMessage());
-                            }
+            UIHelper.showInfo("Success", "PDF generated successfully at: " + file.getAbsolutePath());
+            if (java.awt.Desktop.isDesktopSupported()) {
+                java.awt.Desktop.getDesktop().open(file);
+            }
+        } catch (FileNotFoundException e) {
+            UIHelper.showError("Failed to generate PDF", e.getMessage());
+        } catch (IOException e) {
+            UIHelper.showError("Failed to generate PDF", e.getMessage());
         }
-
     }
 }

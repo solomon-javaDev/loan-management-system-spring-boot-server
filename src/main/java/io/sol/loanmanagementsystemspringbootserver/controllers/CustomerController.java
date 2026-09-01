@@ -5,6 +5,7 @@ import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerResponseDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.EmployeeDTO;
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
+import io.sol.loanmanagementsystemspringbootserver.utilities.Logger;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import javafx.collections.FXCollections;
@@ -18,7 +19,6 @@ import org.springframework.stereotype.Component;
  * This class is a Spring-managed component that serves as the controller for managing customer-related
  * functionalities within a JavaFX application. It interacts with the UI elements defined in the FXML and
  * facilitates the CRUD operations for customers by interfacing with a `CustomerService`.
- *
  * Responsibilities include initializing the customer table, handling form events, enabling or disabling
  * appropriate buttons based on context, and updating the UI to reflect operations performed on customer data.
  */
@@ -115,7 +115,9 @@ public class CustomerController {
     @FXML
     public void initialize() {
         configureTable();
+        Logger.logInfo("Customer Table has been configured");
         loadCustomers();
+
         customerSearchField.textProperty().addListener((obs, oldValue, newValue) -> applyCustomerFilter(newValue));
 
         customersTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, selectedCustomer) -> {
@@ -224,6 +226,7 @@ public class CustomerController {
         Result<java.util.List<CustomerDTO>> result = customerService.getAllCustomers();
         filteredCustomers = new FilteredList<>(FXCollections.observableArrayList(result.value()), customer -> true);
         customersTable.setItems(filteredCustomers);
+        Logger.logInfo("Customer Table has been loaded");
     }
 
 
@@ -238,6 +241,7 @@ public class CustomerController {
                 || contains(customer.getTelephone(), query)
                 || contains(customer.getNin(), query)
                 );
+        Logger.logInfo("Customer Filter has been applied");
     }
 
     private boolean contains(String value, String query) {
@@ -253,6 +257,9 @@ public class CustomerController {
         customer.setTelephone(telephoneField.getText() == null ? "" : telephoneField.getText().trim());
         customer.setAddress(addressField.getText()== null ?  " " : addressField.getText().trim());
         customer.setActive(activeCheckbox.isSelected());
+
+        Logger.logInfo("Customer Form has been created");
+
         return customer;
     }
 
@@ -265,6 +272,8 @@ public class CustomerController {
         telephoneField.setText(customer.getTelephone());
         addressField.setText(customer.getAddress());
         activeCheckbox.setSelected(customer.isActive());
+
+        Logger.logInfo("Customer Form has been populated");
     }
 
     private void clearForm() {
@@ -277,5 +286,7 @@ public class CustomerController {
         addressField.clear();
         activeCheckbox.setSelected(true);
          customersTable.getSelectionModel().clearSelection();
+
+         Logger.logInfo("Customer Form has been cleared");
     }
 }

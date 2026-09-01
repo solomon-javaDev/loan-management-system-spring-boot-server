@@ -1,7 +1,7 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
 import io.sol.loanmanagementsystemspringbootserver.repositories.UserRepository;
-import io.sol.loanmanagementsystemspringbootserver.services.ActivityLoggingService;
+import io.sol.loanmanagementsystemspringbootserver.utilities.Logger;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.utilities.StageManager;
 import io.sol.loanmanagementsystemspringbootserver.entities.custom.User;
@@ -35,7 +35,6 @@ import java.io.IOException;
 public class LoginController {
 
     private final StageManager stageManager;
-    private final ActivityLoggingService activityLoggingService;
     private final UserRepository userRepository;
 
     @FXML
@@ -55,10 +54,9 @@ public class LoginController {
 
     private final AuthenticationService authenticationService;
     private final UserSession userSession;
-    public LoginController(AuthenticationService authenticationService, ApplicationContext applicationContext, StageManager stageManager, ActivityLoggingService activityLoggingService, UserRepository userRepository, UserSession userSession) {
+    public LoginController(AuthenticationService authenticationService, ApplicationContext applicationContext, StageManager stageManager, UserRepository userRepository, UserSession userSession) {
         this.authenticationService = authenticationService;
         this.stageManager = stageManager;
-        this.activityLoggingService = activityLoggingService;
         this.userRepository = userRepository;
         this.userSession = userSession;
     }
@@ -70,6 +68,7 @@ public class LoginController {
 
     @FXML
     private void onLoginClicked() {
+        Logger.logInfo("Login clicked");
         String username = usernameField.getText() == null ? "" : usernameField.getText().trim();
         String password = passwordField.getText() == null ? "" : passwordField.getText();
 
@@ -95,8 +94,8 @@ public class LoginController {
             stage.setTitle("Create Account - LMS");
             stage.setResizable(false);
         }catch(Exception e){
+            Logger.logError(e.getMessage());
             messageLabel.setText("Unable to load the Create Account form!");
-            activityLoggingService.logActivity("User - tried creating an account!", e.getLocalizedMessage());
         }
     }
 
@@ -111,7 +110,7 @@ public class LoginController {
             stage.setResizable(true);
         } catch (IOException e) {
             messageLabel.setText("Unable to open dashboard. Please contact support.");
-            e.printStackTrace();
+            Logger.logError(e.getMessage());
         }
     }
 }

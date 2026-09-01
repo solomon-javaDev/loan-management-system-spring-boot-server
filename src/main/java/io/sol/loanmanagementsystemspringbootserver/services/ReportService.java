@@ -5,21 +5,25 @@ import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
-import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Expense;
-import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Loan;
-import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Payment;
+import com.itextpdf.layout.properties.UnitValue;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.*;
+import io.sol.loanmanagementsystemspringbootserver.repositories.CashTransactionRepository;
 import io.sol.loanmanagementsystemspringbootserver.repositories.ExpenseRepository;
 import io.sol.loanmanagementsystemspringbootserver.repositories.LoansRepository;
 import io.sol.loanmanagementsystemspringbootserver.repositories.PaymentRepository;
+import io.sol.loanmanagementsystemspringbootserver.utilities.Logger;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -28,63 +32,185 @@ public class ReportService {
     private final LoansRepository loansRepository;
     private final PaymentRepository paymentRepository;
     private final ExpenseRepository expenseRepository;
-    private final FinancialStateService financialStateService;
+    private final CashTransactionRepository cashTransactionRepository;
 
-    public byte[] generateDailyReport(LocalDate date) {
-        LocalDateTime startOfDay = date.atStartOfDay();
-        LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
+    private void addHeader(Document document, String title) {
+        String uniqueId = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        
+        document.add(new Paragraph(title).setBold().setFontSize(18));
+        document.add(new Paragraph("Generated on: " + now.format(formatter)));
+        document.add(new Paragraph("Report ID: " + uniqueId));
+        document.add(new Paragraph("\n"));
+    }
 
-        List<Loan> loans = loansRepository.findAll().stream()
-                .filter(l -> l.getStartDate().equals(date))
-                .toList();
-        List<Payment> payments = paymentRepository.findByDate(date);
-        List<Expense> expenses = expenseRepository.findByDateBetween(startOfDay, endOfDay);
+    public byte[] generateDailyLoanReport(LocalDate date) {
+        List<Loan> loans = loansRepository.findByStartDate(date);
 
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              PdfWriter writer = new PdfWriter(baos);
              PdfDocument pdf = new PdfDocument(writer);
              Document document = new Document(pdf)) {
 
-            document.add(new Paragraph("Daily Report - " + date).setBold().setFontSize(18));
-            
-            document.add(new Paragraph("Loans Disbursed").setBold());
-            Table loanTable = new Table(new float[]{1, 3, 2});
-            loanTable.addCell("ID");
-            loanTable.addCell("Customer");
-            loanTable.addCell("Principal");
+            addHeader(document, "DAILY LOANS REPORT - " + date);
+
+            Table table = new Table(UnitValue.createPercentArray(new float[]{3, 2, 2, 1, 2, 2, 2}));
+            table.setWidth(UnitValue.createPercentValue(100));
+            table.addCell("Customer");
+            table.addCell("Contact");
+            table.addCell("Disbursed");
+            table.addCell("Rate");
+            table.addCell("Expected");
+            table.addCell("Maturity");
+            table.addCell("Officer");
+
+            BigDecimal totalDisbursed = BigDecimal.ZERO;
+            BigDecimal totalInterest = BigDecimal.ZERO;
+
             for (Loan l : loans) {
-                loanTable.addCell(String.valueOf(l.getId()));
-                loanTable.addCell(l.getCustomer().getCustomerName());
-                loanTable.addCell(l.getPrincipal().toPlainString());
-            }
-            document.add(loanTable);
+                table.addCell(l.getCustomer().getCustomerName());
+                table.addCell(l.getCustomer().getTelephone());
+                table.addCell(l.getDisbursedAmount().toPlainString());
+                table.addCell(l.getInterestRate().multiply(BigDecimal.valueOf(100)) + "%");
+                table.addCell(l.getFullPayment().toPlainString());
+                table.addCell(l.getMaturityDate().toString());
+                table.addCell(l.getFieldOfficer() != null ? l.getFieldOfficer().getUsername() : "N/A");
 
-            document.add(new Paragraph("Payments Received").setBold());
-            Table paymentTable = new Table(new float[]{1, 3, 2});
-            paymentTable.addCell("ID");
-            paymentTable.addCell("Customer");
-            paymentTable.addCell("Amount");
-            for (Payment p : payments) {
-                paymentTable.addCell(String.valueOf(p.getId()));
-                paymentTable.addCell(p.getLoan().getCustomer().getCustomerName());
-                paymentTable.addCell(p.getAmountReceived().toPlainString());
+                totalDisbursed = totalDisbursed.add(l.getDisbursedAmount());
+                totalInterest = totalInterest.add(l.getFullPayment().subtract(l.getPrincipal()));
             }
-            document.add(paymentTable);
-
-            document.add(new Paragraph("Expenses").setBold());
-            Table expenseTable = new Table(new float[]{3, 2});
-            expenseTable.addCell("Description");
-            expenseTable.addCell("Amount");
-            for (Expense e : expenses) {
-                expenseTable.addCell(e.getDescription());
-                expenseTable.addCell(e.getAmount().toPlainString());
-            }
-            document.add(expenseTable);
+            document.add(table);
+            document.add(new Paragraph("\nTotal Disbursed: " + totalDisbursed));
+            document.add(new Paragraph("Total Expected Interest: " + totalInterest));
 
             document.close();
             return baos.toByteArray();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to generate report", e);
+            throw new RuntimeException("Failed to generate daily loan report", e);
+        }
+    }
+
+    public byte[] generateDailyExpenseReport(LocalDate date) {
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = date.atTime(LocalTime.MAX);
+        List<Expense> expenses = expenseRepository.findByDateBetween(start, end);
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             PdfWriter writer = new PdfWriter(baos);
+             PdfDocument pdf = new PdfDocument(writer);
+             Document document = new Document(pdf)) {
+
+            addHeader(document, "DAILY EXPENSES REPORT - " + date);
+
+            Table table = new Table(UnitValue.createPercentArray(new float[]{4, 2, 2, 2}));
+            table.setWidth(UnitValue.createPercentValue(100));
+            table.addCell("Description");
+            table.addCell("Category");
+            table.addCell("Amount");
+            table.addCell("Reference");
+
+            BigDecimal total = BigDecimal.ZERO;
+            for (Expense e : expenses) {
+                table.addCell(e.getDescription());
+                table.addCell(e.getCategory().getDescription());
+                table.addCell(e.getAmount().toPlainString());
+                table.addCell(e.getReference() != null ? e.getReference() : "");
+                total = total.add(e.getAmount());
+            }
+            document.add(table);
+            document.add(new Paragraph("\nTotal Expenses: " + total));
+
+            document.close();
+            return baos.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate daily expense report", e);
+        }
+    }
+
+    public byte[] generateDailySavingsReport(LocalDate date) {
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = date.atTime(LocalTime.MAX);
+        List<CashTransaction> transactions = cashTransactionRepository.findByTypeInAndDateBetween(
+                List.of(CashTransactionType.SAVINGS_DEPOSIT, CashTransactionType.SAVINGS_WITHDRAWAL),
+                start, end);
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             PdfWriter writer = new PdfWriter(baos);
+             PdfDocument pdf = new PdfDocument(writer);
+             Document document = new Document(pdf)) {
+
+            addHeader(document, "DAILY SAVINGS REPORT - " + date);
+
+            Table table = new Table(UnitValue.createPercentArray(new float[]{3, 2, 2, 3}));
+            table.setWidth(UnitValue.createPercentValue(100));
+            table.addCell("Customer ID");
+            table.addCell("Type");
+            table.addCell("Amount");
+            table.addCell("Description");
+
+            BigDecimal total = BigDecimal.ZERO;
+            for (CashTransaction t : transactions) {
+                table.addCell(String.valueOf(t.getCustomerId()));
+                table.addCell(t.getType().toString());
+                table.addCell(t.getAmount().toPlainString());
+                table.addCell(t.getDescription());
+                
+                if (t.getType() == CashTransactionType.SAVINGS_DEPOSIT) {
+                    total = total.add(t.getAmount());
+                } else {
+                    total = total.subtract(t.getAmount());
+                }
+            }
+            document.add(table);
+            document.add(new Paragraph("\nNet Savings Change: " + total));
+
+            document.close();
+            return baos.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate daily savings report", e);
+        }
+    }
+
+    public byte[] generateLoanStatement(Integer loanId) {
+        Loan loan = loansRepository.findById(loanId).orElseThrow();
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             PdfWriter writer = new PdfWriter(baos);
+             PdfDocument pdf = new PdfDocument(writer);
+             Document document = new Document(pdf)) {
+
+            addHeader(document, "LOAN STATEMENT");
+            document.add(new Paragraph("Customer: " + loan.getCustomer().getCustomerName()));
+            document.add(new Paragraph("Loan ID: " + loan.getId()));
+            document.add(new Paragraph("Disbursed Date: " + loan.getStartDate()));
+            document.add(new Paragraph("\n"));
+
+            Table table = new Table(UnitValue.createPercentArray(new float[]{3, 3, 4}));
+            table.setWidth(UnitValue.createPercentValue(100));
+            table.addCell("Date");
+            table.addCell("Amount Paid");
+            table.addCell("Balance");
+
+            BigDecimal currentBalance = loan.getFullPayment();
+            BigDecimal totalRepayments = BigDecimal.ZERO;
+
+            for (Payment p : loan.getPayments()) {
+                totalRepayments = totalRepayments.add(p.getAmountReceived());
+                currentBalance = currentBalance.subtract(p.getAmountReceived());
+
+                table.addCell(p.getDate().toString());
+                table.addCell(p.getAmountReceived().toPlainString());
+                table.addCell(currentBalance.toPlainString());
+            }
+            document.add(table);
+            document.add(new Paragraph("\nTotal Repayments: " + totalRepayments));
+            document.add(new Paragraph("Remaining Balance: " + loan.getOutstandingBalance()));
+
+            document.close();
+            return baos.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate loan statement", e);
         }
     }
 
@@ -98,74 +224,57 @@ public class ReportService {
              PdfDocument pdf = new PdfDocument(writer);
              Document document = new Document(pdf)) {
 
-            document.add(new Paragraph("Aging Analysis - " + LocalDate.now()).setBold().setFontSize(18));
-            
-            Table table = new Table(new float[]{2, 2, 2, 2, 2, 2, 1, 2});
+            addHeader(document, "AGING ANALYSIS");
+
+            Table table = new Table(UnitValue.createPercentArray(new float[]{3, 2, 3, 2, 2, 2, 2, 2, 2, 1, 2}));
+            table.setWidth(UnitValue.createPercentValue(100));
             table.addCell("Customer");
             table.addCell("Contact");
             table.addCell("Guarantor");
-            table.addCell("Disbursed");
-            table.addCell("Maturity");
+            table.addCell("G. Contact");
+            table.addCell("Disbursed Date");
+            table.addCell("Due Date");
+            table.addCell("Disbursed Amt");
             table.addCell("Outstanding");
-            table.addCell("Aging Days");
-            table.addCell("Deadline");
+            table.addCell("Arrears");
+            table.addCell("Aging");
+            table.addCell("Maturity");
 
             for (Loan l : loans) {
                 table.addCell(l.getCustomer().getCustomerName());
                 table.addCell(l.getCustomer().getTelephone());
                 table.addCell(l.getGuarantor().getCustomerName());
+                table.addCell(l.getGuarantor().getTelephone());
                 table.addCell(l.getStartDate().toString());
                 table.addCell(l.getMaturityDate().toString());
+                table.addCell(l.getDisbursedAmount().toPlainString());
                 table.addCell(l.getOutstandingBalance().toPlainString());
+                
+                // Arrears calculation: scheduled total for elapsed days minus total paid
+                BigDecimal ir = l.getInterestRate() == null ? BigDecimal.ZERO : l.getInterestRate();
+                BigDecimal scheduledTotal = l.getPrincipal().add(l.getPrincipal().multiply(ir));
+                BigDecimal dailyInstallment = scheduledTotal.divide(BigDecimal.valueOf(l.getTenor()), 10, RoundingMode.HALF_UP);
+                long elapsed = java.time.temporal.ChronoUnit.DAYS.between(l.getStartDate(), LocalDate.now()) + 1;
+                BigDecimal expectedSoFar = dailyInstallment.multiply(BigDecimal.valueOf(Math.min(elapsed, l.getTenor())));
+                BigDecimal arrears = expectedSoFar.subtract(l.getTotalPaid()).max(BigDecimal.ZERO);
+                
+                table.addCell(arrears.setScale(2, RoundingMode.HALF_UP).toPlainString());
                 table.addCell(String.valueOf(l.getAgingDays(LocalDate.now())));
-                table.addCell(l.getMaturityDate().toString()); // Deadline is maturity date
+                table.addCell(l.getMaturityDate().toString());
             }
             document.add(table);
 
             document.close();
+            Logger.logError("Generated aging analysis!");
+
             return baos.toByteArray();
         } catch (Exception e) {
+            Logger.logError("Failed to generate againg analysis");
             throw new RuntimeException("Failed to generate aging analysis", e);
         }
     }
 
-    public byte[] generateLoanStatement(Integer loanId) {
-        Loan loan = loansRepository.findById(loanId).orElseThrow();
-        
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-             PdfWriter writer = new PdfWriter(baos);
-             PdfDocument pdf = new PdfDocument(writer);
-             Document document = new Document(pdf)) {
-
-            document.add(new Paragraph("Loan Statement").setBold().setFontSize(18));
-            document.add(new Paragraph("Loan ID: " + loan.getId()));
-            document.add(new Paragraph("Customer: " + loan.getCustomer().getCustomerName()));
-            document.add(new Paragraph("Principal: " + loan.getPrincipal()));
-            
-            document.add(new Paragraph("Transactions").setBold());
-            Table table = new Table(new float[]{2, 2, 2, 2, 2, 2});
-            table.addCell("Date");
-            table.addCell("Total Paid");
-            table.addCell("Principal");
-            table.addCell("Interest");
-            table.addCell("Fees");
-            table.addCell("Surcharge");
-
-            for (Payment p : loan.getPayments()) {
-                table.addCell(p.getDate().toString());
-                table.addCell(p.getAmountReceived().toPlainString());
-                table.addCell(p.getPrincipalAmount().toPlainString());
-                table.addCell(p.getInterestAmount().toPlainString());
-                table.addCell(p.getFeeAmount().toPlainString());
-                table.addCell(p.getSurchargeAmount().toPlainString());
-            }
-            document.add(table);
-            document.add(new Paragraph("Remaining Balance: " + loan.getOutstandingBalance()));
-
-            document.close();
-            return baos.toByteArray();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to generate loan statement", e);
-        }
+    public byte[] generateDailyReport(LocalDate date) {
+        return generateDailyLoanReport(date);
     }
 }

@@ -48,23 +48,13 @@ public class PaymentsService {
              
              // 1. Calculate what is owed as of today
              BigDecimal surchargeOwed = loan.calculateSurcharge(paymentDate);
-             // Note: In a real system, we might track collected vs total surcharge. 
-             // For this decomposition, we allocate the received amount.
-             
              BigDecimal totalInterest = loan.getPrincipal().multiply(loan.getInterestRate());
-             // We should track how much interest and fees have already been paid.
-             // For now, let's assume fees are fully paid at disbursement or first priority.
-             
-             BigDecimal feesOwed = loan.getFees(); // Simplification: whole fee is owed until paid
-             
-             // Calculate already paid amounts
-             BigDecimal alreadyPaid = loan.getTotalPaid();
+             BigDecimal feesOwed = loan.getFees(); 
              
              // Allocation Logic:
              BigDecimal remaining = amountReceived;
              
              // First: Surcharge
-             // Total surcharge owed so far
              BigDecimal surchargeToPay = surchargeOwed.subtract(getPaidSurcharge(loan));
              surchargeToPay = remaining.min(surchargeToPay.max(BigDecimal.ZERO));
              remaining = remaining.subtract(surchargeToPay);
@@ -80,27 +70,38 @@ public class PaymentsService {
              remaining = remaining.subtract(interestToPay);
              
              // Fourth: Principal
-             BigDecimal principalToPay = remaining; 
-             // If remaining > outstanding principal, it's an overpayment. 
-             // Requirement says: "overpayment blocked" (in Sprint 6 notes)
              BigDecimal outstandingPrincipal = loan.getPrincipal().subtract(getPaidPrincipal(loan));
-             if (principalToPay.compareTo(outstandingPrincipal) > 0) {
-                 // Overpayment handling - for now we cap it or return error
-                 // return Result.invalid("Payment exceeds outstanding balance", null);
-                 principalToPay = outstandingPrincipal;
-                 // remaining = remaining.subtract(principalToPay); // excess could be savings?
+             BigDecimal principalToPay = remaining.min(outstandingPrincipal);
+             remaining = remaining.subtract(principalToPay);
+
+             // Excess goes to savings
+             BigDecimal excess = remaining;
+             if (excess.compareTo(BigDecimal.ZERO) > 0 && loan.getCustomer() != null) {
+                 loan.getCustomer().setSavingsBalance(
+                     loan.getCustomer().getSavingsBalance().add(excess)
+                 );
+                 // Publish Savings Event for FinancialState
+                 applicationEventPublisher.publishEvent(new io.sol.loanmanagementsystemspringbootserver.events.SavingsTransactionEvent(
+                     loan.getCustomer().getId(),
+                     excess,
+                     true,
+                     paymentDate
+                 ));
              }
 
              Payment payment = new Payment();
              payment.setLoan(loan);
              payment.setDate(paymentDate);
-             payment.setAmountReceived(amountReceived);
+             payment.setAmountReceived(amountReceived.subtract(excess)); // The actual payment amount credited to loan
              payment.setPrincipalAmount(principalToPay);
              payment.setInterestAmount(interestToPay);
              payment.setFeeAmount(feesToPay);
              payment.setSurchargeAmount(surchargeToPay);
              
              loan.addPayment(payment);
+
+             // Calculate and set remaining balance for this payment record
+             payment.setRemainingBalance(loan.getOutstandingBalance());
 
              Payment savedPayment = paymentRepository.save(payment);
 
@@ -115,7 +116,7 @@ public class PaymentsService {
                  interestToPay,
                  feesToPay,
                  surchargeToPay,
-                 amountReceived,
+                 amountReceived.subtract(excess),
                  paymentDate
              ));
 
@@ -123,6 +124,9 @@ public class PaymentsService {
              System.out.println("Generated Receipt:\n" + receipt);
 
              String message = "Successful payment" + (loan.getStatus() == LoanStatus.CLOSED ? ", loan fully paid and cleared." : "");
+             if (excess.compareTo(BigDecimal.ZERO) > 0) {
+                 message += " Excess of " + excess + " added to savings.";
+             }
              return Result.success(message, DTOMapper.toDTO(savedPayment));
         }).orElse(Result.notFound("Loan not found", null));
     }

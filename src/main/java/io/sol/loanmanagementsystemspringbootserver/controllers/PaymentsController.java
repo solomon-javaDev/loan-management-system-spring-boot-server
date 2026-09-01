@@ -135,6 +135,8 @@ public class PaymentsController {
         configureTable();
         loadData();
 
+        date.setValue(LocalDate.now());
+
         customerName.valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
                 filterLoansByCustomer(newVal);
@@ -242,6 +244,11 @@ public class PaymentsController {
         if (result.isSuccess()) {
             loadData();
             handleClearForm();
+
+            // Show alert for loan closure or excess payment
+            if (result.message().contains("loan fully paid and cleared") || result.message().contains("added to savings")) {
+                UIHelper.showInfo("Loan Status Update", result.message());
+            }
         }
         
     }
@@ -250,6 +257,8 @@ public class PaymentsController {
     private void handleUpdatePayment() {
         PaymentDTO selected = paymentsTable.getSelectionModel().getSelectedItem();
         if (selected == null) return;
+
+        UIHelper.showWarning("WARNING: ", "Avoid updating payments!");
 
         BigDecimal amount = parseBigDecimal(amountRecieved.getText());
         Result<PaymentDTO> result = paymentsService.updatePayment(selected.getId(), date.getValue(), amount);
@@ -275,7 +284,7 @@ public class PaymentsController {
 
     @FXML
     private void handleClearForm() {
-        date.setValue(null);
+        date.setValue(LocalDate.now());
         customerName.setValue(null);
         amountRecieved.clear();
         loanReference.setValue(null);

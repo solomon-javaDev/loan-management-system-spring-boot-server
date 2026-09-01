@@ -33,6 +33,9 @@ public class Payment {
     @Column
     private BigDecimal surchargeAmount = BigDecimal.ZERO;
 
+    @Column
+    private BigDecimal remainingBalance = BigDecimal.ZERO;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "loan_id", nullable = false)
     private Loan loan;
