@@ -23,7 +23,7 @@
                   </HBox>
                   <HBox alignment="CENTER_LEFT" layoutX="115.0" layoutY="10.0" prefHeight="48.0" prefWidth="270.0">
                      <children>
-                        <Label fx:id="totalLoanPortifolio" text="portifolio">
+                        <Label fx:id="totalLoanPortifolioLabel" text="portifolio">
                            <graphic>
                               <Label text="TOTAL LOAN PORTIFOLIO: " />
                            </graphic>

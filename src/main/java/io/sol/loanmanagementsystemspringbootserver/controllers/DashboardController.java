@@ -1,8 +1,11 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.SystemFinancialState;
+import io.sol.loanmanagementsystemspringbootserver.events.FinancialStateUpdatedEvent;
 import io.sol.loanmanagementsystemspringbootserver.services.AutoupdateService;
 import io.sol.loanmanagementsystemspringbootserver.utilities.StageManager;
 import io.sol.loanmanagementsystemspringbootserver.services.SearchService;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -13,6 +16,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -60,10 +64,10 @@ public class DashboardController {
     private Button reportsButton;
 
     @FXML
-    private Label cashAtHand;
+    private Label cashAtHandLabel;
 
     @FXML
-    private Label totalLoanPortifolio;
+    private Label totalLoanPortifolioLabel;
 
     @FXML
     private TextField searchBar;
@@ -93,16 +97,22 @@ public class DashboardController {
             // Requirement doesn't explicitly say hide reports from cashier, 
             // but says "CASHIERS are not allowed entirely to view the settings panel"
         }
+        showHomeView();
     }
 
     public void updateTopBar(){
-        io.sol.loanmanagementsystemspringbootserver.entities.Finance.SystemFinancialState state = financialStateService.getCurrentState();
-        if (cashAtHand != null) {
-            cashAtHand.setText(String.format("%,.2f", state.getCashOnHand()));
+        SystemFinancialState state = financialStateService.getCurrentState();
+        if (cashAtHandLabel != null) {
+            cashAtHandLabel.setText(String.format("%,.2f", state.getCashOnHand()));
         }
-        if (totalLoanPortifolio != null) {
-            totalLoanPortifolio.setText(String.format("%,.2f", state.getGrossLoanPortfolio()));
+        if (totalLoanPortifolioLabel != null) {
+            totalLoanPortifolioLabel.setText(String.format("%,.2f", state.getGrossLoanPortfolio()));
         }
+    }
+
+    @EventListener
+    public void onFinancialStateUpdated(FinancialStateUpdatedEvent event) {
+        Platform.runLater(this::updateTopBar);
     }
 
     @FXML

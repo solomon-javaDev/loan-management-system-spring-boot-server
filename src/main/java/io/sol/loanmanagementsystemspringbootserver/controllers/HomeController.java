@@ -2,11 +2,15 @@ package io.sol.loanmanagementsystemspringbootserver.controllers;
 
 import io.sol.loanmanagementsystemspringbootserver.dtos.*;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.LoanStatus;
+import io.sol.loanmanagementsystemspringbootserver.events.FinancialStateUpdatedEvent;
 import io.sol.loanmanagementsystemspringbootserver.mailing.EmailDetails;
 import io.sol.loanmanagementsystemspringbootserver.mailing.EmailsService;
 import io.sol.loanmanagementsystemspringbootserver.services.*;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.concurrent.ScheduledService;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -17,12 +21,14 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
+import javafx.util.Duration;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -122,9 +128,31 @@ public class HomeController {
 
     @FXML
     public void initialize() {
-
         fillDueCustomersTable();
         calculateDailyStats();
+        startPeriodicRefresh();
+    }
+
+    private void startPeriodicRefresh() {
+        ScheduledService<Void> service = new ScheduledService<>() {
+            @Override
+            protected Task<Void> createTask() {
+                return new Task<>() {
+                    @Override
+                    protected Void call() {
+                        Platform.runLater(HomeController.this::calculateDailyStats);
+                        return null;
+                    }
+                };
+            }
+        };
+        service.setPeriod(Duration.minutes(5));
+        service.start();
+    }
+
+    @EventListener
+    public void onFinancialStateUpdated(FinancialStateUpdatedEvent event) {
+        Platform.runLater(this::calculateDailyStats);
     }
 
 

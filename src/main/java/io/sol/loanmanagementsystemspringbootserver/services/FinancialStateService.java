@@ -1,7 +1,9 @@
 package io.sol.loanmanagementsystemspringbootserver.services;
 
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.SystemFinancialState;
+import io.sol.loanmanagementsystemspringbootserver.events.FinancialStateUpdatedEvent;
 import io.sol.loanmanagementsystemspringbootserver.repositories.SystemFinancialStateRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,9 +19,11 @@ public class FinancialStateService {
 
 
     private final SystemFinancialStateRepository repository;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public FinancialStateService(SystemFinancialStateRepository systemFinancialStateRepository) {
+    public FinancialStateService(SystemFinancialStateRepository systemFinancialStateRepository, ApplicationEventPublisher eventPublisher) {
         this.repository = systemFinancialStateRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -41,6 +45,7 @@ public class FinancialStateService {
 
         updateDerivedValues(state);
         repository.save(state);
+        eventPublisher.publishEvent(new FinancialStateUpdatedEvent(state));
     }
 
     @Transactional
@@ -64,6 +69,7 @@ public class FinancialStateService {
 
         updateDerivedValues(state);
         repository.save(state);
+        eventPublisher.publishEvent(new FinancialStateUpdatedEvent(state));
     }
 
     @Transactional
@@ -74,6 +80,7 @@ public class FinancialStateService {
 
         updateDerivedValues(state);
         repository.save(state);
+        eventPublisher.publishEvent(new FinancialStateUpdatedEvent(state));
     }
 
     @Transactional
@@ -89,6 +96,7 @@ public class FinancialStateService {
 
         updateDerivedValues(state);
         repository.save(state);
+        eventPublisher.publishEvent(new FinancialStateUpdatedEvent(state));
     }
 
     @Transactional
@@ -104,6 +112,7 @@ public class FinancialStateService {
 
         updateDerivedValues(state);
         repository.save(state);
+        eventPublisher.publishEvent(new FinancialStateUpdatedEvent(state));
     }
 
     @Transactional
@@ -119,6 +128,7 @@ public class FinancialStateService {
 
         updateDerivedValues(state);
         repository.save(state);
+        eventPublisher.publishEvent(new FinancialStateUpdatedEvent(state));
     }
 
     private void updateDerivedValues(SystemFinancialState state) {
@@ -155,6 +165,7 @@ public class FinancialStateService {
     public void initialiseSystemState(SystemFinancialState state){
         updateDerivedValues(state);
         repository.save(state);
+        eventPublisher.publishEvent(new FinancialStateUpdatedEvent(state));
     }
 
     @Transactional
@@ -166,5 +177,6 @@ public class FinancialStateService {
         state.setAdminEmails(adminEmails);
         updateDerivedValues(state);
         repository.save(state);
+        eventPublisher.publishEvent(new FinancialStateUpdatedEvent(state));
     }
 }

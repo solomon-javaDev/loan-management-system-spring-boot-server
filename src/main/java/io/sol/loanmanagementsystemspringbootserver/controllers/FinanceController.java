@@ -1,5 +1,6 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
+import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.CashTransaction;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.CashTransactionType;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Expense;
@@ -17,6 +18,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
 
@@ -123,6 +125,7 @@ public class FinanceController {
         }
 
         CashTransaction transaction = new CashTransaction();
+        transaction.setDate(LocalDateTime.now());
         transaction.setCustomerId(Integer.parseInt(custIdStr));
         transaction.setAmount(amount);
         transaction.setType(type.equals("DEPOSIT") ? CashTransactionType.SAVINGS_DEPOSIT : CashTransactionType.SAVINGS_WITHDRAWAL);
@@ -162,8 +165,8 @@ public class FinanceController {
              // For simplicity in MVP, we might just show the transaction amount or fetch customer balance
              Integer id = c.getValue().getCustomerId();
              if (id == null) return new SimpleStringProperty("");
-             Result<io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO> customerResult = customerService.getCustomerById(id);
-             return new SimpleStringProperty(customerResult.isSuccess() ? formatAmount(customerResult.value().getSavingsBalance()) : "");
+             Result<CustomerDTO> customerResult = customerService.getCustomerById(id);
+             return new SimpleStringProperty(customerResult.isSuccess() ? formatAmount(customerResult.value().getSavingsBalance()) : "UPDATE COMING");
         });
     }
 
@@ -195,6 +198,12 @@ public class FinanceController {
     }
 
     private void show(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("ATTENTION");
+        alert.setContentText(message);
+        ButtonType type = new ButtonType("OK");
+        alert.setResult(type);
+        alert.showAndWait();
 
         messageLabel.setText(message);
     }

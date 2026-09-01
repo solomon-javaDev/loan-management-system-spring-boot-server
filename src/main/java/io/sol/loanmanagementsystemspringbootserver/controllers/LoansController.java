@@ -164,13 +164,16 @@ public class LoansController {
                 e -> e.getFirstName() + " " + e.getLastName()
                 );
 
+        uiControlUtilities.configureDropDown(guarantorDropDown, customerService.getAllCustomers().value(), c -> {
+            return c.getCustomerName();
+        });
+
         statusField.setItems(FXCollections.observableArrayList(LoanStatus.values()));
         statusField.setValue(LoanStatus.PENDING);
 
         maturityDatePicker.valueProperty().addListener((obs, oldValue, newValue) -> computeTenorFromDates());
         startDatePicker.valueProperty().addListener((obs, oldValue, newValue) -> computeTenorFromDates());
         principalField.textProperty().addListener((obs, oldValue, newValue) -> {
-            refreshGuarantorOptions();
             if (newValue != null && !newValue.isEmpty()) {
                 try {
                     BigDecimal principal = new BigDecimal(newValue);
@@ -204,12 +207,7 @@ public class LoansController {
     }
 
 
-        private void refreshGuarantorOptions() {
-        BigDecimal principal = parseBigDecimal(principalField.getText());
-
-    }
-
-    private LoanDTO buildLoanFromForm() {
+       private LoanDTO buildLoanFromForm() {
         LoanDTO loan = new LoanDTO();
         loan.setStartDate(startDatePicker.getValue());
         loan.setMaturityDate(maturityDatePicker.getValue());

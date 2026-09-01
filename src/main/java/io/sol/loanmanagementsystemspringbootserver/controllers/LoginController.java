@@ -6,6 +6,7 @@ import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.utilities.StageManager;
 import io.sol.loanmanagementsystemspringbootserver.entities.custom.User;
 import io.sol.loanmanagementsystemspringbootserver.services.AuthenticationService;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
 import org.springframework.context.ApplicationContext;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
@@ -53,8 +54,8 @@ public class LoginController {
     private Button creatAccountButton;
 
     private final AuthenticationService authenticationService;
-    private final io.sol.loanmanagementsystemspringbootserver.utilities.UserSession userSession;
-    public LoginController(AuthenticationService authenticationService, ApplicationContext applicationContext, StageManager stageManager, ActivityLoggingService activityLoggingService, UserRepository userRepository, io.sol.loanmanagementsystemspringbootserver.utilities.UserSession userSession) {
+    private final UserSession userSession;
+    public LoginController(AuthenticationService authenticationService, ApplicationContext applicationContext, StageManager stageManager, ActivityLoggingService activityLoggingService, UserRepository userRepository, UserSession userSession) {
         this.authenticationService = authenticationService;
         this.stageManager = stageManager;
         this.activityLoggingService = activityLoggingService;
@@ -66,27 +67,6 @@ public class LoginController {
     public void initialize() {
 
     }
-
-//    @FXML
-//    private void handleCreateAccountClick(){
-//        String userName = usernameField.getText() == null ? " ": usernameField.getText().trim();
-//
-//        String password = passwordField.getText() == null ? " ": passwordField.getText();
-//
-//        User user = new User();
-//        user.setUsername(userName);
-//        user.setPassword(password);
-//        user.setRole(Role.ADMIN);
-//
-//
-//        try {
-//            userRepository.save(user);
-//        } catch (Exception e) {
-//            activityLoggingService.logActivity("User - ", "Attempted to save a new user, but an error ocurred: "+ e.getLocalizedMessage());
-//
-//        }
-//
-//    }
 
     @FXML
     private void onLoginClicked() {

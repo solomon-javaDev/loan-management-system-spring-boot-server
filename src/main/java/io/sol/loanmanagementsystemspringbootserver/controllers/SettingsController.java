@@ -1,15 +1,18 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.ExpenseCategory;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.SystemFinancialState;
+import io.sol.loanmanagementsystemspringbootserver.events.FinancialStateUpdatedEvent;
 import io.sol.loanmanagementsystemspringbootserver.services.ExpenseCategoryService;
 import io.sol.loanmanagementsystemspringbootserver.services.FinancialStateService;
-import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
-import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 @Component
 public class SettingsController {
@@ -19,6 +22,12 @@ public class SettingsController {
 
     @FXML
     private TextField adminEmailsField;
+
+    @FXML
+    private Label totalCapitalLabel;
+
+    @FXML
+    private Label totalCashOutLabel;
 
     @FXML
     private CheckBox dailyReportCheckbox;
@@ -41,7 +50,7 @@ public class SettingsController {
     @FXML
     private TextField cashOnHandField;
     @FXML
-    private TextField bankAccountField;
+    private TextField bankBalanceField;
     @FXML
     private TextField ownersCapitalField;
 
@@ -53,14 +62,24 @@ public class SettingsController {
     @FXML
     public void initialize() {
         agingFreq.getItems().addAll("Daily", "Every 3 days", "Weekly", "Monthly");
+        refreshUI();
+    }
 
-        io.sol.loanmanagementsystemspringbootserver.entities.Finance.SystemFinancialState state = financialStateService.getCurrentState();
-        if (state != null) {
-            bankAccountField.setText(state.getBankBalance().toPlainString());
-            ownersCapitalField.setText(state.getOwnerCapital().toPlainString());
-            cashOnHandField.setText(state.getCashOnHand().toPlainString());
-            adminEmailsField.setText(state.getAdminEmails());
+    private void refreshUI() {
+        SystemFinancialState state = financialStateService.getCurrentState();
+        if (state != null && totalCapitalLabel != null) {
+            totalCapitalLabel.setText(String.valueOf(state.getOwnerCapital()));
+            if (totalCashOutLabel != null) totalCashOutLabel.setText(String.valueOf(state.getTotalExpenses()));
+            if (bankBalanceField != null) bankBalanceField.setText(state.getBankBalance().toPlainString());
+            if (ownersCapitalField != null) ownersCapitalField.setText(state.getOwnerCapital().toPlainString());
+            if (cashOnHandField != null) cashOnHandField.setText(state.getCashOnHand().toPlainString());
+            if (adminEmailsField != null) adminEmailsField.setText(state.getAdminEmails());
         }
+    }
+
+    @EventListener
+    public void onFinancialStateUpdated(FinancialStateUpdatedEvent event) {
+        Platform.runLater(this::refreshUI);
     }
 
     @FXML
@@ -70,11 +89,11 @@ public class SettingsController {
 
     private void financialSave() {
 
-        String bankBalance = bankAccountField.getText();
-        String ownersCapital = ownersCapitalField.getText();
-        String cashOnHand = cashOnHandField.getText();
+        String bankBalance = bankBalanceField.getText() == null ? "" : bankBalanceField.getText().trim();
+        String ownersCapital = ownersCapitalField.getText() == null ? "" : ownersCapitalField.getText().trim();
+        String cashOnHand = cashOnHandField.getText() == null ? "" : cashOnHandField.getText().trim();
 
-        if(bankBalance.isEmpty() || ownersCapital.isEmpty() || cashOnHand.isEmpty()){
+        if(bankBalance.isBlank() || ownersCapital.isBlank() || cashOnHand.isBlank()){
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Error");
             alert.setHeaderText("Financial Save Error");
@@ -87,7 +106,7 @@ public class SettingsController {
                 BigDecimal bank = new BigDecimal(bankBalance);
                 BigDecimal capital = new BigDecimal(ownersCapital);
                 BigDecimal cash = new BigDecimal(cashOnHand);
-                String adminEmails = adminEmailsField.getText();
+                String adminEmails = adminEmailsField.getText() == null ? "" : adminEmailsField.getText().trim();
                 financialStateService.makeFinancialSetting(bank, capital, cash, adminEmails);
                 messageLabel.setText("Financial settings saved successfully.");
             } catch (NumberFormatException e) {
@@ -121,6 +140,3 @@ public class SettingsController {
     }
 
 }
-
-
-

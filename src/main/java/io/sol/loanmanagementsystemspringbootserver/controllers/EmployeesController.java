@@ -19,7 +19,6 @@ public class EmployeesController {
     private final UiControlUtilities uiControlUtilities;
     @FXML private TextField firstName;
     @FXML private TextField lastName;
-    @FXML private TextField username;
     @FXML private PasswordField password;
     @FXML private TextField email;
     @FXML private TextField telephone;
@@ -31,15 +30,17 @@ public class EmployeesController {
     @FXML private TableColumn<EmployeeDTO, String> firstNameColumn;
     @FXML private TableColumn<EmployeeDTO, String> lastNameColumn;
     @FXML private TableColumn<EmployeeDTO, String> emailColumn;
-    @FXML private TableColumn<EmployeeDTO, String> passwordColumn;
     @FXML private TableColumn<EmployeeDTO, String> telephoneColumn;
+    @FXML private TableColumn<EmployeeDTO, String> passwordColumn;
+
     @FXML private TableColumn<EmployeeDTO, String> salaryColumn;
     @FXML private TableColumn<EmployeeDTO, String> roleColumn;
     @FXML private TableColumn<EmployeeDTO, String> userNameColumn;
     @FXML private TableColumn<EmployeeDTO, Boolean> activeColumn;
 
 
-    public EmployeesController(EmployeeService employeeService, UiControlUtilities uiControlUtilities) { this.employeeService = employeeService;
+    public EmployeesController(EmployeeService employeeService, UiControlUtilities uiControlUtilities) {
+        this.employeeService = employeeService;
         this.uiControlUtilities = uiControlUtilities;
     }
 
@@ -48,6 +49,20 @@ public class EmployeesController {
         configureTable();
         uiControlUtilities.configureDropDown(role, List.of(Role.values()), Enum::toString);
         loadEmployees();
+        // populate form on selection
+        employeesTable.getSelectionModel().selectedItemProperty().addListener((obs, oldV, newV) -> populateForm(newV));
+    }
+
+    private void populateForm(EmployeeDTO dto) {
+        if (dto == null) return;
+        firstName.setText(dto.getFirstName());
+        lastName.setText(dto.getLastName());
+        email.setText(dto.getEmail());
+        telephone.setText(dto.getTelephone());
+        salary.setText(String.valueOf(dto.getSalary()));
+        role.setValue(dto.getRole());
+        // do not populate password for security reasons
+        password.clear();
     }
 
     private void loadEmployees() {
@@ -63,6 +78,7 @@ public class EmployeesController {
         emailColumn.setCellValueFactory(new PropertyValueFactory<>("email"));
         telephoneColumn.setCellValueFactory(new PropertyValueFactory<>("telephone"));
         salaryColumn.setCellValueFactory(new PropertyValueFactory<>("salary"));
+        passwordColumn.setCellValueFactory(new PropertyValueFactory<>("password"));
         roleColumn.setCellValueFactory(new PropertyValueFactory<>("role"));
         userNameColumn.setCellValueFactory(new PropertyValueFactory<>("username"));
         activeColumn.setCellValueFactory(new PropertyValueFactory<>("active"));
@@ -73,19 +89,35 @@ public class EmployeesController {
         EmployeeDTO employee = new EmployeeDTO();
         employee.setFirstName(firstName.getText());
         employee.setLastName(lastName.getText());
-        employee.setUsername(firstName.getText() + " " + lastName.getText());
+        employee.setUsername(firstName.getText() + " "+lastName.getText());
         employee.setRole(role.getValue());
         employee.setPassword(password.getText());
         employee.setEmail(email.getText());
-        if (!salary.getText().isEmpty()) {
-            employee.setSalary(Integer.parseInt(salary.getText()));
+        employee.setTelephone(telephone.getText());
+        try {
+            employee.setSalary(salary.getText() == null || salary.getText().isBlank() ? 0 : Integer.parseInt(salary.getText().trim()));
+        } catch (NumberFormatException ex) {
+            UIHelper.showInfo("Invalid Salary", "Please enter a valid number for salary.");
+            return;
         }
-        
+
         var result = employeeService.createEmployee(employee);
         UIHelper.updateStatusLabel(messageLabel, result);
         if (result.isSuccess()) {
             loadEmployees();
+            clearForm();
         }
+    }
+
+    @FXML
+    private void clearForm() {
+        firstName.clear();
+        lastName.clear();
+        email.clear();
+        telephone.clear();
+        salary.clear();
+        role.getSelectionModel().clearSelection();
+        password.clear();
     }
 
     @FXML
@@ -93,9 +125,53 @@ public class EmployeesController {
         EmployeeDTO selectedEmployee = employeesTable.getSelectionModel().getSelectedItem();
         if(selectedEmployee == null){
             UIHelper.showInfo("EMPTY SELECTION", "There's no employee selected yet");
+            return;
         }
+        EmployeeDTO toUpdate = new EmployeeDTO();
+        toUpdate.setId(selectedEmployee.getId());
+        toUpdate.setFirstName(firstName.getText());
+        toUpdate.setLastName(lastName.getText());
+        toUpdate.setUsername(firstName.getText() + " "+ lastName.getText());
+        toUpdate.setRole(role.getValue());
+        toUpdate.setEmail(email.getText());
+        toUpdate.setTelephone(telephone.getText());
+        try {
+            toUpdate.setSalary(salary.getText() == null || salary.getText().isBlank() ? 0 : Integer.parseInt(salary.getText().trim()));
+        } catch (NumberFormatException ex) {
+            UIHelper.showInfo("Invalid Salary", "Please enter a valid number for salary.");
+            return;
+        }
+        // If password provided, send it; service will decide encoding/keeping
+        toUpdate.setPassword(password.getText());
 
-        Result<EmployeeDTO> result = employeeService.upDateEmployee(selectedEmployee);
+        Result<EmployeeDTO> result = employeeService.updateEmployee(toUpdate);
+        UIHelper.updateStatusLabel(messageLabel, result);
+        if (result.isSuccess()) {
+            loadEmployees();
+            clearForm();
+        }
+    }
+
+    @FXML
+    private void handleDeleteEmployee() {
+        EmployeeDTO selected = employeesTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            UIHelper.showInfo("EMPTY SELECTION", "There's no employee selected yet");
+            return;
+        }
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Delete Employee");
+        alert.setHeaderText("Are you sure you want to delete this employee?");
+        alert.setContentText(selected.getFirstName() + " " + selected.getLastName());
+        var res = alert.showAndWait();
+        if (res.isPresent() && res.get() == ButtonType.OK) {
+            var del = employeeService.deleteEmployeeById(selected.getId());
+            UIHelper.updateStatusLabel(messageLabel, del);
+            if (del.isSuccess()) {
+                loadEmployees();
+                clearForm();
+            }
+        }
     }
 
     @FXML

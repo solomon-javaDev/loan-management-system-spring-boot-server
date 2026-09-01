@@ -37,7 +37,7 @@ public class EmployeeService {
     public Result<List<EmployeeDTO>> getEmployeeByRole(Role role){
         List<Employee> employeeList = employeeRepository.findByRole(role);
         if(!employeeList.isEmpty()){
-            return Result.success("Employees retrieved", 
+            return Result.success("Employees retrieved",
                 employeeList.stream().map(DTOMapper::toDTO).collect(Collectors.toList()));
         }
 
@@ -62,7 +62,7 @@ public class EmployeeService {
     }
 
     public Result<List<EmployeeDTO>> getAllEmployees() {
-        return Result.success("All employees retrieved", 
+        return Result.success("All employees retrieved",
             employeeRepository.findAll().stream().map(DTOMapper::toDTO).collect(Collectors.toList()));
     }
 
@@ -71,6 +71,28 @@ public class EmployeeService {
             employee.setActive(active);
             Employee saved = employeeRepository.save(employee);
             return Result.success("Employee status updated", DTOMapper.toDTO(saved));
+        }).orElse(Result.notFound("Employee not found", null));
+    }
+
+    // New robust update by ID
+    public Result<EmployeeDTO> updateEmployee(EmployeeDTO dto) {
+        if (dto.getId() == null) {
+            return Result.invalid("Employee ID is required for update", null);
+        }
+        return employeeRepository.findById(dto.getId()).map(existing -> {
+            existing.setFirstName(dto.getFirstName());
+            existing.setLastName(dto.getLastName());
+            existing.setUsername(dto.getUsername());
+            existing.setEmail(dto.getEmail());
+            existing.setTelephone(dto.getTelephone());
+            existing.setRole(dto.getRole());
+            existing.setSalary(dto.getSalary());
+            // update password only if provided
+            if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+                existing.setPassword(passwordEncoder.encode(dto.getPassword()));
+            }
+            Employee saved = employeeRepository.save(existing);
+            return Result.success("Employee updated successfully", DTOMapper.toDTO(saved));
         }).orElse(Result.notFound("Employee not found", null));
     }
 
@@ -95,5 +117,13 @@ public class EmployeeService {
         else{
             return Result.notFound("The employee is non existent", null);
         }
+    }
+
+    //TODO improve employee deletion to avoid deleting field officers with loans
+    public Result<Void> deleteEmployeeById(Integer id) {
+        return employeeRepository.findById(id).map(emp -> {
+            employeeRepository.delete(emp);
+            return Result.success("Employee deleted", (Void) null);
+        }).orElse(Result.notFound("Employee not found", null));
     }
 }
