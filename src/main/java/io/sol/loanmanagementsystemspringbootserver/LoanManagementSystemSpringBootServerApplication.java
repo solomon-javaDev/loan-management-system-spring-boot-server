@@ -38,7 +38,7 @@ public class LoanManagementSystemSpringBootServerApplication {
     public DataSource dataSource() {
         return DataSourceBuilder.create()
                 .driverClassName("org.h2.Driver")
-                .url("jdbc:h2:file:~/loan_db;DB_CLOSE_DELAY=-1;MODE=PostgreSQL")
+                .url("jdbc:h2:file:./data/loan_db;DB_CLOSE_DELAY=-1;MODE=PostgreSQL")
                 .username("sa")
                 .password("milka")
                 .build();
