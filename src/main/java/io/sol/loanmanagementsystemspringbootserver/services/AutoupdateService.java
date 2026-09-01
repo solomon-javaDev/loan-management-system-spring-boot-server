@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class AutoupdateService {
 
-    @Value("$spring.application.version")
+    @Value("${spring.application.version}")
     private String currentVersion;
 
     public void checkForUpdatesAsync(){
