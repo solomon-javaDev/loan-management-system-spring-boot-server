@@ -3,17 +3,25 @@ package io.sol.loanmanagementsystemspringbootserver.entities.Finance;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
+@Table(name = "payments")
+@SQLDelete(sql = "UPDATE payments SET deleted = true WHERE id = ?")
+@SQLRestriction("deleted = false")
 @Getter
 @Setter
 public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
+    @Column(nullable = false)
+    private boolean deleted = false;
 
     @Column
     private LocalDate date; // Represents the date on which the payment was made

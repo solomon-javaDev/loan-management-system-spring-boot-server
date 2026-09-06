@@ -296,6 +296,7 @@ public class DTOMapper {
         dto.setRemainingBalance(payment.getRemainingBalance());
 
         if (payment.getLoan() != null) {
+            dto.setAgingDays(payment.getLoan().getAgingDays(LocalDate.now()));
             dto.setLoanId(payment.getLoan().getId());
             dto.setLoanReference(payment.getLoan().getReference());
 

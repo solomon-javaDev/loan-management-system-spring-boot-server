@@ -6,6 +6,7 @@ import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerResponseDTO;
 import io.sol.loanmanagementsystemspringbootserver.entities.custom.Customer;
 import io.sol.loanmanagementsystemspringbootserver.mappers.DTOMapper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
 import io.sol.loanmanagementsystemspringbootserver.repositories.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,10 +28,14 @@ import java.util.stream.Collectors;
 public class CustomerService {
 
     private final CustomerRepository repository;
+    private final UserSession userSession;
+    private final AuditService auditService;
 
     @Autowired
-    public CustomerService(CustomerRepository repository) {
+    public CustomerService(CustomerRepository repository, UserSession userSession, AuditService auditService) {
         this.repository = repository;
+        this.userSession = userSession;
+        this.auditService = auditService;
     }
 
     public Result<CustomerResponseDTO> createCustomer(CustomerCreateDTO customerDto) {
@@ -90,6 +95,8 @@ public class CustomerService {
 
     @Transactional
     public Result<CustomerResponseDTO> updateCustomer(CustomerDTO customerDto) {
+        Result<Void> authorization = userSession.requireAdmin();
+        if (authorization.isFailure()) return Result.forbidden(authorization.message(), null);
         if (customerDto == null || customerDto.getId() <= 0) {
             return Result.invalid("Select a customer from the table before updating.", null);
         }
@@ -110,17 +117,21 @@ public class CustomerService {
                         existingCustomer.setFieldOfficer(null);
                     }
                     Customer saved = repository.save(existingCustomer);
+                    auditService.record("UPDATE", "CUSTOMER", saved.getId(), "Customer details updated");
                     return Result.success("Customer updated successfully.", DTOMapper.toResponseDTO(saved));
                 })
                 .orElseGet(() -> Result.notFound("Customer not found.", null));
     }
 
     public Result<Void> deleteCustomer(CustomerDTO customerDto) {
+        Result<Void> authorization = userSession.requireAdmin();
+        if (authorization.isFailure()) return Result.forbidden(authorization.message(), null);
         if (customerDto == null || customerDto.getId() <= 0) {
             return Result.invalid("Select a customer to delete.", null);
         }
 
         repository.deleteById(customerDto.getId());
+        auditService.record("SOFT_DELETE", "CUSTOMER", customerDto.getId(), "Customer soft deleted");
         return Result.success("Customer deleted successfully.", null);
     }
 
@@ -132,17 +143,21 @@ public class CustomerService {
     }
 
     public Result<Customer> restoreCustomer(int id){
-        //TODO I have to add to the view a choice for restoring a deleted customer
-        //TODO That will require as well adding methods to query the soft deleted customers
-        Optional<Customer> customer = repository.findById(id);
-
-        if(customer.isPresent()){
-            customer.get().setDeleted(true);
-            return Result.success("Customer restored", customer.get());
-
+        Result<Void> authorization = userSession.requireAdmin();
+        if (authorization.isFailure()) return Result.forbidden(authorization.message(), null);
+        if (repository.restoreById(id) == 0) {
+            return Result.notFound("Customer is not existing", null);
         }
+        auditService.record("RESTORE", "CUSTOMER", id, "Customer restored");
+        return repository.findById(id)
+                .map(customer -> Result.success("Customer restored", customer))
+                .orElseGet(() -> Result.notFound("Customer could not be loaded after restore", null));
+    }
 
-        return Result.notFound("Customer is not existing", null);
+    public Result<List<Customer>> getDeletedCustomers() {
+        Result<Void> authorization = userSession.requireAdmin();
+        if (authorization.isFailure()) return Result.forbidden(authorization.message(), null);
+        return Result.success("Deleted customers loaded", repository.findAllDeleted());
     }
 
     private boolean isBlank(String value) {

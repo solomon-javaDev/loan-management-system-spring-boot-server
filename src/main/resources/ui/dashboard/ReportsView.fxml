@@ -124,6 +124,27 @@
                               </VBox>
                            </content>
                         </TitledPane>
+                        <TitledPane fx:id="adminAuditPane" text="4. Audit and Deleted Records">
+                           <content>
+                              <VBox spacing="8.0">
+                                 <children>
+                                    <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                       <children>
+                                          <TextField fx:id="auditUserField" promptText="User" />
+                                          <TextField fx:id="auditActionField" promptText="Action" />
+                                          <TextField fx:id="auditEntityField" promptText="Entity" />
+                                          <DatePicker fx:id="auditDatePicker" />
+                                          <CheckBox fx:id="deletedOnlyCheckBox" onAction="#handleAuditFilter" text="Deleted only" />
+                                          <Button onAction="#handleAuditFilter" text="Filter" />
+                                          <Button fx:id="restoreAuditButton" onAction="#handleRestoreAudit" text="Restore selected" />
+                                       </children>
+                                    </HBox>
+                                    <Label text="Soft-deleted records are highlighted in red." />
+                                    <TableView fx:id="auditTable" prefHeight="260.0" />
+                                 </children>
+                              </VBox>
+                           </content>
+                        </TitledPane>
                      </children>
                   </VBox>
                </content>

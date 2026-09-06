@@ -4,12 +4,24 @@ import io.sol.loanmanagementsystemspringbootserver.entities.custom.Customer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 public interface CustomerRepository extends JpaRepository<Customer, Integer> {
+    @Query(value = "SELECT * FROM customer WHERE deleted = true", nativeQuery = true)
+    List<Customer> findAllDeleted();
+
+    @Query(value = "SELECT * FROM customer WHERE id = :id", nativeQuery = true)
+    Optional<Customer> findByIncludingDeleted(@Param("id") Integer id);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE customer SET deleted = false WHERE id = :id", nativeQuery = true)
+    int restoreById(@Param("id") Integer id);
     Customer findByFirstName(String firstName);
     Optional<Customer> findByNin(String nin);
 

@@ -8,6 +8,7 @@ import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Logger;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Component;
 public class CustomerController {
 
     private final CustomerService customerService;
+    private final UserSession userSession;
 
     @FXML
     private TextField firstNameField;
@@ -108,8 +110,9 @@ public class CustomerController {
 
     private FilteredList<CustomerDTO> filteredCustomers;
 
-    public CustomerController(CustomerService customerService) {
+    public CustomerController(CustomerService customerService, UserSession userSession) {
         this.customerService = customerService;
+        this.userSession = userSession;
     }
 
     @FXML
@@ -133,7 +136,12 @@ public class CustomerController {
 
         //Disable the update button if no row has been selected
         customerUpdateButton.disableProperty().bind(
-                customersTable.getSelectionModel().selectedItemProperty().isNull()
+            customersTable.getSelectionModel().selectedItemProperty().isNull()
+                .or(new javafx.beans.property.ReadOnlyBooleanWrapper(!userSession.isAdmin()))
+        );
+        customerDeleteButton.disableProperty().bind(
+            customersTable.getSelectionModel().selectedItemProperty().isNull()
+                .or(new javafx.beans.property.ReadOnlyBooleanWrapper(!userSession.isAdmin()))
         );
 
 

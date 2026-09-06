@@ -7,6 +7,7 @@ import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Payment;
 import io.sol.loanmanagementsystemspringbootserver.mappers.DTOMapper;
 import io.sol.loanmanagementsystemspringbootserver.repositories.PaymentRepository;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,11 +31,16 @@ public class PaymentsService {
     private final PaymentRepository paymentRepository;
     private final LoansService loansService;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final UserSession userSession;
+    private final AuditService auditService;
 
-    public PaymentsService(LoansService loansService, PaymentRepository paymentRepository, ApplicationEventPublisher applicationEventPublisher) {
+    public PaymentsService(LoansService loansService, PaymentRepository paymentRepository, ApplicationEventPublisher applicationEventPublisher,
+                           UserSession userSession, AuditService auditService) {
         this.loansService = loansService;
         this.paymentRepository = paymentRepository;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.userSession = userSession;
+        this.auditService = auditService;
     }
 
     @Transactional
@@ -180,6 +186,8 @@ public class PaymentsService {
 
     @Transactional
     public Result<PaymentDTO> updatePayment(int paymentId, LocalDate date, BigDecimal amountReceived) {
+        Result<Void> authorization = userSession.requireAdmin();
+        if (authorization.isFailure()) return Result.forbidden(authorization.message(), null);
         return paymentRepository.findById(paymentId).map(payment -> {
             payment.setDate(date);
             payment.setAmountReceived(amountReceived);
@@ -187,6 +195,7 @@ public class PaymentsService {
             
             updateLoanStatus(payment.getLoan(), updated.getDate());
             loansService.saveLoanEntity(payment.getLoan());
+            auditService.record("UPDATE", "PAYMENT", paymentId, "Payment details updated");
             
             return Result.success("Payment updated successfully", DTOMapper.toDTO(updated));
         }).orElse(Result.notFound("Payment not found", null));
@@ -194,6 +203,8 @@ public class PaymentsService {
 
     @Transactional
     public Result<Void> deletePayment(int paymentId) {
+        Result<Void> authorization = userSession.requireAdmin();
+        if (authorization.isFailure()) return Result.forbidden(authorization.message(), null);
         return paymentRepository.findById(paymentId).map(payment -> {
             Loan loan = payment.getLoan();
             loan.removePayment(payment);
@@ -201,6 +212,7 @@ public class PaymentsService {
             
             updateLoanStatus(loan, getLastPaymentDate(loan));
             loansService.saveLoanEntity(loan);
+            auditService.record("SOFT_DELETE", "PAYMENT", paymentId, "Payment soft deleted");
             
             return Result.success("Payment deleted successfully", (Void) null);
         }).orElse(Result.notFound("Payment not found", null));

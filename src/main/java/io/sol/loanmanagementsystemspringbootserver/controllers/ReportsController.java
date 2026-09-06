@@ -1,12 +1,15 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.*;
+import io.sol.loanmanagementsystemspringbootserver.entities.AuditLog;
 import io.sol.loanmanagementsystemspringbootserver.mailing.EmailDetails;
 import io.sol.loanmanagementsystemspringbootserver.mailing.EmailsService;
 import io.sol.loanmanagementsystemspringbootserver.repositories.*;
 import io.sol.loanmanagementsystemspringbootserver.services.FinancialStateService;
 import io.sol.loanmanagementsystemspringbootserver.services.ReportService;
+import io.sol.loanmanagementsystemspringbootserver.services.AuditService;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -39,6 +42,8 @@ public class ReportsController {
     private final EmailsService emailsService;
     private final FinancialStateService financialStateService;
     private final EmployeeRepository employeeRepository;
+    private final AuditService auditService;
+    private final UserSession userSession;
 
     @FXML private DatePicker reportDatePicker;
     @FXML private Label messageLabel;
@@ -65,12 +70,26 @@ public class ReportsController {
     // Aging Analysis
     @FXML private TableView<AgingRow> agingAnalysisTable;
     @FXML private TextField emailField;
+    @FXML private TitledPane adminAuditPane;
+    @FXML private TableView<AuditLog> auditTable;
+    @FXML private TextField auditUserField;
+    @FXML private TextField auditActionField;
+    @FXML private TextField auditEntityField;
+    @FXML private DatePicker auditDatePicker;
+    @FXML private CheckBox deletedOnlyCheckBox;
+    @FXML private Button restoreAuditButton;
 
     @FXML
     public void initialize() {
         reportDatePicker.setValue(LocalDate.now());
         setupTables();
         loadAllData();
+        adminAuditPane.setManaged(userSession.isAdmin());
+        adminAuditPane.setVisible(userSession.isAdmin());
+        auditDatePicker.setValue(LocalDate.now());
+        auditUserField.textProperty().addListener((obs, oldValue, newValue) -> loadAuditData());
+        auditActionField.textProperty().addListener((obs, oldValue, newValue) -> loadAuditData());
+        auditEntityField.textProperty().addListener((obs, oldValue, newValue) -> loadAuditData());
 
         loanComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) loadLoanStatement(newVal);
@@ -152,6 +171,25 @@ public class ReportsController {
         agDaysCol.setCellValueFactory(new PropertyValueFactory<>("agingDays"));
         
         agingAnalysisTable.getColumns().setAll(agCustCol, agContCol, agGuarCol, agDisbCol, agDueCol, agOutCol, agArrCol, agDaysCol);
+
+        TableColumn<AuditLog, String> auditDateColumn = new TableColumn<>("When");
+        auditDateColumn.setCellValueFactory(new PropertyValueFactory<>("occurredAt"));
+        TableColumn<AuditLog, String> auditUserColumn = new TableColumn<>("User");
+        auditUserColumn.setCellValueFactory(new PropertyValueFactory<>("username"));
+        TableColumn<AuditLog, String> auditActionColumn = new TableColumn<>("Action");
+        auditActionColumn.setCellValueFactory(new PropertyValueFactory<>("action"));
+        TableColumn<AuditLog, String> auditEntityColumn = new TableColumn<>("Entity");
+        auditEntityColumn.setCellValueFactory(new PropertyValueFactory<>("entityType"));
+        TableColumn<AuditLog, String> auditIdColumn = new TableColumn<>("Record ID");
+        auditIdColumn.setCellValueFactory(new PropertyValueFactory<>("entityId"));
+        auditTable.getColumns().setAll(auditDateColumn, auditUserColumn, auditActionColumn, auditEntityColumn, auditIdColumn);
+        auditTable.setRowFactory(table -> new TableRow<>() {
+            @Override protected void updateItem(AuditLog item, boolean empty) {
+                super.updateItem(item, empty);
+                setStyle(!empty && item != null && "SOFT_DELETE".equals(item.getAction())
+                        ? "-fx-background-color: #ffd6d6; -fx-text-fill: #8b0000;" : "");
+            }
+        });
     }
 
     private void loadAllData() {
@@ -196,6 +234,30 @@ public class ReportsController {
 
         // Aging Analysis
         loadAgingAnalysis();
+        loadAuditData();
+    }
+
+    private void loadAuditData() {
+        if (!userSession.isAdmin() || auditTable == null) return;
+        var result = auditService.search(
+                auditUserField == null ? "" : auditUserField.getText(),
+                deletedOnlyCheckBox != null && deletedOnlyCheckBox.isSelected() ? "SOFT_DELETE" : auditActionField.getText(),
+                auditEntityField == null ? "" : auditEntityField.getText(),
+                auditDatePicker == null ? LocalDate.now() : auditDatePicker.getValue());
+        if (result.isSuccess()) auditTable.setItems(FXCollections.observableArrayList(result.value()));
+    }
+
+    @FXML private void handleAuditFilter() { loadAuditData(); }
+
+    @FXML private void handleRestoreAudit() {
+        AuditLog selected = auditTable.getSelectionModel().getSelectedItem();
+        if (selected == null || !"SOFT_DELETE".equals(selected.getAction())) {
+            UIHelper.showInfo("Restore", "Select a soft-deleted audit record first.");
+            return;
+        }
+        var result = auditService.restore(selected.getEntityType(), Long.valueOf(selected.getEntityId()));
+        UIHelper.updateStatusLabel(messageLabel, result);
+        if (result.isSuccess()) loadAuditData();
     }
 
     private void loadLoanStatement(Loan loan) {

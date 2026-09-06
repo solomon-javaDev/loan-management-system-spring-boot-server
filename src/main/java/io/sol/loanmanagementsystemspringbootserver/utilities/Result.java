@@ -35,7 +35,11 @@ public sealed interface Result<T> permits Ok, NotFound, Invalid, Unauthorized {
     }
 
     static <T> Result<T> unauthorized(String message, T value) {
-        Logger.logError("Unauthorized: " + message);
+        return forbidden(message, value);
+    }
+
+    static <T> Result<T> forbidden(String message, T value) {
+        Logger.logError("Forbidden: " + message);
         return new Unauthorized<>(message, value);
     }
 }

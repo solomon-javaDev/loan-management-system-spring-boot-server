@@ -6,6 +6,7 @@ import io.sol.loanmanagementsystemspringbootserver.services.EmployeeService;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UiControlUtilities;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -17,6 +18,7 @@ import java.util.List;
 public class EmployeesController {
     private final EmployeeService employeeService;
     private final UiControlUtilities uiControlUtilities;
+    private final UserSession userSession;
     @FXML private TextField firstName;
     @FXML private TextField lastName;
     @FXML private PasswordField password;
@@ -37,11 +39,15 @@ public class EmployeesController {
     @FXML private TableColumn<EmployeeDTO, String> roleColumn;
     @FXML private TableColumn<EmployeeDTO, String> userNameColumn;
     @FXML private TableColumn<EmployeeDTO, Boolean> activeColumn;
+    @FXML private Button createEmployeeButton;
+    @FXML private Button updateButton;
+    @FXML private Button deleteButton;
 
 
-    public EmployeesController(EmployeeService employeeService, UiControlUtilities uiControlUtilities) {
+    public EmployeesController(EmployeeService employeeService, UiControlUtilities uiControlUtilities, UserSession userSession) {
         this.employeeService = employeeService;
         this.uiControlUtilities = uiControlUtilities;
+        this.userSession = userSession;
     }
 
     @FXML
@@ -49,6 +55,10 @@ public class EmployeesController {
         configureTable();
         uiControlUtilities.configureDropDown(role, List.of(Role.values()), Enum::toString);
         loadEmployees();
+        boolean cashier = !userSession.isAdmin();
+        createEmployeeButton.setDisable(cashier);
+        updateButton.setDisable(cashier);
+        deleteButton.setDisable(cashier);
         // populate form on selection
         employeesTable.getSelectionModel().selectedItemProperty().addListener((obs, oldV, newV) -> populateForm(newV));
     }

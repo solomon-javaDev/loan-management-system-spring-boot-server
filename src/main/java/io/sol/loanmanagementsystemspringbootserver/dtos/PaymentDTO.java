@@ -13,6 +13,7 @@ public class PaymentDTO implements Serializable {
     private Integer customerId;
     private String customerName;
     private BigDecimal remainingBalance;
+    private long agingDays;
 
     public PaymentDTO() {}
 
@@ -39,4 +40,7 @@ public class PaymentDTO implements Serializable {
 
     public BigDecimal getRemainingBalance() { return remainingBalance; }
     public void setRemainingBalance(BigDecimal remainingBalance) { this.remainingBalance = remainingBalance; }
+
+    public long getAgingDays() { return agingDays; }
+    public void setAgingDays(long agingDays) { this.agingDays = agingDays; }
 }

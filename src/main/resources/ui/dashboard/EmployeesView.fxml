@@ -63,7 +63,7 @@
                                   <Button fx:id="clearButton" mnemonicParsing="false" onMouseClicked="#clearForm" text="CLEAR" />
                                     <Button fx:id="updateButton" mnemonicParsing="false" onMouseClicked="#handleUpdateEmployee" text="UPDATE" />
                                     <Button fx:id="deleteButton" mnemonicParsing="false" onMouseClicked="#handleDeleteEmployee" text="DELETE" />
-                                    <Button mnemonicParsing="false" onAction="#createEmployee" prefHeight="25.0" prefWidth="199.0" text="Create Account" />
+                                    <Button fx:id="createEmployeeButton" mnemonicParsing="false" onAction="#createEmployee" prefHeight="25.0" prefWidth="199.0" text="Create Account" />
                                 </buttons>
                               </ButtonBar>
                            </children>

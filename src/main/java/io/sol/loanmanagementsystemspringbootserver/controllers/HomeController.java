@@ -204,7 +204,8 @@ public class HomeController {
         updateStat("Total Amount Disbursed (Today)", String.format("%.2f", totalDisbursedToday), totalAmountDisbursedLabel);
 
         updateStat("Principal Balance", String.format("%.2f", state.getOutstandingPrincipal()), principalBalanceLabel);
-        updateStat("Total Loan Portfolio", String.format("%.2f", state.getGrossLoanPortfolio()), totalLoanPortfolioLabel);
+        BigDecimal totalLoanPortfolio = loansService.getTotalLoanPortfolio().value();
+        updateStat("Total Loan Portfolio", String.format("%.2f", totalLoanPortfolio), totalLoanPortfolioLabel);
         updateStat("Opening Cash", String.format("%.2f", state.getCashOnHand().add(totalDisbursedToday).subtract(totalCollToday)), openingCashLabel); // Rough estimate
         updateStat("Principal Collected", String.format("%.2f", state.getTotalPrincipalCollected()), principalCollectedLabel);
         updateStat("Interest Collected", String.format("%.2f", state.getInterestReceived()), interestCollectedLabel);

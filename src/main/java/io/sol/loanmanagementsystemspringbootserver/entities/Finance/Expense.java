@@ -4,13 +4,20 @@ import io.sol.loanmanagementsystemspringbootserver.entities.custom.User;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "expenses")
+@SQLDelete(sql = "UPDATE expenses SET deleted = true WHERE id = ?")
+@SQLRestriction("deleted = false")
 public class Expense {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
+    private boolean deleted = false;
 
     @Column(nullable = false)
     private String description;

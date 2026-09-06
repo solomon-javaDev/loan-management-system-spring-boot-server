@@ -4,6 +4,7 @@ import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Expense;
 import io.sol.loanmanagementsystemspringbootserver.events.ExpenseIncurredEvent;
 import io.sol.loanmanagementsystemspringbootserver.repositories.ExpenseRepository;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,10 +18,15 @@ public class ExpenseService {
 
     private final ExpenseRepository expenseRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final UserSession userSession;
+    private final AuditService auditService;
 
-    public ExpenseService(ExpenseRepository expenseRepository, ApplicationEventPublisher applicationEventPublisher) {
+    public ExpenseService(ExpenseRepository expenseRepository, ApplicationEventPublisher applicationEventPublisher,
+                          UserSession userSession, AuditService auditService) {
         this.expenseRepository = expenseRepository;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.userSession = userSession;
+        this.auditService = auditService;
     }
 
     @Transactional
@@ -36,6 +42,7 @@ public class ExpenseService {
         }
 
         Expense saved = expenseRepository.save(expense);
+        auditService.record("CREATE", "EXPENSE", saved.getId(), "Expense recorded");
         
         applicationEventPublisher.publishEvent(new ExpenseIncurredEvent(
             saved.getId(),
@@ -60,5 +67,15 @@ public class ExpenseService {
                 .map(Expense::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         return Result.success("Total expenses calculated", total);
+    }
+
+    @Transactional
+    public Result<Void> deleteExpense(Long id) {
+        Result<Void> authorization = userSession.requireAdmin();
+        if (authorization.isFailure()) return Result.forbidden(authorization.message(), null);
+        if (!expenseRepository.existsById(id)) return Result.notFound("Expense not found", null);
+        expenseRepository.deleteById(id);
+        auditService.record("SOFT_DELETE", "EXPENSE", id, "Expense soft deleted");
+        return Result.success("Expense deleted", null);
     }
 }

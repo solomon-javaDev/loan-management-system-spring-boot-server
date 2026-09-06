@@ -35,14 +35,16 @@ public class EmployeeService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final LoansRepository loansRepository;
+    private final AuditService auditService;
 
     @Autowired
-     public EmployeeService(EmployeeRepository employeeRepository, PasswordEncoder passwordEncoder, UserSession userSession, UserRepository userRepository, LoansRepository loansRepository){
+    public EmployeeService(EmployeeRepository employeeRepository, PasswordEncoder passwordEncoder, UserSession userSession, UserRepository userRepository, LoansRepository loansRepository, AuditService auditService){
        this.employeeRepository = employeeRepository;
          this.passwordEncoder = passwordEncoder;
         this.userSession = userSession;
         this.userRepository = userRepository;
         this.loansRepository = loansRepository;
+        this.auditService = auditService;
     }
 
     public Result<List<EmployeeDTO>> getEmployeeByRole(Role role){
@@ -56,6 +58,8 @@ public class EmployeeService {
     }
 
     public Result<EmployeeDTO> createEmployee(EmployeeDTO employeeDTO) {
+        Result<Void> authorization = userSession.requireAdmin();
+        if (authorization.isFailure()) return Result.forbidden(authorization.message(), null);
         if (employeeDTO == null || employeeDTO.getUsername() == null || employeeDTO.getUsername().isBlank()) {
             return Result.invalid("Username is required", null);
         }
@@ -89,15 +93,20 @@ public class EmployeeService {
     }
 
     public Result<EmployeeDTO> updateEmployeeStatus(Integer id, boolean active) {
+        Result<Void> authorization = userSession.requireAdmin();
+        if (authorization.isFailure()) return Result.forbidden(authorization.message(), null);
         return employeeRepository.findById(id).map(employee -> {
             employee.setActive(active);
             Employee saved = employeeRepository.save(employee);
+            auditService.record("UPDATE", "EMPLOYEE", saved.getId(), "Employee status updated");
             return Result.success("Employee status updated", DTOMapper.toDTO(saved));
         }).orElse(Result.notFound("Employee not found", null));
     }
 
     // New robust update by ID
     public Result<EmployeeDTO> updateEmployee(EmployeeDTO dto) {
+        Result<Void> authorization = userSession.requireAdmin();
+        if (authorization.isFailure()) return Result.forbidden(authorization.message(), null);
         if (dto.getId() == null) {
             return Result.invalid("Employee ID is required for update", null);
         }
@@ -114,6 +123,7 @@ public class EmployeeService {
                 existing.setPassword(passwordEncoder.encode(dto.getPassword()));
             }
             Employee saved = employeeRepository.save(existing);
+            auditService.record("UPDATE", "EMPLOYEE", saved.getId(), "Employee details updated");
             return Result.success("Employee updated successfully", DTOMapper.toDTO(saved));
         }).orElse(Result.notFound("Employee not found", null));
     }
@@ -146,6 +156,8 @@ public class EmployeeService {
     }
 
     public Result<Void> deleteEmployeeById(Integer id) {
+        Result<Void> authorization = userSession.requireAdmin();
+        if (authorization.isFailure()) return Result.forbidden(authorization.message(), null);
         Optional<Employee> employee = employeeRepository.findById(id);
         if(employee.isEmpty()){
             return Result.notFound("Employee not found", null);
@@ -157,6 +169,7 @@ public class EmployeeService {
          }else {
              return employeeRepository.findById(id).map(emp -> {
                  employeeRepository.delete(emp);
+                 auditService.record("SOFT_DELETE", "EMPLOYEE", id, "Employee soft deleted");
                  return Result.success("Employee deleted", (Void) null);
              }).orElse(Result.notFound("Employee not found", null));
          }

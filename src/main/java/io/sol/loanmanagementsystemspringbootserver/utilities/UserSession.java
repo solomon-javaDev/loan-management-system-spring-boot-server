@@ -25,4 +25,10 @@ public class UserSession {
     public boolean isCashier() {
         return currentUser != null && currentUser.getRole() == Role.CASHIER;
     }
+
+    public Result<Void> requireAdmin() {
+        return isAdmin()
+                ? Result.success("Administrator authorization granted.", null)
+                : Result.forbidden("Only administrators may perform this action.", null);
+    }
 }

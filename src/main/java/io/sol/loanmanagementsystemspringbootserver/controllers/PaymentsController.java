@@ -10,6 +10,7 @@ import io.sol.loanmanagementsystemspringbootserver.services.PaymentsService;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UiControlUtilities;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -77,6 +78,7 @@ public class PaymentsController {
     private final UiControlUtilities uiControlUtilities;
     private final LoansService loansService;
     private final PaymentsService paymentsService;
+    private final UserSession userSession;
 
     @FXML
     private DatePicker date;
@@ -123,11 +125,12 @@ public class PaymentsController {
     @FXML
     private Label messageLabel;
 
-    public PaymentsController(CustomerService customerService, UiControlUtilities uiControlUtilities, LoansService loansService, PaymentsService paymentsService) {
+    public PaymentsController(CustomerService customerService, UiControlUtilities uiControlUtilities, LoansService loansService, PaymentsService paymentsService, UserSession userSession) {
         this.customerService = customerService;
         this.uiControlUtilities = uiControlUtilities;
         this.loansService = loansService;
         this.paymentsService = paymentsService;
+        this.userSession = userSession;
     }
 
     @FXML
@@ -152,8 +155,10 @@ public class PaymentsController {
         });
 
         paymentSaveButton.disableProperty().bind(paymentsTable.getSelectionModel().selectedItemProperty().isNotNull());
-        paymentUpdateButton.disableProperty().bind(paymentsTable.getSelectionModel().selectedItemProperty().isNull());
-        paymentDeleteButton.disableProperty().bind(paymentsTable.getSelectionModel().selectedItemProperty().isNull());
+        paymentUpdateButton.disableProperty().bind(paymentsTable.getSelectionModel().selectedItemProperty().isNull()
+            .or(new javafx.beans.property.ReadOnlyBooleanWrapper(!userSession.isAdmin())));
+        paymentDeleteButton.disableProperty().bind(paymentsTable.getSelectionModel().selectedItemProperty().isNull()
+            .or(new javafx.beans.property.ReadOnlyBooleanWrapper(!userSession.isAdmin())));
     }
 
     private void configureTable() {
@@ -235,7 +240,7 @@ public class PaymentsController {
         paymentMap.put("Date - ", String.valueOf(result.value().getDate()));
         paymentMap.put("Amount paid - ", String.valueOf(result.value().getAmountReceived()));
         paymentMap.put("Loan balance - ", String.valueOf(result.value().getRemainingBalance()));
-        paymentMap.put("Days Skipped  - ", null); //TODO I still need to identify a way of getting aging days into the different DTOS, including the customerDTO
+        paymentMap.put("Days Skipped  - ", String.valueOf(result.value().getAgingDays()));
         paymentMap.put("Signature of receiver - ", null);
 
         UIHelper.exportToPdf("Payment receipt -", "PAYMENT FOR LOAN", paymentMap, (Stage) paymentsTable.getScene().getWindow());

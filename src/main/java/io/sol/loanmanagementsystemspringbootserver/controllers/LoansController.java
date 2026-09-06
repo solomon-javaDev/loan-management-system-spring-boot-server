@@ -322,14 +322,17 @@ public class LoansController {
                                   !loan.getStartDate().equals(selectedLoan.getStartDate());
         
         if (sensitiveChange) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Sensitive Update Warning");
-            alert.setHeaderText("Critical Parameter Change Detected");
-            alert.setContentText("You are attempting to change critical loan parameters (Principal, Interest Rate, Fees, or Date). " +
-                                "This action will be permanently recorded and an alert will be sent to the administrator. " +
-                                "Do you want to proceed?");
-            Optional<ButtonType> result = alert.showAndWait();
+            Optional<ButtonType> result = getButtonType();
             if (result.isEmpty() || result.get() != ButtonType.OK) {
+                return;
+            }
+
+            if (userSession.isCashier()) {
+                Alert cashierAlert = new Alert(Alert.AlertType.INFORMATION);
+                cashierAlert.setTitle("Administrator Approval Required");
+                cashierAlert.setHeaderText("Critical loan changes require administrator approval");
+                cashierAlert.setContentText("Please inform the administrator about this requested change.");
+                cashierAlert.showAndWait();
                 return;
             }
         }
@@ -341,6 +344,17 @@ public class LoansController {
             loadLoans();
             clearForm();
         }
+    }
+
+    private static Optional<ButtonType> getButtonType() {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Sensitive Update Warning");
+        alert.setHeaderText("Critical Parameter Change Detected");
+        alert.setContentText("You are attempting to change critical loan parameters (Principal, Interest Rate, Fees, or Date). " +
+                            "This action will be permanently recorded and an alert will be sent to the administrator. " +
+                            "Do you want to proceed?");
+        Optional<ButtonType> result = alert.showAndWait();
+        return result;
     }
 
     @FXML

@@ -6,6 +6,7 @@ import io.sol.loanmanagementsystemspringbootserver.events.LoanDisbursedEvent;
 import io.sol.loanmanagementsystemspringbootserver.mappers.DTOMapper;
 import io.sol.loanmanagementsystemspringbootserver.repositories.*;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -31,17 +32,23 @@ public class LoansService {
     private final ApplicationEventPublisher applicationEventPublisher;
     private final CustomerRepository customerRepository;
     private final EmployeeRepository employeeRepository;
+    private final UserSession userSession;
+    private final AuditService auditService;
 
     public LoansService(LoansRepository loansRepository,
                         FinancialStateService financialStateService,
                         ApplicationEventPublisher applicationEventPublisher,
                         CustomerRepository customerRepository,
-                        EmployeeRepository employeeRepository) {
+                        EmployeeRepository employeeRepository,
+                        UserSession userSession,
+                        AuditService auditService) {
         this.loansRepository = loansRepository;
         this.financialStateService = financialStateService;
         this.applicationEventPublisher = applicationEventPublisher;
         this.customerRepository = customerRepository;
         this.employeeRepository = employeeRepository;
+        this.userSession = userSession;
+        this.auditService = auditService;
     }
 
     public Result<List<LoanDTO>> getAllLoans() {
@@ -69,28 +76,7 @@ public class LoansService {
     }
 
 
-    /*
-    @Transactional
-public Result<LoanDTO> disburseLoan(...) {
 
-    // 1. calculate current financial state
-
-    // 2. verify liquidity
-
-    // 3. create loan
-
-    // 4. record disbursement
-
-    // 5. commit everything atomically
-}
-    *
-    *Is customer valid?
-    Is employee valid?
-    Is loan amount valid?
-    Is available liquidity sufficient?
-    Is customer eligible?
-    Is loan allowed?
-     */
     @Transactional
     public Result<LoanDTO> issueLoan(int customerId, LoanDTO loanDto) {
         if (loanDto.getPrincipal() == null || loanDto.getPrincipal().compareTo(BigDecimal.ZERO) <= 0) {
@@ -163,11 +149,32 @@ public Result<LoanDTO> disburseLoan(...) {
 
     @Transactional
     public Result<LoanDTO> updateLoan(LoanDTO loanDto) {
-        return Result.notFound("Not found", new LoanDTO());
+        Result<Void> authorization = userSession.requireAdmin();
+        if (authorization.isFailure()) return Result.forbidden(authorization.message(), null);
+        if (loanDto == null || loanDto.getId() <= 0) {
+            return Result.invalid("A valid loan is required for update.", null);
+        }
+        return loansRepository.findById(loanDto.getId()).map(existing -> {
+            existing.setStartDate(loanDto.getStartDate());
+            existing.setMaturityDate(loanDto.getMaturityDate());
+            existing.setPrincipal(loanDto.getPrincipal());
+            existing.setInterestRate(loanDto.getInterestRate());
+            existing.setTenor(loanDto.getTenor());
+            existing.setCollateral(loanDto.getCollateral());
+            existing.setFees(loanDto.getFees());
+            existing.setSurchargeRate(loanDto.getSurchargeRate());
+            existing.setSurchargeAmount(loanDto.getSurchargeAmount());
+            existing.setStatus(loanDto.getStatus());
+            Loan saved = loansRepository.save(existing);
+            auditService.record("UPDATE", "LOAN", saved.getId(), "Loan details updated");
+            return Result.success("Loan updated successfully", DTOMapper.toDTO(saved));
+        }).orElseGet(() -> Result.notFound("Loan not found", null));
     }
 
 
     public Result<Void> deleteLoan(Integer id) {
+        Result<Void> authorization = userSession.requireAdmin();
+        if (authorization.isFailure()) return Result.forbidden(authorization.message(), null);
         if (id == null || id <= 0) {
             return Result.invalid("Select a loan from the table before deleting.", null);
         }
@@ -177,7 +184,18 @@ public Result<LoanDTO> disburseLoan(...) {
         }
 
         loansRepository.deleteById(id);
+        auditService.record("SOFT_DELETE", "LOAN", id, "Loan soft deleted");
         return Result.success("Loan deleted successfully.", null);
+    }
+
+    public Result<BigDecimal> getTotalLoanPortfolio() {
+        BigDecimal total = loansRepository.findByStatusIn(List.of(
+                        io.sol.loanmanagementsystemspringbootserver.entities.Finance.LoanStatus.ACTIVE,
+                        io.sol.loanmanagementsystemspringbootserver.entities.Finance.LoanStatus.PENDING))
+                .stream()
+                .map(Loan::getTotalDue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return Result.success("Loan portfolio calculated", total);
     }
 
     @Scheduled(cron = "0 0 1 * * ?") // Every day at 1 AM

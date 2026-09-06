@@ -5,6 +5,7 @@ import io.sol.loanmanagementsystemspringbootserver.entities.Finance.CashTransact
 import io.sol.loanmanagementsystemspringbootserver.events.*;
 import io.sol.loanmanagementsystemspringbootserver.repositories.CashTransactionRepository;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,8 @@ public class CashTransactionService {
 
     private final CashTransactionRepository repository;
     private final ApplicationEventPublisher eventPublisher;
+    private final UserSession userSession;
+    private final AuditService auditService;
 
     @Transactional
     public Result<CashTransaction> recordTransaction(CashTransaction transaction) {
@@ -28,6 +31,7 @@ public class CashTransactionService {
         }
 
         CashTransaction saved = repository.save(transaction);
+        auditService.record("CREATE", "CASH_TRANSACTION", saved.getId(), "Cash transaction recorded");
         LocalDate date = saved.getDate().toLocalDate();
 
         switch (saved.getType()) {
@@ -44,5 +48,15 @@ public class CashTransactionService {
 
     public List<CashTransaction> getAllTransactions() {
         return repository.findAll();
+    }
+
+    @Transactional
+    public Result<Void> deleteTransaction(Long id) {
+        Result<Void> authorization = userSession.requireAdmin();
+        if (authorization.isFailure()) return Result.forbidden(authorization.message(), null);
+        if (!repository.existsById(id)) return Result.notFound("Cash transaction not found", null);
+        repository.deleteById(id);
+        auditService.record("SOFT_DELETE", "CASH_TRANSACTION", id, "Cash transaction soft deleted");
+        return Result.success("Cash transaction deleted", null);
     }
 }
