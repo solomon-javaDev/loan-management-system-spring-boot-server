@@ -61,8 +61,7 @@ public class EmployeesController {
         telephone.setText(dto.getTelephone());
         salary.setText(String.valueOf(dto.getSalary()));
         role.setValue(dto.getRole());
-        // do not populate password for security reasons
-        password.clear();
+        password.setText(dto.getPassword());
     }
 
     private void loadEmployees() {
@@ -106,6 +105,9 @@ public class EmployeesController {
         if (result.isSuccess()) {
             loadEmployees();
             clearForm();
+        }else {
+            UIHelper.showError("EMPLOYEE NOT CREATED", "There was an error creating the employee, chack you input the proper details");
+
         }
     }
 

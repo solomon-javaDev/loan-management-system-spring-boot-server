@@ -1,11 +1,16 @@
 package io.sol.loanmanagementsystemspringbootserver.services;
 
 import io.sol.loanmanagementsystemspringbootserver.dtos.EmployeeDTO;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.LoanStatus;
 import io.sol.loanmanagementsystemspringbootserver.entities.Role;
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.User;
 import io.sol.loanmanagementsystemspringbootserver.mappers.DTOMapper;
+import io.sol.loanmanagementsystemspringbootserver.repositories.LoansRepository;
+import io.sol.loanmanagementsystemspringbootserver.repositories.UserRepository;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.entities.custom.Employee;
 import io.sol.loanmanagementsystemspringbootserver.repositories.EmployeeRepository;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,13 +30,19 @@ import java.util.stream.Collectors;
 public class EmployeeService {
 
 
-    private EmployeeRepository employeeRepository;
+    private final UserSession userSession;
+    private final EmployeeRepository employeeRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final LoansRepository loansRepository;
 
     @Autowired
-     public EmployeeService(EmployeeRepository employeeRepository, PasswordEncoder passwordEncoder){
+     public EmployeeService(EmployeeRepository employeeRepository, PasswordEncoder passwordEncoder, UserSession userSession, UserRepository userRepository, LoansRepository loansRepository){
        this.employeeRepository = employeeRepository;
          this.passwordEncoder = passwordEncoder;
+        this.userSession = userSession;
+        this.userRepository = userRepository;
+        this.loansRepository = loansRepository;
     }
 
     public Result<List<EmployeeDTO>> getEmployeeByRole(Role role){
@@ -51,14 +62,25 @@ public class EmployeeService {
         if (employeeDTO.getPassword() == null || employeeDTO.getPassword().isBlank()) {
             return Result.invalid("Password is required", null);
         }
-        Employee employee = DTOMapper.toEntity(employeeDTO);
-        if (employee.getPassword() != null && !employee.getPassword().isEmpty()) {
-            employee.setPassword(passwordEncoder.encode(employee.getPassword()));
-        } else {
-            employee.setPassword(passwordEncoder.encode("0000"));
+        if(employeeDTO.getRole() != Role.FIELD_OFFICER){
+            User user = new User();
+            user.setEmail(employeeDTO.getEmail());
+            user.setRole(employeeDTO.getRole());
+            user.setUsername(employeeDTO.getUsername());
+            user.setPassword(passwordEncoder.encode(employeeDTO.getPassword()));
+
+            userRepository.save(user);
+            return Result.success("A new System user has been created successfully ", DTOMapper.toDTO(user));
+        }else {
+            Employee employee = DTOMapper.toEntity(employeeDTO);
+            if (employee.getPassword() != null && !employee.getPassword().isEmpty()) {
+                employee.setPassword(passwordEncoder.encode(employee.getPassword()));
+            } else {
+                employee.setPassword(passwordEncoder.encode("0000"));
+            }
+            Employee saved = employeeRepository.save(employee);
+            return Result.success("Employee created successfully", DTOMapper.toDTO(saved));
         }
-        Employee saved = employeeRepository.save(employee);
-        return Result.success("Employee created successfully", DTOMapper.toDTO(saved));
     }
 
     public Result<List<EmployeeDTO>> getAllEmployees() {
@@ -108,6 +130,10 @@ public class EmployeeService {
     }
 
     public Result<Void> deleteEmployee(EmployeeDTO selectedEmployee){
+        if(!userSession.isAdmin()){
+            return Result.unauthorized("This action id meant for admin only", null);
+        }
+
         Optional<Employee> employee = employeeRepository.findByFirstName(selectedEmployee.getFirstName());
 
         if(employee.isPresent()){
@@ -119,11 +145,21 @@ public class EmployeeService {
         }
     }
 
-    //TODO improve employee deletion to avoid deleting field officers with loans
     public Result<Void> deleteEmployeeById(Integer id) {
-        return employeeRepository.findById(id).map(emp -> {
-            employeeRepository.delete(emp);
-            return Result.success("Employee deleted", (Void) null);
-        }).orElse(Result.notFound("Employee not found", null));
+        Optional<Employee> employee = employeeRepository.findById(id);
+        if(employee.isEmpty()){
+            return Result.notFound("Employee not found", null);
+        }
+        else{
+         if(loansRepository.existsByFieldOfficerAndStatus(employee.get(), LoanStatus.ACTIVE)){
+             return Result.invalid("You cannot delete a field officer with active loans", null);
+
+         }else {
+             return employeeRepository.findById(id).map(emp -> {
+                 employeeRepository.delete(emp);
+                 return Result.success("Employee deleted", (Void) null);
+             }).orElse(Result.notFound("Employee not found", null));
+         }
+        }
     }
 }

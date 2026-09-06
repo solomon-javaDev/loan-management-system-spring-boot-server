@@ -5,6 +5,7 @@ import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Loan;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Payment;
 import io.sol.loanmanagementsystemspringbootserver.entities.custom.Customer;
 import io.sol.loanmanagementsystemspringbootserver.entities.custom.Employee;
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.User;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -367,4 +368,7 @@ public class DTOMapper {
         return employee;
     }
 
-  }
+    public static EmployeeDTO toDTO(User user) {
+        return new EmployeeDTO();
+    }
+}

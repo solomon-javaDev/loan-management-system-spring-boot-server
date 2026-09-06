@@ -55,7 +55,7 @@ public class DashboardController {
     @FXML
     private Button loansButton;
     @FXML
-    private Button applicationsButton;
+    private Button employeesButton;
     @FXML
     private Button paymentsButton;
     @FXML
@@ -87,17 +87,27 @@ public class DashboardController {
 
     @FXML
     public void initialize() {
-        updateTopBar();
         autoupdateService.checkForUpdatesAsync();
-        
-        if (settingsButton != null) {
-            settingsButton.setVisible(userSession.isAdmin());
+        updateTopBar();
+
+        if(userSession.isCashier()){
+            reportsButton.disableProperty().setValue(true);
+            settingsButton.disableProperty().setValue(true);
+            employeesButton.disableProperty().setValue(true);
+
+        }else if(userSession.isAdmin()){
+
+            if (settingsButton != null) {
+                settingsButton.setVisible(userSession.isAdmin());
+            }
+            if (reportsButton != null) {
+                // Requirement doesn't explicitly say hide reports from cashier,
+                // but says "CASHIERS are not allowed entirely to view the settings panel"
+            }
+            showHomeView();
+        } else {
+
         }
-        if (reportsButton != null) {
-            // Requirement doesn't explicitly say hide reports from cashier, 
-            // but says "CASHIERS are not allowed entirely to view the settings panel"
-        }
-        showHomeView();
     }
 
     public void updateTopBar(){

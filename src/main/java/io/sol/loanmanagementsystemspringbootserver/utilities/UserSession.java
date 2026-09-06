@@ -2,8 +2,10 @@ package io.sol.loanmanagementsystemspringbootserver.utilities;
 
 import io.sol.loanmanagementsystemspringbootserver.entities.custom.User;
 import io.sol.loanmanagementsystemspringbootserver.entities.Role;
+import lombok.Getter;
 import org.springframework.stereotype.Component;
 
+@Getter
 @Component
 public class UserSession {
     private User currentUser;
@@ -14,10 +16,6 @@ public class UserSession {
 
     public void logout() {
         this.currentUser = null;
-    }
-
-    public User getCurrentUser() {
-        return currentUser;
     }
 
     public boolean isAdmin() {
