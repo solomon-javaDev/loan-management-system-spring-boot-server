@@ -92,6 +92,38 @@
                </content>
             </TitledPane>
 
+            <TitledPane animated="false" collapsible="false" text="Loan Fee Buckets">
+               <content>
+                  <VBox spacing="10.0">
+                     <GridPane hgap="10.0" vgap="10.0">
+                        <columnConstraints>
+                           <ColumnConstraints minWidth="150.0" />
+                           <ColumnConstraints hgrow="ALWAYS" />
+                        </columnConstraints>
+                        <children>
+                           <Label text="Minimum loan amount:" />
+                           <TextField fx:id="feeMinAmountField" promptText="e.g. 0" GridPane.columnIndex="1" />
+                           <Label text="Maximum loan amount:" GridPane.rowIndex="1" />
+                           <TextField fx:id="feeMaxAmountField" promptText="e.g. 100000" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                           <Label text="Fee amount:" GridPane.rowIndex="2" />
+                           <TextField fx:id="feeAmountField" promptText="e.g. 500" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                        </children>
+                     </GridPane>
+                     <HBox spacing="8.0">
+                        <Button onAction="#saveFeeBucket" text="Save Fee Bucket" />
+                        <Button onAction="#clearFeeBucketFields" text="Clear" />
+                     </HBox>
+                     <TableView fx:id="feeBucketsTable" onMouseClicked="#selectFeeBucket" prefHeight="120.0">
+                        <columns>
+                           <TableColumn fx:id="feeMinColumn" prefWidth="150.0" text="Minimum" />
+                           <TableColumn fx:id="feeMaxColumn" prefWidth="150.0" text="Maximum" />
+                           <TableColumn fx:id="feeAmountColumn" prefWidth="150.0" text="Fee" />
+                        </columns>
+                     </TableView>
+                  </VBox>
+               </content>
+            </TitledPane>
+
              <TitledPane animated="false" collapsible="false" text="Loan Surcharge Policy">
                 <content>
                    <GridPane hgap="10.0" vgap="15.0">

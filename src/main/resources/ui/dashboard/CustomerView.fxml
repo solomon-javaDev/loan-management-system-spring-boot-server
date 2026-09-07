@@ -75,6 +75,7 @@
                         <TableColumn fx:id="otherNamesColumn" prefWidth="120.0" text="Other Names" />
                         <TableColumn fx:id="ninColumn" prefWidth="150.0" text="Customer NIN" />
                         <TableColumn fx:id="numberOfLoans" prefWidth="75.0" text="Loans" />
+                        <TableColumn fx:id="savingsBalanceColumn" prefWidth="110.0" text="Savings" />
                         <TableColumn fx:id="telephoneColumn" prefWidth="120.0" text="Telephone" />
                         <TableColumn fx:id="addressColumn" prefWidth="180.0" text="Address" />
                         <TableColumn fx:id="activeColumn" prefWidth="75.0" text="Active" />

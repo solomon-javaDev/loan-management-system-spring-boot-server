@@ -67,9 +67,11 @@ public class SeedDataConfig implements CommandLineRunner {
                 make("Wendy",   "Glav",  20000, "wens@wen.com",      "093728923")
         );
         for (Employee e : seeds) {
-            employeeRepository.findByFirstName(e.getFirstName())
+            employeeRepository.findByEmailIncludingDeleted(e.getEmail())
                     .ifPresentOrElse(existing -> {
-                        if (isPlainTextPassword(existing.getPassword())) {
+                        if (existing.isDeleted()) {
+                            employeeRepository.restoreById(existing.getId());
+                        } else if (isPlainTextPassword(existing.getPassword())) {
                             existing.setPassword(passwordEncoder.encode(existing.getPassword()));
                             employeeRepository.save(existing);
                         }
@@ -110,6 +112,9 @@ public class SeedDataConfig implements CommandLineRunner {
         e.setRole(Role.FIELD_OFFICER);
         e.setActive(true);
         e.setPassword("123");
+        e.setActive(true);
+        e.setDeleted(false);
+
         return e;
     }
 

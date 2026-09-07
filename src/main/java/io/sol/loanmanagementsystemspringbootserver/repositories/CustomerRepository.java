@@ -1,6 +1,7 @@
 package io.sol.loanmanagementsystemspringbootserver.repositories;
 
 import io.sol.loanmanagementsystemspringbootserver.entities.custom.Customer;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -28,6 +29,7 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
     @Query("SELECT c, COUNT(l) FROM Customer c LEFT JOIN c.loans l WHERE c.deleted = false GROUP BY c")
     List<Object[]> findAllWithLoanCount();
 
+    @EntityGraph(attributePaths = "loans")
     @Query("SELECT DISTINCT c FROM Customer c JOIN c.loans l WHERE l.status = 'ACTIVE' AND l.fieldOfficer.username = :fieldOfficer AND l.maturityDate >= :today")
     List<Customer> findCustomersByDueForFieldOfficer(@Param("fieldOfficer") String fieldOfficer, @Param("today") LocalDate today);
 

@@ -11,6 +11,7 @@ import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -92,6 +93,9 @@ public class CustomerController {
 
     @FXML
     private TableColumn<CustomerDTO, Number> numberOfLoans;
+
+    @FXML
+    private TableColumn<CustomerDTO, String> savingsBalanceColumn;
 
     @FXML
     private TableColumn<CustomerDTO, String> addressColumn;
@@ -228,6 +232,9 @@ public class CustomerController {
             }
             return new javafx.beans.property.SimpleIntegerProperty(0);
         });
+        savingsBalanceColumn.setCellValueFactory(cellData -> new SimpleStringProperty(
+            String.format("%.2f", cellData.getValue().getSavingsBalance() == null
+                ? java.math.BigDecimal.ZERO : cellData.getValue().getSavingsBalance())));
     }
 
     private void loadCustomers() {

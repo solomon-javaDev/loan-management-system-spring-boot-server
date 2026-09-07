@@ -24,5 +24,8 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
     int restoreById(@Param("id") Integer id);
     List<Employee> findByRole(Role role);
 
-   Optional<Employee> findByFirstName(String firstName);
+    Optional<Employee> findByFirstName(String firstName);
+
+    @Query(value = "SELECT * FROM employees WHERE email = :email", nativeQuery = true)
+    Optional<Employee> findByEmailIncludingDeleted(@Param("email") String email);
 }

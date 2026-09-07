@@ -2,8 +2,12 @@ package io.sol.loanmanagementsystemspringbootserver.services;
 
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.CashTransaction;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.CashTransactionType;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.LoanStatus;
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.Customer;
 import io.sol.loanmanagementsystemspringbootserver.events.*;
 import io.sol.loanmanagementsystemspringbootserver.repositories.CashTransactionRepository;
+import io.sol.loanmanagementsystemspringbootserver.repositories.CustomerRepository;
+import io.sol.loanmanagementsystemspringbootserver.repositories.LoansRepository;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +24,8 @@ import java.util.List;
 public class CashTransactionService {
 
     private final CashTransactionRepository repository;
+    private final CustomerRepository customerRepository;
+    private final LoansRepository loansRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final UserSession userSession;
     private final AuditService auditService;
@@ -28,6 +34,14 @@ public class CashTransactionService {
     public Result<CashTransaction> recordTransaction(CashTransaction transaction) {
         if (transaction.getAmount() == null || transaction.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             return Result.invalid("Amount must be greater than zero", null);
+        }
+
+        if (transaction.getType() == CashTransactionType.SAVINGS_DEPOSIT
+                || transaction.getType() == CashTransactionType.SAVINGS_WITHDRAWAL) {
+            Result<Void> savingsValidation = validateSavingsTransaction(transaction);
+            if (savingsValidation.isFailure()) {
+                return Result.invalid(savingsValidation.message(), null);
+            }
         }
 
         CashTransaction saved = repository.save(transaction);
@@ -41,9 +55,46 @@ public class CashTransactionService {
             case BANK_WITHDRAWAL -> eventPublisher.publishEvent(new BankTransactionEvent(saved.getAmount(), false, date));
             case SAVINGS_DEPOSIT -> eventPublisher.publishEvent(new SavingsTransactionEvent(saved.getCustomerId(), saved.getAmount(), true, date));
             case SAVINGS_WITHDRAWAL -> eventPublisher.publishEvent(new SavingsTransactionEvent(saved.getCustomerId(), saved.getAmount(), false, date));
+            case REPAYMENT_RECEIVED, EXPENSE_PAID -> { }
         }
 
         return Result.success("Transaction recorded successfully", saved);
+    }
+
+    public boolean hasOutstandingLoan(int customerId) {
+        return loansRepository.existsByCustomerIdAndStatusIn(customerId,
+                List.of(LoanStatus.PENDING, LoanStatus.ACTIVE, LoanStatus.DEFAULTED));
+    }
+
+    private Result<Void> validateSavingsTransaction(CashTransaction transaction) {
+        if (transaction.getCustomerId() == null) {
+            return Result.invalid("A customer is required for a savings transaction", null);
+        }
+
+        Customer customer = customerRepository.findById(transaction.getCustomerId()).orElse(null);
+        if (customer == null) {
+            return Result.notFound("Customer not found", null);
+        }
+
+        boolean outstandingLoan = hasOutstandingLoan(customer.getId());
+        if (outstandingLoan && !userSession.isAdmin()) {
+            return Result.forbidden("A customer with an uncleared loan cannot make savings transactions. An administrator must process this transaction.", null);
+        }
+
+        BigDecimal currentBalance = customer.getSavingsBalance() == null
+                ? BigDecimal.ZERO : customer.getSavingsBalance();
+        if (transaction.getType() == CashTransactionType.SAVINGS_WITHDRAWAL
+                && transaction.getAmount().compareTo(currentBalance) > 0) {
+            return Result.invalid("Withdrawal exceeds the customer's savings balance", null);
+        }
+
+        BigDecimal updatedBalance = transaction.getType() == CashTransactionType.SAVINGS_DEPOSIT
+                ? currentBalance.add(transaction.getAmount())
+                : currentBalance.subtract(transaction.getAmount());
+        customer.setSavingsBalance(updatedBalance);
+        customerRepository.save(customer);
+        transaction.setRecordedBy(userSession.getCurrentUser());
+        return Result.success("Savings transaction is valid", null);
     }
 
     public List<CashTransaction> getAllTransactions() {

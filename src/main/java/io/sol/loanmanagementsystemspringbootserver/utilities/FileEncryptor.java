@@ -6,6 +6,8 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class FileEncryptor {
 
@@ -23,9 +25,20 @@ public class FileEncryptor {
     }
 
     private static SecretKeySpec getSecretKey() throws Exception{
+        if (Files.notExists(Path.of(SECRET_KEY_FILE))) {
+            KeyGenerator keyGenerator = KeyGenerator.getInstance(ALGORITHM);
+            keyGenerator.init(128);
+            try (FileOutputStream fos = new FileOutputStream(SECRET_KEY_FILE)) {
+                fos.write(keyGenerator.generateKey().getEncoded());
+            }
+        }
+
         byte[] keyBytes = new byte[16];
         try(FileInputStream fis = new FileInputStream(SECRET_KEY_FILE)){
-            fis.read(keyBytes);
+            int bytesRead = fis.readNBytes(keyBytes, 0, keyBytes.length);
+            if (bytesRead != keyBytes.length) {
+                throw new IllegalStateException("The encryption key is incomplete");
+            }
         }
         return new SecretKeySpec(keyBytes, ALGORITHM);
     }

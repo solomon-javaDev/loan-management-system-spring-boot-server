@@ -33,6 +33,10 @@ public interface LoansRepository extends JpaRepository<Loan, Integer> {
     List<Loan> findByStartDate(LocalDate date);
     List<Loan> findByStatusIn(List<LoanStatus> statuses);
 
+    @Query("SELECT COUNT(l) > 0 FROM Loan l WHERE l.customer.id = :customerId AND l.status IN :statuses")
+    boolean existsByCustomerIdAndStatusIn(@Param("customerId") int customerId,
+                                          @Param("statuses") List<LoanStatus> statuses);
+
     boolean existsByFieldOfficerAndStatus(Employee fieldOfficer, LoanStatus status);
 
     @Query("SELECT COALESCE(SUM(l.principal), 0) FROM Loan l WHERE l.startDate = :date")

@@ -5,11 +5,11 @@ import io.sol.loanmanagementsystemspringbootserver.entities.Finance.CashTransact
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.CashTransactionType;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Expense;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.ExpenseCategory;
-import io.sol.loanmanagementsystemspringbootserver.entities.custom.Customer;
 import io.sol.loanmanagementsystemspringbootserver.services.*;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UiControlUtilities;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
 import javafx.collections.FXCollections;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
@@ -29,6 +29,7 @@ public class FinanceController {
     private final UiControlUtilities uiControlUtilities;
     private final ExpenseCategoryService expenseCategoryService;
     private final CashTransactionService cashTransactionService;
+    private final UserSession userSession;
 
     @FXML private TextField expenseDescription;
     @FXML private ComboBox<ExpenseCategory> expenseCategoryDropDown;
@@ -56,12 +57,13 @@ public class FinanceController {
 
     public FinanceController(ExpenseService expenseService, CustomerService customerService, 
                              UiControlUtilities uiControlUtilities, ExpenseCategoryService expenseCategoryService,
-                             CashTransactionService cashTransactionService) {
+                             CashTransactionService cashTransactionService, UserSession userSession) {
         this.expenseService = expenseService;
         this.customerService = customerService;
         this.uiControlUtilities = uiControlUtilities;
         this.expenseCategoryService = expenseCategoryService;
         this.cashTransactionService = cashTransactionService;
+        this.userSession = userSession;
     }
 
     @FXML
@@ -124,9 +126,19 @@ public class FinanceController {
             return;
         }
 
+        int customerId = Integer.parseInt(custIdStr);
+        boolean outstandingLoan = cashTransactionService.hasOutstandingLoan(customerId);
+        if (outstandingLoan && !userSession.isAdmin()) {
+            show("This customer has an uncleared loan. Only an administrator may process savings for this customer.");
+            return;
+        }
+        if (outstandingLoan && !confirmAdminSavingsTransaction()) {
+            return;
+        }
+
         CashTransaction transaction = new CashTransaction();
         transaction.setDate(LocalDateTime.now());
-        transaction.setCustomerId(Integer.parseInt(custIdStr));
+        transaction.setCustomerId(customerId);
         transaction.setAmount(amount);
         transaction.setType(type.equals("DEPOSIT") ? CashTransactionType.SAVINGS_DEPOSIT : CashTransactionType.SAVINGS_WITHDRAWAL);
         transaction.setDescription("Savings " + type + " for customer " + custIdStr);
@@ -139,6 +151,14 @@ public class FinanceController {
             loadSavings();
             savingsAmount.clear();
         }
+    }
+
+    private boolean confirmAdminSavingsTransaction() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Administrator confirmation required");
+        alert.setHeaderText("Customer has an uncleared loan");
+        alert.setContentText("Only an administrator may process this savings transaction. Continue?");
+        return alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK;
     }
 
     private void configureTables() {

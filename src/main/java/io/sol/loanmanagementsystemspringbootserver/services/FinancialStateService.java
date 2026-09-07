@@ -4,13 +4,13 @@ import io.sol.loanmanagementsystemspringbootserver.entities.Finance.SystemFinanc
 import io.sol.loanmanagementsystemspringbootserver.events.FinancialStateUpdatedEvent;
 import io.sol.loanmanagementsystemspringbootserver.repositories.SystemFinancialStateRepository;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Logger;
+import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 /**
  * The class that performs all operations to change the system state
@@ -21,10 +21,13 @@ public class FinancialStateService {
 
     private final SystemFinancialStateRepository repository;
     private final ApplicationEventPublisher eventPublisher;
+    private final UserSession userSession;
 
-    public FinancialStateService(SystemFinancialStateRepository systemFinancialStateRepository, ApplicationEventPublisher eventPublisher) {
+    public FinancialStateService(SystemFinancialStateRepository systemFinancialStateRepository,
+                                 ApplicationEventPublisher eventPublisher, UserSession userSession) {
         this.repository = systemFinancialStateRepository;
         this.eventPublisher = eventPublisher;
+        this.userSession = userSession;
     }
 
     @Transactional
@@ -179,7 +182,10 @@ public class FinancialStateService {
     }
 
     @Transactional
-    public void makeFinancialSetting(BigDecimal bankBalance, BigDecimal ownersCapital, BigDecimal cashOnHand, String adminEmails) {
+    public Result<Void> makeFinancialSetting(BigDecimal bankBalance, BigDecimal ownersCapital,
+                                             BigDecimal cashOnHand, String adminEmails) {
+        Result<Void> authorization = userSession.requireAdmin();
+        if (authorization.isFailure()) return authorization;
         SystemFinancialState state = getCurrentState();
         state.setBankBalance(bankBalance);
         state.setOwnerCapital(ownersCapital);
@@ -189,5 +195,6 @@ public class FinancialStateService {
         repository.save(state);
         eventPublisher.publishEvent(new FinancialStateUpdatedEvent(state));
         Logger.logInfo("New settings have been saved successfully");
+        return Result.success("Financial settings saved successfully.", null);
     }
 }

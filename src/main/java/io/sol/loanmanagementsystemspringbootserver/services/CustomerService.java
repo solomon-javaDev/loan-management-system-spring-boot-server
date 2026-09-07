@@ -109,7 +109,6 @@ public class CustomerService {
                     existingCustomer.setTelephone(customerDto.getTelephone());
                     existingCustomer.setOtherNames(customerDto.getOtherNames());
                     existingCustomer.setAddress(customerDto.getAddress());
-                    existingCustomer.setSavingsBalance(customerDto.getSavingsBalance());
                     existingCustomer.setActive(customerDto.isActive());
                     if (customerDto.getFieldOfficer() != null) {
                         existingCustomer.setFieldOfficer(DTOMapper.toEntity(customerDto.getFieldOfficer()));

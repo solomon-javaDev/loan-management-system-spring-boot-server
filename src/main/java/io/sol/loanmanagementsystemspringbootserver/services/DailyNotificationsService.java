@@ -8,9 +8,6 @@ import io.sol.loanmanagementsystemspringbootserver.mailing.EmailsService;
 import io.sol.loanmanagementsystemspringbootserver.repositories.CustomerRepository;
 import io.sol.loanmanagementsystemspringbootserver.repositories.EmployeeRepository;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.mail.MailSender;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 

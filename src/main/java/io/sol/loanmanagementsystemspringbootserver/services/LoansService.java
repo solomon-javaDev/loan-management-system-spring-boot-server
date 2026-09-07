@@ -2,6 +2,9 @@ package io.sol.loanmanagementsystemspringbootserver.services;
 
 import io.sol.loanmanagementsystemspringbootserver.dtos.LoanDTO;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Loan;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.LoanStatus;
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.Customer;
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.Employee;
 import io.sol.loanmanagementsystemspringbootserver.events.LoanDisbursedEvent;
 import io.sol.loanmanagementsystemspringbootserver.mappers.DTOMapper;
 import io.sol.loanmanagementsystemspringbootserver.repositories.*;
@@ -91,6 +94,7 @@ public class LoansService {
             return Result.invalid("Start and maturity dates are required.", null);
         }
 
+
         // Validate liquidity
         BigDecimal availableLiquidity = financialStateService.getAvailableLiquidity();
         if (loanDto.getPrincipal().compareTo(availableLiquidity) > 0) {
@@ -98,16 +102,23 @@ public class LoansService {
         }
 
         // Validate customer
-        Optional<io.sol.loanmanagementsystemspringbootserver.entities.custom.Customer> customerOpt = customerRepository.findById(customerId);
+        Optional<Customer> customerOpt = customerRepository.findById(customerId);
         if (customerOpt.isEmpty()) {
             return Result.notFound("Customer not found.", null);
+        }
+
+        //Ensure Customer has no other loans
+        List<Loan> customerLoans = customerOpt.get().getLoans();
+        boolean hasActiveLoan = customerLoans.stream().anyMatch(l -> l.getStatus() != LoanStatus.CLOSED);
+        if(hasActiveLoan){
+            return Result.invalid("Customer still has unpaid loans", null);
         }
 
         // Validate guarantor
         if (loanDto.getGuarantorId() == null) {
             return Result.invalid("Guarantor is required.", null);
         }
-        Optional<io.sol.loanmanagementsystemspringbootserver.entities.custom.Customer> guarantorOpt = customerRepository.findById(loanDto.getGuarantorId().intValue());
+        Optional<Customer> guarantorOpt = customerRepository.findById(loanDto.getGuarantorId().intValue());
         if (guarantorOpt.isEmpty()) {
             return Result.notFound("Guarantor not found.", null);
         }
@@ -116,7 +127,7 @@ public class LoansService {
         if (loanDto.getFieldOfficerId() == null) {
             return Result.invalid("Field officer is required.", null);
         }
-        Optional<io.sol.loanmanagementsystemspringbootserver.entities.custom.Employee> officerOpt = employeeRepository.findById(loanDto.getFieldOfficerId());
+        Optional<Employee> officerOpt = employeeRepository.findById(loanDto.getFieldOfficerId());
         if (officerOpt.isEmpty()) {
             return Result.notFound("Field officer not found.", null);
         }

@@ -70,9 +70,6 @@ public class DashboardController {
     private Label totalLoanPortifolioLabel;
 
     @FXML
-    private TextField searchBar;
-
-    @FXML
     private StackPane mainContent;
 
     private final ApplicationContext applicationContext;
@@ -100,11 +97,7 @@ public class DashboardController {
             if (settingsButton != null) {
                 settingsButton.setVisible(userSession.isAdmin());
             }
-            if (reportsButton != null) {
-                // Requirement doesn't explicitly say hide reports from cashier,
-                // but says "CASHIERS are not allowed entirely to view the settings panel"
-            }
-            showHomeView();
+                  showHomeView();
         } else {
 
         }

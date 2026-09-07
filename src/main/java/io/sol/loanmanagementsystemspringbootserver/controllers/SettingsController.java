@@ -2,9 +2,17 @@ package io.sol.loanmanagementsystemspringbootserver.controllers;
 
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.ExpenseCategory;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.SystemFinancialState;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.FeeBucket;
 import io.sol.loanmanagementsystemspringbootserver.events.FinancialStateUpdatedEvent;
+import io.sol.loanmanagementsystemspringbootserver.mailing.EmailDetails;
+import io.sol.loanmanagementsystemspringbootserver.mailing.EmailsService;
 import io.sol.loanmanagementsystemspringbootserver.services.ExpenseCategoryService;
+import io.sol.loanmanagementsystemspringbootserver.services.FeeBucketService;
 import io.sol.loanmanagementsystemspringbootserver.services.FinancialStateService;
+import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
+import javafx.collections.FXCollections;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -12,13 +20,15 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.Objects;
 
 @Component
 public class SettingsController {
 
     private final ExpenseCategoryService expenseCategoryService;
     private final FinancialStateService financialStateService;
+    private final FeeBucketService feeBucketService;
+    private final EmailsService emailsService;
+    private final UserSession userSession;
 
     @FXML
     private TextField adminEmailsField;
@@ -54,14 +64,30 @@ public class SettingsController {
     @FXML
     private TextField ownersCapitalField;
 
-    public SettingsController(ExpenseCategoryService expenseCategoryService, FinancialStateService financialStateService) {
+    @FXML private TextField feeMinAmountField;
+    @FXML private TextField feeMaxAmountField;
+    @FXML private TextField feeAmountField;
+    @FXML private TableView<FeeBucket> feeBucketsTable;
+    @FXML private TableColumn<FeeBucket, BigDecimal> feeMinColumn;
+    @FXML private TableColumn<FeeBucket, BigDecimal> feeMaxColumn;
+    @FXML private TableColumn<FeeBucket, BigDecimal> feeAmountColumn;
+
+    public SettingsController(ExpenseCategoryService expenseCategoryService, FinancialStateService financialStateService,
+                              FeeBucketService feeBucketService, EmailsService emailsService, UserSession userSession) {
         this.expenseCategoryService = expenseCategoryService;
         this.financialStateService = financialStateService;
+        this.feeBucketService = feeBucketService;
+        this.emailsService = emailsService;
+        this.userSession = userSession;
     }
 
     @FXML
     public void initialize() {
         agingFreq.getItems().addAll("Daily", "Every 3 days", "Weekly", "Monthly");
+        feeMinColumn.setCellValueFactory(new PropertyValueFactory<>("minAmount"));
+        feeMaxColumn.setCellValueFactory(new PropertyValueFactory<>("maxAmount"));
+        feeAmountColumn.setCellValueFactory(new PropertyValueFactory<>("feeAmount"));
+        loadFeeBuckets();
         refreshUI();
     }
 
@@ -89,6 +115,11 @@ public class SettingsController {
 
     private void financialSave() {
 
+        if (!userSession.isAdmin()) {
+            showAlert(Alert.AlertType.ERROR, "Authorization required", "Only an administrator can change capital and cash settings.");
+            return;
+        }
+
         String bankBalance = bankBalanceField.getText() == null ? "" : bankBalanceField.getText().trim();
         String ownersCapital = ownersCapitalField.getText() == null ? "" : ownersCapitalField.getText().trim();
         String cashOnHand = cashOnHandField.getText() == null ? "" : cashOnHandField.getText().trim();
@@ -107,8 +138,15 @@ public class SettingsController {
                 BigDecimal capital = new BigDecimal(ownersCapital);
                 BigDecimal cash = new BigDecimal(cashOnHand);
                 String adminEmails = adminEmailsField.getText() == null ? "" : adminEmailsField.getText().trim();
-                financialStateService.makeFinancialSetting(bank, capital, cash, adminEmails);
-                messageLabel.setText("Financial settings saved successfully.");
+                SystemFinancialState previous = financialStateService.getCurrentState();
+                if (!confirmFinancialChange(previous, bank, capital, cash)) return;
+                Result<Void> result = financialStateService.makeFinancialSetting(bank, capital, cash, adminEmails);
+                if (result.isFailure()) {
+                    showAlert(Alert.AlertType.ERROR, "Settings not saved", result.message());
+                    return;
+                }
+                sendFinancialSettingsSnapshot(previous, bank, capital, cash, adminEmails);
+                messageLabel.setText(result.message());
             } catch (NumberFormatException e) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error");
@@ -117,6 +155,84 @@ public class SettingsController {
                 alert.showAndWait();
             }
         }
+    }
+
+    @FXML
+    private void saveFeeBucket() {
+        if (!userSession.isAdmin()) {
+            showAlert(Alert.AlertType.ERROR, "Authorization required", "Only an administrator can edit fee buckets.");
+            return;
+        }
+        try {
+            FeeBucket selected = feeBucketsTable.getSelectionModel().getSelectedItem();
+            FeeBucket bucket = selected == null ? new FeeBucket() : selected;
+            bucket.setMinAmount(new BigDecimal(feeMinAmountField.getText().trim()));
+            bucket.setMaxAmount(new BigDecimal(feeMaxAmountField.getText().trim()));
+            bucket.setFeeAmount(new BigDecimal(feeAmountField.getText().trim()));
+            Result<FeeBucket> result = feeBucketService.saveBucket(bucket);
+            messageLabel.setText(result.message());
+            if (result.isSuccess()) {
+                loadFeeBuckets();
+                clearFeeBucketFields();
+            }
+        } catch (NumberFormatException exception) {
+            showAlert(Alert.AlertType.ERROR, "Invalid fee bucket", "Enter valid numeric values for all fee bucket fields.");
+        }
+    }
+
+    @FXML
+    private void selectFeeBucket() {
+        FeeBucket bucket = feeBucketsTable.getSelectionModel().getSelectedItem();
+        if (bucket == null) return;
+        feeMinAmountField.setText(bucket.getMinAmount().toPlainString());
+        feeMaxAmountField.setText(bucket.getMaxAmount().toPlainString());
+        feeAmountField.setText(bucket.getFeeAmount().toPlainString());
+    }
+
+    private void loadFeeBuckets() {
+        feeBucketsTable.setItems(FXCollections.observableArrayList(feeBucketService.getAllBuckets()));
+    }
+
+    @FXML
+    private void clearFeeBucketFields() {
+        feeMinAmountField.clear();
+        feeMaxAmountField.clear();
+        feeAmountField.clear();
+        feeBucketsTable.getSelectionModel().clearSelection();
+    }
+
+    private boolean confirmFinancialChange(SystemFinancialState previous, BigDecimal bank, BigDecimal capital, BigDecimal cash) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirm financial settings");
+        alert.setHeaderText("Capital and cash settings will be changed");
+        alert.setContentText("A snapshot of the previous settings will be recorded and emailed to the configured administrators. Continue?");
+        return alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK;
+    }
+
+    private void sendFinancialSettingsSnapshot(SystemFinancialState previous, BigDecimal bank, BigDecimal capital,
+                                               BigDecimal cash, String adminEmails) {
+        if (adminEmails == null || adminEmails.isBlank()) return;
+        String body = "Capital and cash settings have been updated by an administrator.\n\n"
+                + "Previous settings (snapshot):\n" + formatFinancialSettings(previous.getBankBalance(), previous.getOwnerCapital(), previous.getCashOnHand())
+                + "\nNew settings:\n" + formatFinancialSettings(bank, capital, cash);
+        for (String email : adminEmails.split(",")) {
+            String recipient = email.trim();
+            if (!recipient.isBlank()) {
+                emailsService.sendSimpleMail(new EmailDetails(recipient, "Capital and cash settings updated", body));
+            }
+        }
+    }
+
+    private String formatFinancialSettings(BigDecimal bank, BigDecimal capital, BigDecimal cash) {
+        return "Bank balance: " + bank + "\nOwner capital: " + capital + "\nCash on hand: " + cash + "\n";
+    }
+
+    private void showAlert(Alert.AlertType type, String header, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle("Settings");
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 
 

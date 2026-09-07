@@ -24,7 +24,7 @@ public class FeeBucketService {
         return repository.findAllByOrderByMinAmountAsc().stream()
                 .filter(bucket -> principal.compareTo(bucket.getMinAmount()) >= 0 && principal.compareTo(bucket.getMaxAmount()) <= 0)
                 .findFirst()
-                .map(FeeBucket::getFeeAmount)
+                .map(bucket -> bucket.getFeeAmount())
                 .orElse(BigDecimal.ZERO);
     }
 
@@ -32,9 +32,29 @@ public class FeeBucketService {
         return repository.findAllByOrderByMinAmountAsc();
     }
 
-    public void saveBucket(FeeBucket bucket) {
-        if (!userSession.isAdmin()) return;
-        repository.save(bucket);
+    public Result<FeeBucket> saveBucket(FeeBucket bucket) {
+        Result<Void> authorization = userSession.requireAdmin();
+        if (authorization.isFailure()) return Result.forbidden(authorization.message(), null);
+        if (bucket == null || bucket.getMinAmount() == null || bucket.getMaxAmount() == null
+                || bucket.getFeeAmount() == null) {
+            return Result.invalid("Minimum, maximum, and fee amounts are required.", null);
+        }
+        if (bucket.getMinAmount().compareTo(BigDecimal.ZERO) < 0
+                || bucket.getMaxAmount().compareTo(bucket.getMinAmount()) < 0
+                || bucket.getFeeAmount().compareTo(BigDecimal.ZERO) < 0) {
+            return Result.invalid("Fee bucket amounts must be valid and non-negative, with maximum at least minimum.", null);
+        }
+        boolean overlaps = repository.findAllByOrderByMinAmountAsc().stream()
+                .filter(existing -> !existing.getId().equals(bucket.getId()))
+                .anyMatch(existing -> bucket.getMinAmount().compareTo(existing.getMaxAmount()) <= 0
+                        && bucket.getMaxAmount().compareTo(existing.getMinAmount()) >= 0);
+        if (overlaps) {
+            return Result.invalid("Fee bucket range overlaps an existing bucket.", null);
+        }
+        FeeBucket saved = repository.save(bucket);
+        auditService.record(bucket.getId() == null ? "CREATE" : "UPDATE", "FEE_BUCKET", saved.getId(),
+                "Fee bucket saved");
+        return Result.success("Fee bucket saved successfully.", saved);
     }
 
     public void deleteBucket(Long id) {
