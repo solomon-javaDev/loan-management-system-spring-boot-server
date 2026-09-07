@@ -1,10 +1,14 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
 import io.sol.loanmanagementsystemspringbootserver.dtos.*;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Loan;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.LoanStatus;
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.Customer;
 import io.sol.loanmanagementsystemspringbootserver.events.FinancialStateUpdatedEvent;
 import io.sol.loanmanagementsystemspringbootserver.mailing.EmailDetails;
 import io.sol.loanmanagementsystemspringbootserver.mailing.EmailsService;
+import io.sol.loanmanagementsystemspringbootserver.mappers.DTOMapper;
+import io.sol.loanmanagementsystemspringbootserver.repositories.LoansRepository;
 import io.sol.loanmanagementsystemspringbootserver.services.*;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
 import javafx.application.Platform;
@@ -35,6 +39,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -56,6 +61,7 @@ public class HomeController {
     private final PaymentsService paymentsService;
     private final EmailsService emailsService;
     private final DashboardController dashboardController;
+    private final LoansRepository loansRepository;
 
     @FXML
     private Label totalCustomersLabel;
@@ -106,6 +112,8 @@ public class HomeController {
     @FXML
     private TableColumn<CustomerDTO, String> guarantorName;
     @FXML
+    private TableColumn<CustomerDTO, String> guarantorContact;
+    @FXML
     private TableColumn<CustomerDTO, String> agingDays;
 
     private final FinancialStateService financialStateService;
@@ -113,21 +121,30 @@ public class HomeController {
     private Map<String, String> statsMap = new LinkedHashMap<>();
 
 
-    public HomeController(LoansService loansService, CustomerService customerService, 
+    public HomeController(LoansService loansService, CustomerService customerService,
                           PaymentsService paymentsService,
                           EmailsService emailsService,
                           @Lazy DashboardController dashboardController,
-                          FinancialStateService financialStateService) {
+                          FinancialStateService financialStateService, LoansRepository loansRepository) {
         this.loansService = loansService;
         this.customerService = customerService;
         this.paymentsService = paymentsService;
         this.emailsService = emailsService;
         this.dashboardController = dashboardController;
         this.financialStateService = financialStateService;
+        this.loansRepository = loansRepository;
     }
 
     @FXML
     public void initialize() {
+
+        customerAccountNumber.setCellValueFactory(new PropertyValueFactory<CustomerDTO, String>("accountNumber"));
+        customerName.setCellValueFactory(new PropertyValueFactory<CustomerDTO, String>("customerName"));
+        customerTelephone.setCellValueFactory(new PropertyValueFactory<CustomerDTO, String>("telephone"));
+        guarantorName.setCellValueFactory(new PropertyValueFactory<CustomerDTO, String>("guarantorName"));
+        guarantorContact.setCellValueFactory(new PropertyValueFactory<CustomerDTO, String>("guarantorPhone"));
+        agingDays.setCellValueFactory(new PropertyValueFactory<CustomerDTO, String>("agingDays"));
+
         fillDueCustomersTable();
         calculateDailyStats();
         startPeriodicRefresh();
@@ -217,8 +234,24 @@ public class HomeController {
     }
 
     private void fillDueCustomersTable(){
+        LocalDateTime today = LocalDateTime.now();
 
+        List<Loan> activeLoans = loansRepository.findAllByStatus(LoanStatus.ACTIVE);
+        List<CustomerDTO> customersWithActiveLoans = new ArrayList<>();
 
+        for (Loan loan : activeLoans) {
+            Customer customer = loan.getCustomer();
+            long agingDays = loan.getAgingDays(LocalDate.from(today));
+            CustomerDTO dto = DTOMapper.toDTO(customer);
+            dto.setAgingDays((int) agingDays);
+            if (loan.getGuarantor() != null) {
+                dto.setGuarantorName(loan.getGuarantor().getCustomerName());
+                dto.setGuarantorPhone(loan.getGuarantor().getTelephone());
+            }
+            customersWithActiveLoans.add(dto);
+        }
+
+        dueCustomersTable.setItems(FXCollections.observableArrayList(customersWithActiveLoans));
     }
     private void updateStat(String key, String value, Label label) {
         statsMap.put(key, value);

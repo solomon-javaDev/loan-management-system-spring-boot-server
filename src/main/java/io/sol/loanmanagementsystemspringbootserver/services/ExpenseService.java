@@ -74,7 +74,11 @@ public class ExpenseService {
         Result<Void> authorization = userSession.requireAdmin();
         if (authorization.isFailure()) return Result.forbidden(authorization.message(), null);
         if (!expenseRepository.existsById(id)) return Result.notFound("Expense not found", null);
+        Expense expense = expenseRepository.findById(id).orElse(null);
+        if (expense == null) return Result.notFound("Expense not found", null);
         expenseRepository.deleteById(id);
+        applicationEventPublisher.publishEvent(new ExpenseIncurredEvent(
+            expense.getId(), expense.getAmount().negate(), expense.getDate()));
         auditService.record("SOFT_DELETE", "EXPENSE", id, "Expense soft deleted");
         return Result.success("Expense deleted", null);
     }

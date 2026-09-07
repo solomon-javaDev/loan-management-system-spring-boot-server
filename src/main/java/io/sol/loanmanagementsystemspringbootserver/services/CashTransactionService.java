@@ -105,7 +105,26 @@ public class CashTransactionService {
     public Result<Void> deleteTransaction(Long id) {
         Result<Void> authorization = userSession.requireAdmin();
         if (authorization.isFailure()) return Result.forbidden(authorization.message(), null);
-        if (!repository.existsById(id)) return Result.notFound("Cash transaction not found", null);
+        CashTransaction transaction = repository.findById(id).orElse(null);
+        if (transaction == null) return Result.notFound("Cash transaction not found", null);
+        if (transaction.getType() == CashTransactionType.SAVINGS_DEPOSIT
+            || transaction.getType() == CashTransactionType.SAVINGS_WITHDRAWAL) {
+            Customer customer = transaction.getCustomerId() == null ? null
+                : customerRepository.findById(transaction.getCustomerId()).orElse(null);
+            if (customer != null) {
+            BigDecimal balance = customer.getSavingsBalance() == null ? BigDecimal.ZERO : customer.getSavingsBalance();
+            BigDecimal corrected = transaction.getType() == CashTransactionType.SAVINGS_DEPOSIT
+                ? balance.subtract(transaction.getAmount()) : balance.add(transaction.getAmount());
+            if (corrected.compareTo(BigDecimal.ZERO) < 0) {
+                return Result.invalid("This transaction cannot be deleted because the customer balance has already been withdrawn.", null);
+            }
+            customer.setSavingsBalance(corrected);
+            customerRepository.save(customer);
+            eventPublisher.publishEvent(new SavingsTransactionEvent(customer.getId(), transaction.getAmount(),
+                transaction.getType() == CashTransactionType.SAVINGS_WITHDRAWAL,
+                transaction.getDate().toLocalDate()));
+            }
+        }
         repository.deleteById(id);
         auditService.record("SOFT_DELETE", "CASH_TRANSACTION", id, "Cash transaction soft deleted");
         return Result.success("Cash transaction deleted", null);

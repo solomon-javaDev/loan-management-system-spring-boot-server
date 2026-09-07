@@ -42,23 +42,25 @@
                            <children>
                               <Label text="First Name" />
                               <Label layoutX="10.0" layoutY="17.0" text="Last Name" GridPane.rowIndex="1" />
-                              <Label layoutX="10.0" layoutY="47.0" text="Email" GridPane.rowIndex="3" />
+                              <Label layoutX="10.0" layoutY="47.0" text="Username" GridPane.rowIndex="3" />
+                              <Label layoutX="10.0" layoutY="47.0" text="Email" GridPane.rowIndex="4" />
                               <Label layoutX="10.0" layoutY="77.0" text="Role" GridPane.rowIndex="2" />
                               <Label layoutX="10.0" layoutY="17.0" text="Salary" GridPane.rowIndex="4" />
                               <TextField fx:id="firstName" GridPane.columnIndex="1" />
                               <TextField fx:id="lastName" layoutX="209.0" layoutY="31.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                              <TextField fx:id="email" layoutX="209.0" layoutY="99.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                              <TextField fx:id="salary" layoutX="209.0" layoutY="235.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                              <TextField fx:id="username" layoutX="209.0" layoutY="99.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                              <TextField fx:id="email" layoutX="209.0" layoutY="99.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                              <TextField fx:id="salary" layoutX="209.0" layoutY="235.0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
                               <ComboBox fx:id="role" prefHeight="25.0" prefWidth="202.0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" />
-                              <Label text="Telephone" GridPane.rowIndex="5" />
-                              <TextField fx:id="telephone" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                              <Label text="Password" GridPane.rowIndex="6" />
-                              <PasswordField fx:id="password" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                              <Label text="Telephone" GridPane.rowIndex="6" />
+                              <TextField fx:id="telephone" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                              <Label text="Password" GridPane.rowIndex="7" />
+                              <PasswordField fx:id="password" GridPane.columnIndex="1" GridPane.rowIndex="7" />
                               <Label fx:id="messageLabel" prefHeight="17.0" prefWidth="475.0" text="Status" textAlignment="CENTER" textOverrun="CENTER_ELLIPSIS" GridPane.columnIndex="1" GridPane.rowIndex="8">
                                  <font>
                                     <Font name="System Bold" size="22.0" />
                                  </font></Label>
-                              <ButtonBar fx:id="createAccountButton" prefHeight="40.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="7">
+                              <ButtonBar fx:id="createAccountButton" prefHeight="40.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="8">
                                 <buttons>
                                   <Button fx:id="clearButton" mnemonicParsing="false" onMouseClicked="#clearForm" text="CLEAR" />
                                     <Button fx:id="updateButton" mnemonicParsing="false" onMouseClicked="#handleUpdateEmployee" text="UPDATE" />

@@ -41,4 +41,6 @@ public interface LoansRepository extends JpaRepository<Loan, Integer> {
 
     @Query("SELECT COALESCE(SUM(l.principal), 0) FROM Loan l WHERE l.startDate = :date")
     BigDecimal sumPrincipalByStartDate(@Param("date") LocalDate date);
+
+    List<Loan> findAllByStatus(LoanStatus status);
 }

@@ -140,6 +140,7 @@
                             <TableColumn fx:id="customerName" prefWidth="113.66668701171875" text="Customer Name" />
                               <TableColumn fx:id="customerTelephone" prefWidth="133.0" text="Telephone" />
                               <TableColumn fx:id="guarantorName" prefWidth="139.0" text="Guarantor Name" />
+                              <TableColumn fx:id="guarantorContact" prefWidth="139.0" text="Guarantor Contact" />
                               <TableColumn fx:id="agingDays" prefWidth="119.33331298828125" text="Aging Days" />
                           </columns>
                         </TableView>

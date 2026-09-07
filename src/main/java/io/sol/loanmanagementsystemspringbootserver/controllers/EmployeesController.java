@@ -21,6 +21,7 @@ public class EmployeesController {
     private final UserSession userSession;
     @FXML private TextField firstName;
     @FXML private TextField lastName;
+    @FXML private TextField username;
     @FXML private PasswordField password;
     @FXML private TextField email;
     @FXML private TextField telephone;
@@ -67,6 +68,7 @@ public class EmployeesController {
         if (dto == null) return;
         firstName.setText(dto.getFirstName());
         lastName.setText(dto.getLastName());
+        username.setText(dto.getUsername());
         email.setText(dto.getEmail());
         telephone.setText(dto.getTelephone());
         salary.setText(String.valueOf(dto.getSalary()));
@@ -98,7 +100,7 @@ public class EmployeesController {
         EmployeeDTO employee = new EmployeeDTO();
         employee.setFirstName(firstName.getText());
         employee.setLastName(lastName.getText());
-        employee.setUsername(firstName.getText() + " "+lastName.getText());
+        employee.setUsername(username.getText());
         employee.setRole(role.getValue());
         employee.setPassword(password.getText());
         employee.setEmail(email.getText());
@@ -125,6 +127,7 @@ public class EmployeesController {
     private void clearForm() {
         firstName.clear();
         lastName.clear();
+        username.clear();
         email.clear();
         telephone.clear();
         salary.clear();
@@ -143,7 +146,7 @@ public class EmployeesController {
         toUpdate.setId(selectedEmployee.getId());
         toUpdate.setFirstName(firstName.getText());
         toUpdate.setLastName(lastName.getText());
-        toUpdate.setUsername(firstName.getText() + " "+ lastName.getText());
+        toUpdate.setUsername(username.getText());
         toUpdate.setRole(role.getValue());
         toUpdate.setEmail(email.getText());
         toUpdate.setTelephone(telephone.getText());

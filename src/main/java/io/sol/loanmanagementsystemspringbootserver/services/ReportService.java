@@ -2,6 +2,7 @@ package io.sol.loanmanagementsystemspringbootserver.services;
 
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
@@ -222,12 +223,14 @@ public class ReportService {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              PdfWriter writer = new PdfWriter(baos);
              PdfDocument pdf = new PdfDocument(writer);
-             Document document = new Document(pdf)) {
+             Document document = new Document(pdf, PageSize.A4.rotate())) {
 
             addHeader(document, "AGING ANALYSIS");
 
-            Table table = new Table(UnitValue.createPercentArray(new float[]{3, 2, 3, 2, 2, 2, 2, 2, 2, 1, 2}));
+            Table table = new Table(UnitValue.createPercentArray(new float[]{2.4f, 1.7f, 2.2f, 1.7f, 1.7f, 1.7f, 1.8f, 1.8f, 1.6f, 1.0f, 1.7f}));
             table.setWidth(UnitValue.createPercentValue(100));
+            table.setFontSize(6.5f);
+            table.setMarginTop(4);
             table.addCell("Customer");
             table.addCell("Contact");
             table.addCell("Guarantor");

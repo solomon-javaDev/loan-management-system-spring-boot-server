@@ -158,17 +158,16 @@ public class LoansController {
 
         startDatePicker.setValue(LocalDate.now());
 
-        uiControlUtilities.configureDropDown(customerList, customerService.getAllCustomers().value(),
-                c -> c.getFirstName() + " " + c.getLastName()
+       uiControlUtilities.configureSearchableDropDown(customerList,
+                customerService.getAllCustomers().value(), customer -> customer.getFirstName() + " " +customer.getLastName()+" - "+ customer.getNin()
                 );
 
-        uiControlUtilities.configureDropDown(fieldOfficerField, employeeService.getEmployeeByRole(Role.FIELD_OFFICER).value(),
-                e -> e.getFirstName() + " " + e.getLastName()
-                );
+        uiControlUtilities.configureSearchableDropDown(fieldOfficerField,
+                employeeService.getEmployeeByRole(Role.FIELD_OFFICER).value(), fieldOfficer -> fieldOfficer.getFirstName() +" " +fieldOfficer.getLastName());
 
-        uiControlUtilities.configureDropDown(guarantorDropDown, customerService.getAllCustomers().value(), c -> {
-            return c.getCustomerName();
-        });
+        uiControlUtilities.configureSearchableDropDown(guarantorDropDown,
+                customerService.getAllCustomers().value(), customer -> customer.getFirstName() + " " +customer.getLastName()+" - "+ customer.getNin()
+        );
 
         statusField.setItems(FXCollections.observableArrayList(LoanStatus.values()));
         statusField.setValue(LoanStatus.PENDING);

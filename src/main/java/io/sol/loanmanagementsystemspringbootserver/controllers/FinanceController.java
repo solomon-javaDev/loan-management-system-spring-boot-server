@@ -205,6 +205,40 @@ public class FinanceController {
                         .collect(Collectors.toList())));
     }
 
+    @FXML
+    private void deleteSelectedExpense() {
+        Expense selected = expensesTable.getSelectionModel().getSelectedItem();
+        if (!userSession.isAdmin()) {
+            show("Only administrators can edit finance records.");
+            return;
+        }
+        if (selected == null || !confirmDelete("expense")) return;
+        Result<Void> result = expenseService.deleteExpense(selected.getId());
+        show(result.message());
+        if (result.isSuccess()) loadExpenses();
+    }
+
+    @FXML
+    private void deleteSelectedSavings() {
+        CashTransaction selected = customerSavingsTable.getSelectionModel().getSelectedItem();
+        if (!userSession.isAdmin()) {
+            show("Only administrators can edit finance records.");
+            return;
+        }
+        if (selected == null || !confirmDelete("savings transaction")) return;
+        Result<Void> result = cashTransactionService.deleteTransaction(selected.getId());
+        show(result.message());
+        if (result.isSuccess()) loadSavings();
+    }
+
+    private boolean confirmDelete(String recordType) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirm finance record edit");
+        alert.setHeaderText("Delete selected " + recordType + "?");
+        alert.setContentText("This action will be recorded in the audit log.");
+        return alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK;
+    }
+
     private BigDecimal parseAmount(String value) {
         try { return new BigDecimal(value == null ? "" : value.trim()); }
         catch (NumberFormatException exception) { return null; }

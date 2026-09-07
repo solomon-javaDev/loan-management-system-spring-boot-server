@@ -15,6 +15,7 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -69,6 +70,7 @@ public class ReportsController {
 
     // Aging Analysis
     @FXML private TableView<AgingRow> agingAnalysisTable;
+    @FXML private TableColumn<AgingRow, String> guarantorContact;
     @FXML private TextField emailField;
     @FXML private TitledPane adminAuditPane;
     @FXML private TableView<AuditLog> auditTable;
@@ -159,6 +161,8 @@ public class ReportsController {
         agContCol.setCellValueFactory(new PropertyValueFactory<>("contact"));
         TableColumn<AgingRow, String> agGuarCol = new TableColumn<>("Guarantor");
         agGuarCol.setCellValueFactory(new PropertyValueFactory<>("guarantorName"));
+        TableColumn<AgingRow, String> agGuarContactCol = new TableColumn<>("G. Contact");
+        agGuarContactCol.setCellValueFactory(new PropertyValueFactory<>("guarantorContact"));
         TableColumn<AgingRow, LocalDate> agDisbCol = new TableColumn<>("Disbursed");
         agDisbCol.setCellValueFactory(new PropertyValueFactory<>("disbursementDate"));
         TableColumn<AgingRow, LocalDate> agDueCol = new TableColumn<>("Due Date");
@@ -170,7 +174,8 @@ public class ReportsController {
         TableColumn<AgingRow, Long> agDaysCol = new TableColumn<>("Aging Days");
         agDaysCol.setCellValueFactory(new PropertyValueFactory<>("agingDays"));
         
-        agingAnalysisTable.getColumns().setAll(agCustCol, agContCol, agGuarCol, agDisbCol, agDueCol, agOutCol, agArrCol, agDaysCol);
+        agingAnalysisTable.getColumns().setAll(agCustCol, agContCol, agGuarCol, agGuarContactCol,
+            agDisbCol, agDueCol, agOutCol, agArrCol, agDaysCol);
 
         TableColumn<AuditLog, String> auditDateColumn = new TableColumn<>("When");
         auditDateColumn.setCellValueFactory(new PropertyValueFactory<>("occurredAt"));
@@ -290,13 +295,14 @@ public class ReportsController {
                 l.getCustomer().getCustomerName(),
                 l.getCustomer().getTelephone(),
                 l.getGuarantor().getCustomerName(),
-                l.getStartDate(),
-                l.getMaturityDate(),
-                l.getOutstandingBalance(),
-                arrears.setScale(2, RoundingMode.HALF_UP),
-                l.getAgingDays(LocalDate.now())
-            );
+                    l.getGuarantor().getTelephone(),
+                    l.getStartDate(),
+                    l.getMaturityDate(),
+                    l.getOutstandingBalance(),
+                    arrears.setScale(2, RoundingMode.HALF_UP),
+                    l.getAgingDays(LocalDate.now()));
         }).toList();
+
         agingAnalysisTable.setItems(FXCollections.observableArrayList(rows));
     }
 
@@ -379,53 +385,54 @@ public class ReportsController {
         details.setAttachment(pdf);
         details.setAttachmentName(subject.replace(" ", "_") + ".pdf");
         
-        emailsService.sendMailWithAttachment(details);
-        messageLabel.setText("Email sent to " + recipient);
+        String result = emailsService.sendMailWithAttachment(details);
+        if (result != null && result.startsWith("Mail Sent Successfully")) {
+            messageLabel.setText("Email sent to " + recipient);
+            UIHelper.showInfo("Email status", "Email sent successfully to " + recipient + ".");
+        } else {
+            String error = result == null || result.isBlank() ? "Unknown email error." : result;
+            messageLabel.setText("Email failed for " + recipient);
+            UIHelper.showError("Email status", "Email could not be sent to " + recipient + ": " + error);
+        }
     }
 
     // Helper classes for TableView
     public static class StatementRow {
         private final SimpleStringProperty date;
-        private final BigDecimal amountPaid;
+        @Getter
         private final BigDecimal balance;
         public StatementRow(String date, BigDecimal amountPaid, BigDecimal balance) {
             this.date = new SimpleStringProperty(date);
-            this.amountPaid = amountPaid;
             this.balance = balance;
         }
         public String getDate() { return date.get(); }
-        public BigDecimal getAmountPaid() { return amountPaid; }
-        public BigDecimal getBalance() { return balance; }
+
     }
 
+    @Getter
     public static class AgingRow {
         private final String customerName;
         private final String contact;
         private final String guarantorName;
+        private final String guarantorContact;
         private final LocalDate disbursementDate;
         private final LocalDate dueDate;
         private final BigDecimal outstanding;
         private final BigDecimal arrears;
         private final long agingDays;
 
-        public AgingRow(String customerName, String contact, String guarantorName, LocalDate disbursementDate, 
+        public AgingRow(String customerName, String contact, String guarantorName, String guarantorContact, LocalDate disbursementDate,
                         LocalDate dueDate, BigDecimal outstanding, BigDecimal arrears, long agingDays) {
             this.customerName = customerName;
             this.contact = contact;
             this.guarantorName = guarantorName;
+            this.guarantorContact = guarantorContact;
             this.disbursementDate = disbursementDate;
             this.dueDate = dueDate;
             this.outstanding = outstanding;
             this.arrears = arrears;
             this.agingDays = agingDays;
         }
-        public String getCustomerName() { return customerName; }
-        public String getContact() { return contact; }
-        public String getGuarantorName() { return guarantorName; }
-        public LocalDate getDisbursementDate() { return disbursementDate; }
-        public LocalDate getDueDate() { return dueDate; }
-        public BigDecimal getOutstanding() { return outstanding; }
-        public BigDecimal getArrears() { return arrears; }
-        public long getAgingDays() { return agingDays; }
-    }
+
+      }
 }

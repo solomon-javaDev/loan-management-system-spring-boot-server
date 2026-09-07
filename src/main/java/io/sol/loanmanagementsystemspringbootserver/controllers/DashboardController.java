@@ -4,7 +4,6 @@ import io.sol.loanmanagementsystemspringbootserver.entities.Finance.SystemFinanc
 import io.sol.loanmanagementsystemspringbootserver.events.FinancialStateUpdatedEvent;
 import io.sol.loanmanagementsystemspringbootserver.services.AutoupdateService;
 import io.sol.loanmanagementsystemspringbootserver.utilities.StageManager;
-import io.sol.loanmanagementsystemspringbootserver.services.SearchService;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -12,11 +11,12 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.EventListener;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -47,6 +47,10 @@ public class DashboardController {
     private final AutoupdateService autoupdateService;
     private final io.sol.loanmanagementsystemspringbootserver.services.FinancialStateService financialStateService;
     private final io.sol.loanmanagementsystemspringbootserver.utilities.UserSession userSession;
+    private final JdbcTemplate jdbcTemplate;
+
+    @Value("${spring.application.version:unknown}")
+    private String applicationVersion;
 
     @FXML
     private Label dashboardLabel;
@@ -70,22 +74,30 @@ public class DashboardController {
     private Label totalLoanPortifolioLabel;
 
     @FXML
+    private Label databaseStatusLabel;
+
+    @FXML
+    private Label versionLabel;
+
+    @FXML
     private StackPane mainContent;
 
     private final ApplicationContext applicationContext;
 
-    public DashboardController(ApplicationContext applicationContext, StageManager stageManager, AutoupdateService autoupdateService, io.sol.loanmanagementsystemspringbootserver.services.FinancialStateService financialStateService, io.sol.loanmanagementsystemspringbootserver.utilities.UserSession userSession) {
+    public DashboardController(ApplicationContext applicationContext, StageManager stageManager, AutoupdateService autoupdateService, io.sol.loanmanagementsystemspringbootserver.services.FinancialStateService financialStateService, io.sol.loanmanagementsystemspringbootserver.utilities.UserSession userSession, JdbcTemplate jdbcTemplate) {
         this.applicationContext = applicationContext;
         this.stageManager = stageManager;
         this.autoupdateService = autoupdateService;
         this.financialStateService = financialStateService;
         this.userSession = userSession;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @FXML
     public void initialize() {
         autoupdateService.checkForUpdatesAsync();
         updateTopBar();
+        updateFooterStatus();
 
         if(userSession.isCashier()){
             reportsButton.disableProperty().setValue(true);
@@ -100,6 +112,22 @@ public class DashboardController {
                   showHomeView();
         } else {
 
+        }
+    }
+
+    private void updateFooterStatus() {
+        if (versionLabel != null) {
+            versionLabel.setText("VERSION " + applicationVersion);
+        }
+        if (databaseStatusLabel != null) {
+            try {
+                jdbcTemplate.queryForObject("SELECT 1", Integer.class);
+                databaseStatusLabel.setText("DB: ONLINE");
+                databaseStatusLabel.setStyle("-fx-text-fill: green;");
+            } catch (Exception exception) {
+                databaseStatusLabel.setText("DB: OFFLINE - " + exception.getClass().getSimpleName());
+                databaseStatusLabel.setStyle("-fx-text-fill: red;");
+            }
         }
     }
 
