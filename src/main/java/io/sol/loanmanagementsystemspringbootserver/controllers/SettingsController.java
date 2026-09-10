@@ -1,8 +1,13 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
+import java.math.BigDecimal;
+
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.ExpenseCategory;
-import io.sol.loanmanagementsystemspringbootserver.entities.Finance.SystemFinancialState;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.FeeBucket;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.SystemFinancialState;
 import io.sol.loanmanagementsystemspringbootserver.events.FinancialStateUpdatedEvent;
 import io.sol.loanmanagementsystemspringbootserver.mailing.EmailDetails;
 import io.sol.loanmanagementsystemspringbootserver.mailing.EmailsService;
@@ -13,16 +18,19 @@ import io.sol.loanmanagementsystemspringbootserver.utilities.MoneyHelper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UiControlUtilities;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
-import javafx.collections.FXCollections;
-import javafx.event.ActionEvent;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
-
-import java.math.BigDecimal;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
 
 @Component
 public class SettingsController {
@@ -114,7 +122,15 @@ public class SettingsController {
 
     @EventListener
     public void onFinancialStateUpdated(FinancialStateUpdatedEvent event) {
-        Platform.runLater(this::refreshUI);
+        try {
+            if (Platform.isFxApplicationThread()) {
+                refreshUI();
+                return;
+            }
+            Platform.runLater(this::refreshUI);
+        } catch (IllegalStateException | IllegalArgumentException | UnsupportedOperationException ignored) {
+            // JavaFX is not initialized during non-UI bootstrap.
+        }
     }
 
     @FXML

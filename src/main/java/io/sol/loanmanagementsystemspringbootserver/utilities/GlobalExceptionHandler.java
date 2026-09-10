@@ -1,27 +1,28 @@
 package io.sol.loanmanagementsystemspringbootserver.utilities;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
+import org.springframework.stereotype.Component;
+
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
-import org.springframework.stereotype.Component;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
 
 @Component
 public class GlobalExceptionHandler {
 
     public static void handleException(Throwable throwable){
         Logger.logError("Unhandled exception: " + throwable.getMessage());
-        if(Platform.isFxApplicationThread()){
-            showErrorDialog(throwable);
-
-        }else{
-
-            Platform.runLater(()-> showErrorDialog(throwable));
+        try {
+            if (Platform.isFxApplicationThread()) {
+                showErrorDialog(throwable);
+            } else {
+                Platform.runLater(() -> showErrorDialog(throwable));
+            }
+        } catch (IllegalStateException | IllegalArgumentException | UnsupportedOperationException ignored) {
+            // Ignore UI-only error callbacks during non-UI startup.
         }
     }
 

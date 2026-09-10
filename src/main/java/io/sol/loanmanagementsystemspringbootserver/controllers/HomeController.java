@@ -171,7 +171,15 @@ public class HomeController {
 
     @EventListener
     public void onFinancialStateUpdated(FinancialStateUpdatedEvent event) {
-        Platform.runLater(this::calculateDailyStats);
+        try {
+            if (Platform.isFxApplicationThread()) {
+                calculateDailyStats();
+                return;
+            }
+            Platform.runLater(this::calculateDailyStats);
+        } catch (IllegalStateException | IllegalArgumentException | UnsupportedOperationException ignored) {
+            // JavaFX is not initialized in non-UI startup contexts.
+        }
     }
 
 

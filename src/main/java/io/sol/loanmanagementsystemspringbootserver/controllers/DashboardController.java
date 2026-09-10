@@ -1,5 +1,13 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
+import java.io.IOException;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.event.EventListener;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.SystemFinancialState;
 import io.sol.loanmanagementsystemspringbootserver.events.FinancialStateUpdatedEvent;
 import io.sol.loanmanagementsystemspringbootserver.services.AutoupdateService;
@@ -16,13 +24,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.event.EventListener;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Component;
-
-import java.io.IOException;
 
 /*
  * Inject new StageManager into the DashboardController.
@@ -146,7 +147,15 @@ public class DashboardController {
 
     @EventListener
     public void onFinancialStateUpdated(FinancialStateUpdatedEvent event) {
-        Platform.runLater(this::updateTopBar);
+        try {
+            if (Platform.isFxApplicationThread()) {
+                updateTopBar();
+                return;
+            }
+            Platform.runLater(this::updateTopBar);
+        } catch (IllegalStateException | IllegalArgumentException | UnsupportedOperationException ignored) {
+            // The JavaFX toolkit is not initialised in headless/test startup paths.
+        }
     }
 
     @FXML
