@@ -20,6 +20,8 @@ import java.util.Map;
 
 public class UIHelper {
 
+
+
     public static void showInfo(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);

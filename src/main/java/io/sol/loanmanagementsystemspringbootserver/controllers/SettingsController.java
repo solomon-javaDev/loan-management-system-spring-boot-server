@@ -9,9 +9,12 @@ import io.sol.loanmanagementsystemspringbootserver.mailing.EmailsService;
 import io.sol.loanmanagementsystemspringbootserver.services.ExpenseCategoryService;
 import io.sol.loanmanagementsystemspringbootserver.services.FeeBucketService;
 import io.sol.loanmanagementsystemspringbootserver.services.FinancialStateService;
+import io.sol.loanmanagementsystemspringbootserver.utilities.MoneyHelper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UiControlUtilities;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -85,8 +88,14 @@ public class SettingsController {
     public void initialize() {
         agingFreq.getItems().addAll("Daily", "Every 3 days", "Weekly", "Monthly");
         feeMinColumn.setCellValueFactory(new PropertyValueFactory<>("minAmount"));
+        feeMinColumn.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
+
         feeMaxColumn.setCellValueFactory(new PropertyValueFactory<>("maxAmount"));
+        feeMaxColumn.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
+
         feeAmountColumn.setCellValueFactory(new PropertyValueFactory<>("feeAmount"));
+        feeAmountColumn.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
+
         loadFeeBuckets();
         refreshUI();
     }
@@ -94,11 +103,11 @@ public class SettingsController {
     private void refreshUI() {
         SystemFinancialState state = financialStateService.getCurrentState();
         if (state != null && totalCapitalLabel != null) {
-            totalCapitalLabel.setText(String.valueOf(state.getOwnerCapital()));
-            if (totalCashOutLabel != null) totalCashOutLabel.setText(String.valueOf(state.getTotalExpenses()));
-            if (bankBalanceField != null) bankBalanceField.setText(state.getBankBalance().toPlainString());
-            if (ownersCapitalField != null) ownersCapitalField.setText(state.getOwnerCapital().toPlainString());
-            if (cashOnHandField != null) cashOnHandField.setText(state.getCashOnHand().toPlainString());
+            totalCapitalLabel.setText(MoneyHelper.formatMoney(state.getOwnerCapital()));
+            if (totalCashOutLabel != null) totalCashOutLabel.setText(MoneyHelper.formatMoney(state.getTotalExpenses()));
+            if (bankBalanceField != null) bankBalanceField.setText(MoneyHelper.formatMoney(state.getBankBalance()));
+            if (ownersCapitalField != null) ownersCapitalField.setText(MoneyHelper.formatMoney(state.getOwnerCapital()));
+            if (cashOnHandField != null) cashOnHandField.setText(MoneyHelper.formatMoney(state.getCashOnHand()));
             if (adminEmailsField != null) adminEmailsField.setText(state.getAdminEmails());
         }
     }
@@ -255,4 +264,23 @@ public class SettingsController {
         }
     }
 
+    public void updateFeeBucket() {
+        if(feeBucketsTable.getSelectionModel().getSelectedItem() == null){
+            showAlert(Alert.AlertType.WARNING, "No selected Item", "There has been no selection made");
+            return;
+        }
+
+        FeeBucket feeBucket = feeBucketsTable.getSelectionModel().getSelectedItem();
+        feeBucketService.updateBucket(feeBucket);
+    }
+
+    public void deleteFeeBucket() {
+        if(feeBucketsTable.getSelectionModel().getSelectedItem() == null){
+            showAlert(Alert.AlertType.WARNING, "No selected Item", "There has been no selection made");
+            return;
+        }
+
+        FeeBucket feeBucket = feeBucketsTable.getSelectionModel().getSelectedItem();
+        feeBucketService.deleteBucket(feeBucket.getId());
+    }
 }

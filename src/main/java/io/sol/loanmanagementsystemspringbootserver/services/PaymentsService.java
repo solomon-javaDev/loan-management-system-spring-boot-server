@@ -4,6 +4,7 @@ import io.sol.loanmanagementsystemspringbootserver.dtos.PaymentDTO;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Loan;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.LoanStatus;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Payment;
+import io.sol.loanmanagementsystemspringbootserver.events.RepaymentReceivedEvent;
 import io.sol.loanmanagementsystemspringbootserver.mappers.DTOMapper;
 import io.sol.loanmanagementsystemspringbootserver.repositories.PaymentRepository;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
@@ -115,7 +116,7 @@ public class PaymentsService {
              loansService.saveLoanEntity(loan);
 
              // Publish Event
-             applicationEventPublisher.publishEvent(new io.sol.loanmanagementsystemspringbootserver.events.RepaymentReceivedEvent(
+             applicationEventPublisher.publishEvent(new RepaymentReceivedEvent(
                  savedPayment.getId(),
                  loan.getId(),
                  principalToPay,
@@ -171,9 +172,9 @@ public class PaymentsService {
         sb.append("-----------------------------------\n");
         sb.append("   COMPANY NAME: ").append("SOL LOANS").append("\n"); // Placeholder for company name
         sb.append("   DATE: ").append(payment.getDate()).append("\n");
+        sb.append("   Customer Name:").append(payment.getLoan().getCustomer().getCustomerName()).append("\n");
         sb.append("   AMOUNT PAID: ").append(payment.getAmountReceived()).append("\n");
         sb.append("   LOAN BALANCE: ").append(loan.getOutstandingBalance()).append("\n");
-        
         long daysSkipped = 0;
         if (loan.getMaturityDate() != null && LocalDate.now().isAfter(loan.getMaturityDate())) {
             daysSkipped = DAYS.between(loan.getMaturityDate(), LocalDate.now());

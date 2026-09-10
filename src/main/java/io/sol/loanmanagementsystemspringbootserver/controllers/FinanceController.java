@@ -6,10 +6,8 @@ import io.sol.loanmanagementsystemspringbootserver.entities.Finance.CashTransact
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Expense;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.ExpenseCategory;
 import io.sol.loanmanagementsystemspringbootserver.services.*;
-import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
-import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
-import io.sol.loanmanagementsystemspringbootserver.utilities.UiControlUtilities;
-import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
+import io.sol.loanmanagementsystemspringbootserver.utilities.*;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
@@ -45,14 +43,14 @@ public class FinanceController {
     @FXML private TableColumn<Expense, String> recordDateColumn;
     @FXML private TableColumn<Expense, String> recordDescriptionColumn;
     @FXML private TableColumn<Expense, String> recordCategoryColumn;
-    @FXML private TableColumn<Expense, String> recordAmountColumn;
+    @FXML private TableColumn<Expense, BigDecimal> recordAmountColumn;
 
     @FXML private TableView<CashTransaction> customerSavingsTable;
     @FXML private TableColumn<CashTransaction, String> savingsDateColumn;
     @FXML private TableColumn<CashTransaction, String> savingsCustomerNameColumn;
     @FXML private TableColumn<CashTransaction, String> savingsMovementColumn;
-    @FXML private TableColumn<CashTransaction, String> savingsAmountColumn;
-    @FXML private TableColumn<CashTransaction, String> savingsTotalBalanceColumn;
+    @FXML private TableColumn<CashTransaction, BigDecimal> savingsAmountColumn;
+    @FXML private TableColumn<CashTransaction, BigDecimal> savingsTotalBalanceColumn;
 
 
     public FinanceController(ExpenseService expenseService, CustomerService customerService, 
@@ -169,7 +167,8 @@ public class FinanceController {
         recordDescriptionColumn.setCellValueFactory(new PropertyValueFactory<>("description"));
         recordCategoryColumn.setCellValueFactory(c -> new SimpleStringProperty(
                 c.getValue().getCategory() != null ? c.getValue().getCategory().getDescription() : ""));
-        recordAmountColumn.setCellValueFactory(c -> new SimpleStringProperty(formatAmount(c.getValue().getAmount())));
+        recordAmountColumn.setCellValueFactory(new PropertyValueFactory<>("amount"));
+        recordAmountColumn.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
 
         savingsDateColumn.setCellValueFactory(c -> new SimpleStringProperty(
                 c.getValue().getDate() == null ? "" : c.getValue().getDate().format(fmt)));
@@ -180,14 +179,24 @@ public class FinanceController {
             return new SimpleStringProperty(customerResult.isSuccess() ? customerResult.value().getCustomerName() : "ID: " + id);
         });
         savingsMovementColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getType().toString()));
-        savingsAmountColumn.setCellValueFactory(c -> new SimpleStringProperty(formatAmount(c.getValue().getAmount())));
+        savingsAmountColumn.setCellValueFactory(c ->
+            new ReadOnlyObjectWrapper<>(c.getValue().getAmount()));
+        savingsAmountColumn.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
+
         savingsTotalBalanceColumn.setCellValueFactory(c -> {
-             // For simplicity in MVP, we might just show the transaction amount or fetch customer balance
-             Integer id = c.getValue().getCustomerId();
-             if (id == null) return new SimpleStringProperty("");
-             Result<CustomerDTO> customerResult = customerService.getCustomerById(id);
-             return new SimpleStringProperty(customerResult.isSuccess() ? formatAmount(customerResult.value().getSavingsBalance()) : "UPDATE COMING");
+            Integer id = c.getValue().getCustomerId();
+            if (id == null) {
+            return new ReadOnlyObjectWrapper<>(BigDecimal.ZERO);
+            }
+            Result<CustomerDTO> customerResult = customerService.getCustomerById(id);
+            BigDecimal balance = customerResult.isSuccess()
+                ? customerResult.value().getSavingsBalance()
+                : BigDecimal.ZERO;
+            return new ReadOnlyObjectWrapper<>(
+                balance == null ? BigDecimal.ZERO : balance);
         });
+        savingsTotalBalanceColumn.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
+
     }
 
     private void loadExpenses() {
@@ -242,13 +251,6 @@ public class FinanceController {
     private BigDecimal parseAmount(String value) {
         try { return new BigDecimal(value == null ? "" : value.trim()); }
         catch (NumberFormatException exception) { return null; }
-    }
-
-    private String formatAmount(BigDecimal amount) {
-        if (amount == null) {
-            return "0.00";
-        }
-        return amount.setScale(2, java.math.RoundingMode.HALF_UP).toPlainString();
     }
 
     private void show(String message) {

@@ -3,15 +3,13 @@ package io.sol.loanmanagementsystemspringbootserver.controllers;
 import io.sol.loanmanagementsystemspringbootserver.dtos.EmployeeDTO;
 import io.sol.loanmanagementsystemspringbootserver.entities.Role;
 import io.sol.loanmanagementsystemspringbootserver.services.EmployeeService;
-import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
-import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
-import io.sol.loanmanagementsystemspringbootserver.utilities.UiControlUtilities;
-import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
+import io.sol.loanmanagementsystemspringbootserver.utilities.*;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Component
@@ -36,7 +34,7 @@ public class EmployeesController {
     @FXML private TableColumn<EmployeeDTO, String> telephoneColumn;
     @FXML private TableColumn<EmployeeDTO, String> passwordColumn;
 
-    @FXML private TableColumn<EmployeeDTO, String> salaryColumn;
+    @FXML private TableColumn<EmployeeDTO, Number> salaryColumn;
     @FXML private TableColumn<EmployeeDTO, String> roleColumn;
     @FXML private TableColumn<EmployeeDTO, String> userNameColumn;
     @FXML private TableColumn<EmployeeDTO, Boolean> activeColumn;
@@ -89,6 +87,10 @@ public class EmployeesController {
         emailColumn.setCellValueFactory(new PropertyValueFactory<>("email"));
         telephoneColumn.setCellValueFactory(new PropertyValueFactory<>("telephone"));
         salaryColumn.setCellValueFactory(new PropertyValueFactory<>("salary"));
+        salaryColumn.setCellFactory(UiControlUtilities.formattedCell(
+            salaryValue -> MoneyHelper.formatMoney(
+                BigDecimal.valueOf(salaryValue.longValue()))));
+
         passwordColumn.setCellValueFactory(new PropertyValueFactory<>("password"));
         roleColumn.setCellValueFactory(new PropertyValueFactory<>("role"));
         userNameColumn.setCellValueFactory(new PropertyValueFactory<>("username"));

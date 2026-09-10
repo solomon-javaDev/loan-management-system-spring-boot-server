@@ -117,8 +117,11 @@
                               </rowConstraints>
                            </GridPane>
                            <HBox spacing="8.0">
-                              <Button onAction="#saveFeeBucket" text="Save Fee Bucket" />
-                              <Button onAction="#clearFeeBucketFields" text="Clear" />
+                              <Button onMouseClicked="#saveFeeBucket" text="Save Fee Bucket" />
+                              <Button onMouseClicked="#updateFeeBucket" text="Update" />
+                               <Button onMouseClicked="#deleteFeeBucket" text="Delete" />
+                               <Button onMouseClicked="#clearFeeBucketFields" text="Clear" />
+
                            </HBox>
                            <TableView fx:id="feeBucketsTable" onMouseClicked="#selectFeeBucket" prefHeight="120.0">
                               <columns>

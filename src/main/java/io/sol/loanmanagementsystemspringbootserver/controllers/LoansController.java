@@ -8,6 +8,7 @@ import io.sol.loanmanagementsystemspringbootserver.entities.Role;
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
 import io.sol.loanmanagementsystemspringbootserver.services.EmployeeService;
 import io.sol.loanmanagementsystemspringbootserver.services.LoansService;
+import io.sol.loanmanagementsystemspringbootserver.utilities.MoneyHelper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UiControlUtilities;
@@ -16,6 +17,7 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.util.Callback;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -393,12 +395,19 @@ public class LoansController {
         maturityDateColumn.setCellValueFactory(new PropertyValueFactory<>("maturityDate"));
         fullPaidDateColumn.setCellValueFactory(new PropertyValueFactory<>("fullPaidDate"));
         principalColumn.setCellValueFactory(new PropertyValueFactory<>("principal"));
+        principalColumn.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
+
         interestRateColumn.setCellValueFactory(new PropertyValueFactory<>("interestRate"));
         tenorColumn.setCellValueFactory(new PropertyValueFactory<>("tenor"));
         collateralColumn.setCellValueFactory(new PropertyValueFactory<>("collateral"));
+
         feesColumn.setCellValueFactory(new PropertyValueFactory<>("fees"));
+        feesColumn.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
+
         statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
         fullPayment.setCellValueFactory(new PropertyValueFactory<>("fullPayment"));
+
+        fullPayment.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
 
         fieldOfficerColumn.setCellValueFactory(cellData -> {
             String name = cellData.getValue().getFieldOfficerName();

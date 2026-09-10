@@ -4,7 +4,10 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.TextField;
+import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +20,53 @@ import java.util.function.Function;
  */
 @Component
 public class UiControlUtilities {
+
+
+
+    /**
+     *
+     * @param formatter
+     * @return
+     * @param <S>
+     * @param <T>
+     */
+      /*
+    // Example with dates
+        dateColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
+        dateColumn.setCellFactory(TableCellFactoryHelper.forFormattedCell(
+                d -> d.format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))
+        ));
+
+        For more flexibility: predefined factories can work as well, but we already have a MoneyHelper class
+        public static <S> Callback<TableColumn<S, BigDecimal>, TableCell<S, BigDecimal>> moneyCellFactory() {
+    return forFormattedCell(MoneyHelper::formatMoney);
+        }
+
+        public static <S> Callback<TableColumn<S, LocalDate>, TableCell<S, LocalDate>> dateCellFactory(DateTimeFormatter formatter) {
+            return forFormattedCell(d -> d.format(formatter));
+        }
+
+
+        and usage becomes super easy: e.g
+        fullPayment.setCellFactory(UiControlUtilities.moneyCellFactory());
+        dateColumn.setCellFactory(UiControlUtilities.dateCellFactory(DateTimeFormatter.ISO_DATE));
+
+
+     */
+
+    public static <S, T> Callback<TableColumn<S,T>, TableCell<S, T>> formattedCell(Function<T, String> formatter){
+        return column -> new TableCell<S, T>(){
+            @Override
+            protected void updateItem(T item, boolean empty) {
+                super.updateItem(item, empty);
+                if(empty || item == null){
+                    setText("");
+                }else{
+                    setText(formatter.apply(item));
+                }
+            }
+        };
+    }
 
     public <T> void configureSearchableDropDown(ComboBox<T> comboBox
     , List<T> sourceItems, Function<T, String> nameExtractor

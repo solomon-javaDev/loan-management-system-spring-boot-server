@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +25,7 @@ public class FeeBucketService {
         return repository.findAllByOrderByMinAmountAsc().stream()
                 .filter(bucket -> principal.compareTo(bucket.getMinAmount()) >= 0 && principal.compareTo(bucket.getMaxAmount()) <= 0)
                 .findFirst()
-                .map(bucket -> bucket.getFeeAmount())
+                .map(FeeBucket::getFeeAmount)
                 .orElse(BigDecimal.ZERO);
     }
 
@@ -55,6 +56,26 @@ public class FeeBucketService {
         auditService.record(bucket.getId() == null ? "CREATE" : "UPDATE", "FEE_BUCKET", saved.getId(),
                 "Fee bucket saved");
         return Result.success("Fee bucket saved successfully.", saved);
+    }
+
+    public Result<FeeBucket> updateBucket(FeeBucket bucket){
+        Result<Void> auth = userSession.requireAdmin();
+        if (auth.isFailure()) return Result.forbidden(auth.message(), null);
+
+        Optional<FeeBucket> existingBucket = repository.findById(bucket.getId());
+        if(existingBucket.isEmpty()){
+            return Result.invalid("The bucket is non existent", null);
+        }
+
+        FeeBucket oldBucket = existingBucket.get();
+
+        if(oldBucket.equals(bucket)){
+            return Result.invalid("No changes detected", null);
+        }
+
+        FeeBucket updatedBucket = repository.save(bucket);
+        return Result.success("Updated the fee bucket", updatedBucket);
+
     }
 
     public void deleteBucket(Long id) {

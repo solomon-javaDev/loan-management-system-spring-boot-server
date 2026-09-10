@@ -5,10 +5,8 @@ import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerResponseDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.EmployeeDTO;
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
-import io.sol.loanmanagementsystemspringbootserver.utilities.Logger;
-import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
-import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
-import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
+import io.sol.loanmanagementsystemspringbootserver.utilities.*;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
 import javafx.beans.property.SimpleStringProperty;
@@ -16,6 +14,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
 
 /**
  * This class is a Spring-managed component that serves as the controller for managing customer-related
@@ -95,7 +95,7 @@ public class CustomerController {
     private TableColumn<CustomerDTO, Number> numberOfLoans;
 
     @FXML
-    private TableColumn<CustomerDTO, String> savingsBalanceColumn;
+    private TableColumn<CustomerDTO, BigDecimal> savingsBalanceColumn;
 
     @FXML
     private TableColumn<CustomerDTO, String> addressColumn;
@@ -232,9 +232,10 @@ public class CustomerController {
             }
             return new javafx.beans.property.SimpleIntegerProperty(0);
         });
-        savingsBalanceColumn.setCellValueFactory(cellData -> new SimpleStringProperty(
-            String.format("%.2f", cellData.getValue().getSavingsBalance() == null
-                ? java.math.BigDecimal.ZERO : cellData.getValue().getSavingsBalance())));
+        savingsBalanceColumn.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(
+                cellData.getValue().getSavingsBalance() == null ? BigDecimal.ZERO : cellData.getValue().getSavingsBalance()
+        ));
+        savingsBalanceColumn.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
     }
 
     private void loadCustomers() {

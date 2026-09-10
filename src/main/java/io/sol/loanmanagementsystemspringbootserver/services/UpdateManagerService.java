@@ -27,9 +27,9 @@ import java.util.List;
 public class UpdateManagerService {
 
     private final String GITHUB_API_URL = "https://api.github.com/repos/solomon-javaDev/loan-management-system-spring-boot-server/releases/latest";
-    
-    @Value("${app.version:0.0.1-SNAPSHOT}")
-    private String currentVersion;
+
+    @Value("${spring.application.version}")
+     private String currentVersion;
 
     private final RestTemplate restTemplate = new RestTemplate();
 

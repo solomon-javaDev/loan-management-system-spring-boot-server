@@ -3,7 +3,10 @@ package io.sol.loanmanagementsystemspringbootserver.controllers;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.SystemFinancialState;
 import io.sol.loanmanagementsystemspringbootserver.events.FinancialStateUpdatedEvent;
 import io.sol.loanmanagementsystemspringbootserver.services.AutoupdateService;
+import io.sol.loanmanagementsystemspringbootserver.services.FinancialStateService;
+import io.sol.loanmanagementsystemspringbootserver.utilities.MoneyHelper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.StageManager;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -45,8 +48,8 @@ public class DashboardController {
 
     private final StageManager stageManager;
     private final AutoupdateService autoupdateService;
-    private final io.sol.loanmanagementsystemspringbootserver.services.FinancialStateService financialStateService;
-    private final io.sol.loanmanagementsystemspringbootserver.utilities.UserSession userSession;
+    private final FinancialStateService financialStateService;
+    private final UserSession userSession;
     private final JdbcTemplate jdbcTemplate;
 
     @Value("${spring.application.version:unknown}")
@@ -134,10 +137,10 @@ public class DashboardController {
     public void updateTopBar(){
         SystemFinancialState state = financialStateService.getCurrentState();
         if (cashAtHandLabel != null) {
-            cashAtHandLabel.setText(String.format("%,.2f", state.getCashOnHand()));
+            cashAtHandLabel.setText(MoneyHelper.formatMoney(state.getCashOnHand()));
         }
         if (totalLoanPortifolioLabel != null) {
-            totalLoanPortifolioLabel.setText(String.format("%,.2f", state.getGrossLoanPortfolio()));
+            totalLoanPortifolioLabel.setText(MoneyHelper.formatMoney(state.getGrossLoanPortfolio()));
         }
     }
 

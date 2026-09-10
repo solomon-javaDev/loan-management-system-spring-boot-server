@@ -7,10 +7,7 @@ import io.sol.loanmanagementsystemspringbootserver.entities.Finance.LoanStatus;
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
 import io.sol.loanmanagementsystemspringbootserver.services.LoansService;
 import io.sol.loanmanagementsystemspringbootserver.services.PaymentsService;
-import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
-import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
-import io.sol.loanmanagementsystemspringbootserver.utilities.UiControlUtilities;
-import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
+import io.sol.loanmanagementsystemspringbootserver.utilities.*;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -164,7 +161,10 @@ public class PaymentsController {
     private void configureTable() {
         dateColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
         amountColumn.setCellValueFactory(new PropertyValueFactory<>("amountReceived"));
+        amountColumn.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
+
         remainingColumn.setCellValueFactory(new PropertyValueFactory<>("remainingBalance"));
+        remainingColumn.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
 
         customerColumn.setCellValueFactory(cellData -> {
             PaymentDTO payment = cellData.getValue();
@@ -181,7 +181,7 @@ public class PaymentsController {
 
     @FXML
     public void loadData() {
-        uiControlUtilities.configureDropDown(customerName, customerService.getAllCustomers().value(),
+        uiControlUtilities.configureSearchableDropDown(customerName, customerService.getAllCustomers().value(),
                 c -> c.getFirstName() + " " + c.getLastName());
         
         uiControlUtilities.configureDropDown(loanReference, loansService.getAllLoans().value(),
@@ -237,11 +237,12 @@ public class PaymentsController {
         Result<PaymentDTO> result = paymentsService.savePayment(date.getValue(), amount, selectedLoan.getId());
 
         Map<String, String> paymentMap = new LinkedHashMap<>();
-        paymentMap.put("Date - ", String.valueOf(result.value().getDate()));
-        paymentMap.put("Amount paid - ", String.valueOf(result.value().getAmountReceived()));
-        paymentMap.put("Loan balance - ", String.valueOf(result.value().getRemainingBalance()));
-        paymentMap.put("Days Skipped  - ", String.valueOf(result.value().getAgingDays()));
-        paymentMap.put("Signature of receiver - ", null);
+        paymentMap.put("Date:  ", String.valueOf(result.value().getDate()));
+        paymentMap.put("Amount paid:  ", String.valueOf(result.value().getAmountReceived()));
+        paymentMap.put("Customer Name: ", result.value().getCustomerName());
+        paymentMap.put("Loan balance:  ", String.valueOf(result.value().getRemainingBalance()));
+        paymentMap.put("Days Skipped:   ", String.valueOf(result.value().getAgingDays()));
+        paymentMap.put("Signature of receiver: ", null);
 
         UIHelper.exportToPdf("Payment receipt -", "PAYMENT FOR LOAN", paymentMap, (Stage) paymentsTable.getScene().getWindow());
         UIHelper.updateStatusLabel(messageLabel, result);

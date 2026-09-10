@@ -8,7 +8,9 @@ import io.sol.loanmanagementsystemspringbootserver.repositories.*;
 import io.sol.loanmanagementsystemspringbootserver.services.FinancialStateService;
 import io.sol.loanmanagementsystemspringbootserver.services.ReportService;
 import io.sol.loanmanagementsystemspringbootserver.services.AuditService;
+import io.sol.loanmanagementsystemspringbootserver.utilities.MoneyHelper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UiControlUtilities;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -108,12 +110,15 @@ public class ReportsController {
         
         TableColumn<Loan, BigDecimal> disbursedCol = new TableColumn<>("Disbursed");
         disbursedCol.setCellValueFactory(new PropertyValueFactory<>("disbursedAmount"));
+        disbursedCol.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
         
         TableColumn<Loan, String> rateCol = new TableColumn<>("Rate");
         rateCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getInterestRate().multiply(BigDecimal.valueOf(100)) + "%"));
         
         TableColumn<Loan, BigDecimal> expectedCol = new TableColumn<>("Expected");
         expectedCol.setCellValueFactory(new PropertyValueFactory<>("fullPayment"));
+        expectedCol.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
+
         
         TableColumn<Loan, LocalDate> maturityCol = new TableColumn<>("Maturity");
         maturityCol.setCellValueFactory(new PropertyValueFactory<>("maturityDate"));
@@ -130,6 +135,8 @@ public class ReportsController {
         expCatCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getCategory().getDescription()));
         TableColumn<Expense, BigDecimal> expAmtCol = new TableColumn<>("Amount");
         expAmtCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
+        expAmtCol.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
+
         TableColumn<Expense, String> expRefCol = new TableColumn<>("Reference");
         expRefCol.setCellValueFactory(new PropertyValueFactory<>("reference"));
         dailyExpensesTable.getColumns().setAll(expDescCol, expCatCol, expAmtCol, expRefCol);
@@ -141,6 +148,8 @@ public class ReportsController {
         savTypeCol.setCellValueFactory(new PropertyValueFactory<>("type"));
         TableColumn<CashTransaction, BigDecimal> savAmtCol = new TableColumn<>("Amount");
         savAmtCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
+        savAmtCol.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
+
         TableColumn<CashTransaction, String> savDescCol = new TableColumn<>("Description");
         savDescCol.setCellValueFactory(new PropertyValueFactory<>("description"));
         dailySavingsTable.getColumns().setAll(savCustCol, savTypeCol, savAmtCol, savDescCol);
@@ -150,8 +159,12 @@ public class ReportsController {
         stDateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
         TableColumn<StatementRow, BigDecimal> stPaidCol = new TableColumn<>("Amount Paid");
         stPaidCol.setCellValueFactory(new PropertyValueFactory<>("amountPaid"));
+        stPaidCol.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
+
         TableColumn<StatementRow, BigDecimal> stBalCol = new TableColumn<>("Balance");
         stBalCol.setCellValueFactory(new PropertyValueFactory<>("balance"));
+        stBalCol.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
+
         loanStatementTable.getColumns().setAll(stDateCol, stPaidCol, stBalCol);
 
         // Aging Analysis Table
@@ -169,8 +182,13 @@ public class ReportsController {
         agDueCol.setCellValueFactory(new PropertyValueFactory<>("dueDate"));
         TableColumn<AgingRow, BigDecimal> agOutCol = new TableColumn<>("Outstanding");
         agOutCol.setCellValueFactory(new PropertyValueFactory<>("outstanding"));
+        agOutCol.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
+
+
         TableColumn<AgingRow, BigDecimal> agArrCol = new TableColumn<>("Arrears");
         agArrCol.setCellValueFactory(new PropertyValueFactory<>("arrears"));
+        agArrCol.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
+
         TableColumn<AgingRow, Long> agDaysCol = new TableColumn<>("Aging Days");
         agDaysCol.setCellValueFactory(new PropertyValueFactory<>("agingDays"));
         

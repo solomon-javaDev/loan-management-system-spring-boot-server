@@ -3,6 +3,7 @@ package io.sol.loanmanagementsystemspringbootserver.controllers;
 import io.sol.loanmanagementsystemspringbootserver.dtos.*;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Loan;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.LoanStatus;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.SystemFinancialState;
 import io.sol.loanmanagementsystemspringbootserver.entities.custom.Customer;
 import io.sol.loanmanagementsystemspringbootserver.events.FinancialStateUpdatedEvent;
 import io.sol.loanmanagementsystemspringbootserver.mailing.EmailDetails;
@@ -10,6 +11,7 @@ import io.sol.loanmanagementsystemspringbootserver.mailing.EmailsService;
 import io.sol.loanmanagementsystemspringbootserver.mappers.DTOMapper;
 import io.sol.loanmanagementsystemspringbootserver.repositories.LoansRepository;
 import io.sol.loanmanagementsystemspringbootserver.services.*;
+import io.sol.loanmanagementsystemspringbootserver.utilities.MoneyHelper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -184,7 +186,7 @@ public class HomeController {
                 .filter(l -> today.equals(l.getStartDate()))
                 .collect(java.util.stream.Collectors.toList());
 
-        io.sol.loanmanagementsystemspringbootserver.entities.Finance.SystemFinancialState state = financialStateService.getCurrentState();
+        SystemFinancialState state = financialStateService.getCurrentState();
 
         statsMap.clear();
 
@@ -211,26 +213,26 @@ public class HomeController {
         BigDecimal totalCollToday = todayPayments.stream()
                 .map(PaymentDTO::getAmountReceived)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        updateStat("Total Collections (Today)", String.format("%.2f", totalCollToday), totalCollectionsLabel);
+        updateStat("Total Collections (Today)", MoneyHelper.formatMoney(totalCollToday), totalCollectionsLabel);
 
         updateStat("Loans Disbursed (Today)", String.valueOf(todayLoans.size()), loansDisbursedLabel);
 
         BigDecimal totalDisbursedToday = todayLoans.stream()
                 .map(LoanDTO::getPrincipal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        updateStat("Total Amount Disbursed (Today)", String.format("%.2f", totalDisbursedToday), totalAmountDisbursedLabel);
+        updateStat("Total Amount Disbursed (Today)", MoneyHelper.formatMoney(totalDisbursedToday), totalAmountDisbursedLabel);
 
-        updateStat("Principal Balance", String.format("%.2f", state.getOutstandingPrincipal()), principalBalanceLabel);
+        updateStat("Principal Balance", MoneyHelper.formatMoney(state.getOutstandingPrincipal()), principalBalanceLabel);
         BigDecimal totalLoanPortfolio = loansService.getTotalLoanPortfolio().value();
-        updateStat("Total Loan Portfolio", String.format("%.2f", totalLoanPortfolio), totalLoanPortfolioLabel);
-        updateStat("Opening Cash", String.format("%.2f", state.getCashOnHand().add(totalDisbursedToday).subtract(totalCollToday)), openingCashLabel); // Rough estimate
-        updateStat("Principal Collected", String.format("%.2f", state.getTotalPrincipalCollected()), principalCollectedLabel);
-        updateStat("Interest Collected", String.format("%.2f", state.getInterestReceived()), interestCollectedLabel);
-        updateStat("Processing Fees", String.format("%.2f", state.getTotalFeesCollected()), processingFeesLabel);
-        updateStat("Bank Balance", String.format("%.2f", state.getBankBalance()), bankDepositsLabel);
-        updateStat("Total Expenses", String.format("%.2f", state.getTotalExpenses()), totalExpensesLabel);
-        updateStat("Loan Disbursements (Total)", String.format("%.2f", state.getTotalCashDisbursedInLoans()), loanDisbursementsLabel);
-        updateStat("Cash On Hand", String.format("%.2f", state.getCashOnHand()), checkoutCashLabel);
+        updateStat("Total Loan Portfolio", MoneyHelper.formatMoney(totalLoanPortfolio), totalLoanPortfolioLabel);
+        updateStat("Opening Cash", MoneyHelper.formatMoney(state.getCashOnHand().add(totalDisbursedToday).subtract(totalCollToday)), openingCashLabel); // TODO Rough estimate
+        updateStat("Principal Collected", MoneyHelper.formatMoney(state.getTotalPrincipalCollected()), principalCollectedLabel);
+        updateStat("Interest Collected", MoneyHelper.formatMoney(state.getInterestReceived()), interestCollectedLabel);
+        updateStat("Processing Fees", MoneyHelper.formatMoney(state.getTotalFeesCollected()), processingFeesLabel);
+        updateStat("Bank Balance", MoneyHelper.formatMoney(state.getBankBalance()), bankDepositsLabel);
+        updateStat("Total Expenses", MoneyHelper.formatMoney(state.getTotalExpenses()), totalExpensesLabel);
+        updateStat("Loan Disbursements (Total)", MoneyHelper.formatMoney(state.getTotalCashDisbursedInLoans()), loanDisbursementsLabel);
+        updateStat("Cash On Hand", MoneyHelper.formatMoney(state.getCashOnHand()), checkoutCashLabel);
     }
 
     private void fillDueCustomersTable(){
