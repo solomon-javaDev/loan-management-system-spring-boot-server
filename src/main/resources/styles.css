@@ -1,6 +1,6 @@
 .root {
     -fx-font-family: "Segoe UI", "Inter", "System";
-    -fx-font-size: 14px;
+    -fx-font-size: 16px;
     -fx-base: #f4f7fa;
     -fx-background: #f4f7fa;
     -fx-control-inner-background: #ffffff;
@@ -8,6 +8,11 @@
 
 .label {
     -fx-text-fill: #34495e;
+}
+
+.table-cell, .table-column, .text-field, .date-picker, .combo-box,
+.button, .check-box, .radio-button, .list-cell, .menu-button {
+    -fx-font-size: 20px;
 }
 
 .button {

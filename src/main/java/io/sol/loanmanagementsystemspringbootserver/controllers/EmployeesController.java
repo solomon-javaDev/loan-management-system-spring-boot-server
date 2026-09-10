@@ -2,7 +2,9 @@ package io.sol.loanmanagementsystemspringbootserver.controllers;
 
 import io.sol.loanmanagementsystemspringbootserver.dtos.EmployeeDTO;
 import io.sol.loanmanagementsystemspringbootserver.entities.Role;
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.User;
 import io.sol.loanmanagementsystemspringbootserver.services.EmployeeService;
+import io.sol.loanmanagementsystemspringbootserver.services.UserService;
 import io.sol.loanmanagementsystemspringbootserver.utilities.*;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -17,6 +19,7 @@ public class EmployeesController {
     private final EmployeeService employeeService;
     private final UiControlUtilities uiControlUtilities;
     private final UserSession userSession;
+    private final UserService userService;
     @FXML private TextField firstName;
     @FXML private TextField lastName;
     @FXML private TextField username;
@@ -38,15 +41,21 @@ public class EmployeesController {
     @FXML private TableColumn<EmployeeDTO, String> roleColumn;
     @FXML private TableColumn<EmployeeDTO, String> userNameColumn;
     @FXML private TableColumn<EmployeeDTO, Boolean> activeColumn;
+    @FXML private TableView<User> usersTable;
+    @FXML private TableColumn<User, String> userUsernameColumn;
+    @FXML private TableColumn<User, String> userEmailColumn;
+    @FXML private TableColumn<User, Role> userRoleColumn;
     @FXML private Button createEmployeeButton;
     @FXML private Button updateButton;
     @FXML private Button deleteButton;
 
 
-    public EmployeesController(EmployeeService employeeService, UiControlUtilities uiControlUtilities, UserSession userSession) {
+    public EmployeesController(EmployeeService employeeService, UiControlUtilities uiControlUtilities,
+                               UserSession userSession, UserService userService) {
         this.employeeService = employeeService;
         this.uiControlUtilities = uiControlUtilities;
         this.userSession = userSession;
+        this.userService = userService;
     }
 
     @FXML
@@ -54,6 +63,7 @@ public class EmployeesController {
         configureTable();
         uiControlUtilities.configureDropDown(role, List.of(Role.values()), Enum::toString);
         loadEmployees();
+        loadUsers();
         boolean cashier = !userSession.isAdmin();
         createEmployeeButton.setDisable(cashier);
         updateButton.setDisable(cashier);
@@ -81,6 +91,11 @@ public class EmployeesController {
         }
     }
 
+    private void loadUsers() {
+        var result = userService.getAllUsers();
+        if (result.isSuccess()) usersTable.getItems().setAll(result.value());
+    }
+
     private void configureTable(){
         firstNameColumn.setCellValueFactory(new PropertyValueFactory<>("firstName"));
         lastNameColumn.setCellValueFactory(new PropertyValueFactory<>("lastName"));
@@ -95,6 +110,9 @@ public class EmployeesController {
         roleColumn.setCellValueFactory(new PropertyValueFactory<>("role"));
         userNameColumn.setCellValueFactory(new PropertyValueFactory<>("username"));
         activeColumn.setCellValueFactory(new PropertyValueFactory<>("active"));
+        userUsernameColumn.setCellValueFactory(new PropertyValueFactory<>("username"));
+        userEmailColumn.setCellValueFactory(new PropertyValueFactory<>("email"));
+        userRoleColumn.setCellValueFactory(new PropertyValueFactory<>("role"));
     }
 
     @FXML

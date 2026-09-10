@@ -7,20 +7,18 @@ import io.sol.loanmanagementsystemspringbootserver.entities.Finance.LoanStatus;
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
 import io.sol.loanmanagementsystemspringbootserver.services.LoansService;
 import io.sol.loanmanagementsystemspringbootserver.services.PaymentsService;
+import io.sol.loanmanagementsystemspringbootserver.services.DocumentService;
 import io.sol.loanmanagementsystemspringbootserver.utilities.*;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.stage.Stage;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * The PaymentsController class is responsible for managing the user interface interactions
@@ -76,6 +74,7 @@ public class PaymentsController {
     private final LoansService loansService;
     private final PaymentsService paymentsService;
     private final UserSession userSession;
+    private final DocumentService documentService;
 
     @FXML
     private DatePicker date;
@@ -122,12 +121,13 @@ public class PaymentsController {
     @FXML
     private Label messageLabel;
 
-    public PaymentsController(CustomerService customerService, UiControlUtilities uiControlUtilities, LoansService loansService, PaymentsService paymentsService, UserSession userSession) {
+    public PaymentsController(CustomerService customerService, UiControlUtilities uiControlUtilities, LoansService loansService, PaymentsService paymentsService, UserSession userSession, DocumentService documentService) {
         this.customerService = customerService;
         this.uiControlUtilities = uiControlUtilities;
         this.loansService = loansService;
         this.paymentsService = paymentsService;
         this.userSession = userSession;
+        this.documentService = documentService;
     }
 
     @FXML
@@ -236,15 +236,9 @@ public class PaymentsController {
         BigDecimal amount = parseBigDecimal(amountRecieved.getText());
         Result<PaymentDTO> result = paymentsService.savePayment(date.getValue(), amount, selectedLoan.getId());
 
-        Map<String, String> paymentMap = new LinkedHashMap<>();
-        paymentMap.put("Date:  ", String.valueOf(result.value().getDate()));
-        paymentMap.put("Amount paid:  ", String.valueOf(result.value().getAmountReceived()));
-        paymentMap.put("Customer Name: ", result.value().getCustomerName());
-        paymentMap.put("Loan balance:  ", String.valueOf(result.value().getRemainingBalance()));
-        paymentMap.put("Days Skipped:   ", String.valueOf(result.value().getAgingDays()));
-        paymentMap.put("Signature of receiver: ", null);
-
-        UIHelper.exportToPdf("Payment receipt -", "PAYMENT FOR LOAN", paymentMap, (Stage) paymentsTable.getScene().getWindow());
+        if (result.isSuccess()) {
+            UIHelper.exportPdfBytes("PaymentReceipt", documentService.generatePaymentReceipt(result.value()));
+        }
         UIHelper.updateStatusLabel(messageLabel, result);
 
         if (result.isSuccess()) {

@@ -79,19 +79,40 @@
             </AnchorPane>
           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="192.0" prefWidth="685.0">
                <children>
-                  <TableView fx:id="employeesTable" layoutY="62.0" prefHeight="244.0" prefWidth="684.6666666666666" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                    <columns>
-                      <TableColumn fx:id="firstNameColumn" prefWidth="75.0" text="First Name" />
-                      <TableColumn fx:id="lastNameColumn" prefWidth="75.0" text="Last Name" />
-                        <TableColumn fx:id="emailColumn" prefWidth="75.0" text="Email" />
-                        <TableColumn fx:id="telephoneColumn" prefWidth="75.0" text="Telephone" />
-                        <TableColumn fx:id="salaryColumn" prefWidth="75.0" text="Salary" />
-                        <TableColumn fx:id="passwordColumn" prefWidth="75.0" text="Password" />
-                        <TableColumn fx:id="roleColumn" prefWidth="75.0" text="Role" />
-                        <TableColumn fx:id="userNameColumn" prefWidth="75.0" text="User Name" />
-                        <TableColumn fx:id="activeColumn" prefWidth="75.0" text="Active" />
-                    </columns>
-                  </TableView>
+                  <HBox spacing="12.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                     <children>
+                        <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                           <children>
+                              <Label text="EMPLOYEES" />
+                              <TableView fx:id="employeesTable" prefHeight="244.0" VBox.vgrow="ALWAYS">
+                                <columns>
+                                  <TableColumn fx:id="firstNameColumn" prefWidth="75.0" text="First Name" />
+                                  <TableColumn fx:id="lastNameColumn" prefWidth="75.0" text="Last Name" />
+                                  <TableColumn fx:id="emailColumn" prefWidth="75.0" text="Email" />
+                                  <TableColumn fx:id="telephoneColumn" prefWidth="75.0" text="Telephone" />
+                                  <TableColumn fx:id="salaryColumn" prefWidth="75.0" text="Salary" />
+                                  <TableColumn fx:id="passwordColumn" prefWidth="75.0" text="Password" />
+                                  <TableColumn fx:id="roleColumn" prefWidth="75.0" text="Role" />
+                                  <TableColumn fx:id="userNameColumn" prefWidth="75.0" text="User Name" />
+                                  <TableColumn fx:id="activeColumn" prefWidth="75.0" text="Active" />
+                                </columns>
+                              </TableView>
+                           </children>
+                        </VBox>
+                        <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                           <children>
+                              <Label text="SYSTEM USERS" />
+                              <TableView fx:id="usersTable" prefHeight="244.0" VBox.vgrow="ALWAYS">
+                                <columns>
+                                  <TableColumn fx:id="userUsernameColumn" prefWidth="120.0" text="Username" />
+                                  <TableColumn fx:id="userEmailColumn" prefWidth="150.0" text="Email" />
+                                  <TableColumn fx:id="userRoleColumn" prefWidth="100.0" text="Role" />
+                                </columns>
+                              </TableView>
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
                </children>
             </AnchorPane>
         </items>

@@ -5,6 +5,7 @@ import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Loan;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.LoanStatus;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Payment;
 import io.sol.loanmanagementsystemspringbootserver.events.RepaymentReceivedEvent;
+import io.sol.loanmanagementsystemspringbootserver.events.SavingsTransactionEvent;
 import io.sol.loanmanagementsystemspringbootserver.mappers.DTOMapper;
 import io.sol.loanmanagementsystemspringbootserver.repositories.PaymentRepository;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
@@ -88,7 +89,7 @@ public class PaymentsService {
                      loan.getCustomer().getSavingsBalance().add(excess)
                  );
                  // Publish Savings Event for FinancialState
-                 applicationEventPublisher.publishEvent(new io.sol.loanmanagementsystemspringbootserver.events.SavingsTransactionEvent(
+                 applicationEventPublisher.publishEvent(new SavingsTransactionEvent(
                      loan.getCustomer().getId(),
                      excess,
                      true,
@@ -127,9 +128,6 @@ public class PaymentsService {
                  paymentDate
              ));
 
-             String receipt = generateReceiptText(savedPayment);
-             System.out.println("Generated Receipt:\n" + receipt);
-
              String message = "Successful payment" + (loan.getStatus() == LoanStatus.CLOSED ? ", loan fully paid and cleared." : "");
              if (excess.compareTo(BigDecimal.ZERO) > 0) {
                  message += " Excess of " + excess + " added to savings.";
@@ -166,24 +164,6 @@ public class PaymentsService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    public String generateReceiptText(Payment payment) {
-        Loan loan = payment.getLoan();
-        StringBuilder sb = new StringBuilder();
-        sb.append("-----------------------------------\n");
-        sb.append("   COMPANY NAME: ").append("SOL LOANS").append("\n"); // Placeholder for company name
-        sb.append("   DATE: ").append(payment.getDate()).append("\n");
-        sb.append("   Customer Name:").append(payment.getLoan().getCustomer().getCustomerName()).append("\n");
-        sb.append("   AMOUNT PAID: ").append(payment.getAmountReceived()).append("\n");
-        sb.append("   LOAN BALANCE: ").append(loan.getOutstandingBalance()).append("\n");
-        long daysSkipped = 0;
-        if (loan.getMaturityDate() != null && LocalDate.now().isAfter(loan.getMaturityDate())) {
-            daysSkipped = DAYS.between(loan.getMaturityDate(), LocalDate.now());
-        }
-        sb.append("   DAYS SKIPPED: ").append(daysSkipped).append("\n");
-        sb.append("   ISSUER SIGNATURE: ________________\n");
-        sb.append("-----------------------------------\n");
-        return sb.toString();
-    }
 
     @Transactional
     public Result<PaymentDTO> updatePayment(int paymentId, LocalDate date, BigDecimal amountReceived) {

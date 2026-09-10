@@ -28,6 +28,7 @@ public class FinanceController {
     private final ExpenseCategoryService expenseCategoryService;
     private final CashTransactionService cashTransactionService;
     private final UserSession userSession;
+    private final DocumentService documentService;
 
     @FXML private TextField expenseDescription;
     @FXML private ComboBox<ExpenseCategory> expenseCategoryDropDown;
@@ -55,13 +56,15 @@ public class FinanceController {
 
     public FinanceController(ExpenseService expenseService, CustomerService customerService, 
                              UiControlUtilities uiControlUtilities, ExpenseCategoryService expenseCategoryService,
-                             CashTransactionService cashTransactionService, UserSession userSession) {
+                             CashTransactionService cashTransactionService, UserSession userSession,
+                             DocumentService documentService) {
         this.expenseService = expenseService;
         this.customerService = customerService;
         this.uiControlUtilities = uiControlUtilities;
         this.expenseCategoryService = expenseCategoryService;
         this.cashTransactionService = cashTransactionService;
         this.userSession = userSession;
+        this.documentService = documentService;
     }
 
     @FXML
@@ -145,6 +148,12 @@ public class FinanceController {
         show(result.message());
 
         if (result.isSuccess()) {
+            Result<CustomerDTO> customerResult = customerService.getCustomerById(customerId);
+            String customerName = customerResult.isSuccess()
+                    ? customerResult.value().getCustomerName()
+                    : "Customer " + customerId;
+            UIHelper.exportPdfBytes("SavingsReceipt",
+                documentService.generateSavingsReceipt(result.value(), customerName));
             UIHelper.showInfo("SUCCESS", result.message());
             loadSavings();
             savingsAmount.clear();

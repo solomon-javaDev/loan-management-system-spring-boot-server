@@ -99,4 +99,21 @@ public class UIHelper {
             UIHelper.showError("Failed to generate PDF", e.getMessage());
         }
     }
+
+    public static void exportPdfBytes(String defaultPrefix, byte[] pdfBytes) {
+        File dir = new File("receipts");
+        if (!dir.exists()) dir.mkdir();
+        String timestamp = java.time.LocalDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        File file = new File(dir, defaultPrefix + "_" + timestamp + ".pdf");
+        try (FileOutputStream output = new FileOutputStream(file)) {
+            output.write(pdfBytes);
+            showInfo("Success", "PDF generated successfully at: " + file.getAbsolutePath());
+            if (java.awt.Desktop.isDesktopSupported()) {
+                java.awt.Desktop.getDesktop().open(file);
+            }
+        } catch (IOException exception) {
+            showError("Failed to generate PDF", exception.getMessage());
+        }
+    }
 }

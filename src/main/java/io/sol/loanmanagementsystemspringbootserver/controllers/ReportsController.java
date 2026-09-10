@@ -6,7 +6,7 @@ import io.sol.loanmanagementsystemspringbootserver.mailing.EmailDetails;
 import io.sol.loanmanagementsystemspringbootserver.mailing.EmailsService;
 import io.sol.loanmanagementsystemspringbootserver.repositories.*;
 import io.sol.loanmanagementsystemspringbootserver.services.FinancialStateService;
-import io.sol.loanmanagementsystemspringbootserver.services.ReportService;
+import io.sol.loanmanagementsystemspringbootserver.services.DocumentService;
 import io.sol.loanmanagementsystemspringbootserver.services.AuditService;
 import io.sol.loanmanagementsystemspringbootserver.utilities.MoneyHelper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
@@ -38,7 +38,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReportsController {
 
-    private final ReportService reportService;
+    private final DocumentService reportService;
     private final LoansRepository loansRepository;
     private final ExpenseRepository expenseRepository;
     private final CashTransactionRepository cashTransactionRepository;

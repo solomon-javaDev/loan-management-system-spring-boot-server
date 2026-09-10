@@ -22,11 +22,11 @@ public class DailyNotificationsService implements CommandLineRunner {
     private final CustomerRepository repository;
     private final EmployeeRepository employeeRepository;
     private final EmailsService emailsService;
-    private final ReportService reportService;
+    private final DocumentService reportService;
     private final FinancialStateService financialStateService;
 
     public DailyNotificationsService(CustomerRepository repository, EmployeeRepository employeeRepository, 
-                                     EmailsService emailsService, ReportService reportService, 
+                                     EmailsService emailsService, DocumentService reportService,
                                      FinancialStateService financialStateService) {
         this.repository = repository;
         this.employeeRepository = employeeRepository;
