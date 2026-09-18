@@ -157,20 +157,17 @@ public class FinanceController {
         transaction.setCustomerId(customerId);
         transaction.setAmount(amount);
         transaction.setType(type.equals("DEPOSIT") ? CashTransactionType.SAVINGS_DEPOSIT : CashTransactionType.SAVINGS_WITHDRAWAL);
-        transaction.setDescription("Savings " + type + " for customer " + custIdStr);
+        transaction.setDescription("Savings " + type + " for customer " + customerService.getCustomerById(customerId).value().getCustomerName());
 
         Result<CashTransaction> result = cashTransactionService.recordTransaction(transaction);
-        show(result.message());
 
         if (result.isSuccess()) {
             Result<CustomerDTO> customerResult = customerService.getCustomerById(customerId);
             String customerName = customerResult.isSuccess()
                     ? customerResult.value().getCustomerName()
                     : "Customer " + customerId;
-            if (!documentService.printSavingsReceipt(result.value(), customerName)) {
-                UIHelper.exportPdfBytes("SavingsReceipt",
-                    documentService.generateSavingsReceipt(result.value(), customerName));
-            }
+            UIHelper.exportPdfBytes("SavingsReceipt",
+                documentService.generateSavingsReceipt(result.value(), customerName));
             UIHelper.showInfo("SUCCESS", result.message());
             loadSavings();
             savingsAmount.clear();

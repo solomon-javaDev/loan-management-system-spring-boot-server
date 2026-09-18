@@ -23,6 +23,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
     @Query(value = "UPDATE employees SET deleted = false WHERE id = :id", nativeQuery = true)
     int restoreById(@Param("id") Integer id);
     List<Employee> findByRole(Role role);
+    Optional<Employee> findByUsername(String username);
 
     Optional<Employee> findByFirstName(String firstName);
 

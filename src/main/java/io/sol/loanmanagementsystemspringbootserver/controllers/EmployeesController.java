@@ -3,6 +3,7 @@ package io.sol.loanmanagementsystemspringbootserver.controllers;
 import io.sol.loanmanagementsystemspringbootserver.dtos.EmployeeDTO;
 import io.sol.loanmanagementsystemspringbootserver.entities.Role;
 import io.sol.loanmanagementsystemspringbootserver.entities.custom.User;
+import io.sol.loanmanagementsystemspringbootserver.mappers.DTOMapper;
 import io.sol.loanmanagementsystemspringbootserver.services.EmployeeService;
 import io.sol.loanmanagementsystemspringbootserver.services.UserService;
 import io.sol.loanmanagementsystemspringbootserver.utilities.*;
@@ -39,10 +40,10 @@ public class EmployeesController {
     @FXML private TableColumn<EmployeeDTO, String> roleColumn;
     @FXML private TableColumn<EmployeeDTO, String> userNameColumn;
     @FXML private TableColumn<EmployeeDTO, Boolean> activeColumn;
-    @FXML private TableView<User> usersTable;
-    @FXML private TableColumn<User, String> userUsernameColumn;
-    @FXML private TableColumn<User, String> userEmailColumn;
-    @FXML private TableColumn<User, Role> userRoleColumn;
+    @FXML private TableView<EmployeeDTO> usersTable;
+    @FXML private TableColumn<EmployeeDTO, String> userUsernameColumn;
+    @FXML private TableColumn<EmployeeDTO, String> userEmailColumn;
+    @FXML private TableColumn<EmployeeDTO, Role> userRoleColumn;
     @FXML private Button createEmployeeButton;
     @FXML private Button updateButton;
     @FXML private Button deleteButton;
@@ -67,7 +68,18 @@ public class EmployeesController {
         updateButton.setDisable(cashier);
         deleteButton.setDisable(cashier);
         // populate form on selection
-        employeesTable.getSelectionModel().selectedItemProperty().addListener((obs, oldV, newV) -> populateForm(newV));
+        employeesTable.getSelectionModel().selectedItemProperty().addListener((obs, oldV, newV) -> {
+            if (newV != null) {
+                populateForm(newV);
+                usersTable.getSelectionModel().clearSelection();
+            }
+        });
+        usersTable.getSelectionModel().selectedItemProperty().addListener((obs, oldV, newV) -> {
+            if (newV != null) {
+                populateForm(newV);
+                employeesTable.getSelectionModel().clearSelection();
+            }
+        });
     }
 
     private void populateForm(EmployeeDTO dto) {
@@ -79,7 +91,7 @@ public class EmployeesController {
         telephone.setText(dto.getTelephone());
         salary.setText(String.valueOf(dto.getSalary()));
         role.setValue(dto.getRole());
-        password.setText(dto.getPassword());
+        password.clear();
     }
 
     private void loadEmployees() {
@@ -93,7 +105,7 @@ public class EmployeesController {
     private void loadUsers() {
         var result = userService.getAllUsers();
         if (result.isSuccess()) {
-            usersTable.getItems().setAll(result.value());
+            usersTable.getItems().setAll(result.value().stream().map(DTOMapper::toDTO).toList());
             UiControlUtilities.autoSizeColumns(usersTable);
         }
     }
@@ -116,6 +128,7 @@ public class EmployeesController {
         userRoleColumn.setCellValueFactory(new PropertyValueFactory<>("role"));
 
         UiControlUtilities.autoSizeColumns(employeesTable);
+        UiControlUtilities.autoSizeColumns(usersTable);
 
     }
 
@@ -161,13 +174,17 @@ public class EmployeesController {
 
     @FXML
     private void handleUpdateEmployee(){
-        EmployeeDTO selectedEmployee = employeesTable.getSelectionModel().getSelectedItem();
-        if(selectedEmployee == null){
-            UIHelper.showInfo("EMPTY SELECTION", "There's no employee selected yet");
+        EmployeeDTO selected = employeesTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            selected = usersTable.getSelectionModel().getSelectedItem();
+        }
+
+        if(selected == null){
+            UIHelper.showInfo("EMPTY SELECTION", "There's no employee or user selected yet");
             return;
         }
         EmployeeDTO toUpdate = new EmployeeDTO();
-        toUpdate.setId(selectedEmployee.getId());
+        toUpdate.setId(selected.getId());
         toUpdate.setFirstName(firstName.getText());
         toUpdate.setLastName(lastName.getText());
         toUpdate.setUsername(username.getText());
@@ -187,6 +204,7 @@ public class EmployeesController {
         UIHelper.updateStatusLabel(messageLabel, result);
         if (result.isSuccess()) {
             loadEmployees();
+            loadUsers();
             clearForm();
         }
     }
@@ -195,7 +213,11 @@ public class EmployeesController {
     private void handleDeleteEmployee() {
         EmployeeDTO selected = employeesTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            UIHelper.showInfo("EMPTY SELECTION", "There's no employee selected yet");
+            selected = usersTable.getSelectionModel().getSelectedItem();
+        }
+
+        if (selected == null) {
+            UIHelper.showInfo("EMPTY SELECTION", "There's no employee or user selected yet");
             return;
         }
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -208,6 +230,7 @@ public class EmployeesController {
             UIHelper.updateStatusLabel(messageLabel, del);
             if (del.isSuccess()) {
                 loadEmployees();
+                loadUsers();
                 clearForm();
             }
         }
@@ -225,14 +248,19 @@ public class EmployeesController {
 
     private void updateStatus(boolean active) {
         EmployeeDTO selected = employeesTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            selected = usersTable.getSelectionModel().getSelectedItem();
+        }
+
         if (selected != null) {
             var result = employeeService.updateEmployeeStatus(selected.getId(), active);
             UIHelper.updateStatusLabel(messageLabel, result);
             if (result.isSuccess()) {
                 loadEmployees();
+                loadUsers();
             }
         } else {
-            messageLabel.setText("Please select an employee");
+            messageLabel.setText("Please select an employee or user");
         }
     }
 }

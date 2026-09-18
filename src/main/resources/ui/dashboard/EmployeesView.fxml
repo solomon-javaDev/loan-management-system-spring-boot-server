@@ -38,6 +38,9 @@
                               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                               <RowConstraints />
                               <RowConstraints />
+                              <RowConstraints minHeight="10.0" prefHeight="30.0" />
+                              <RowConstraints minHeight="10.0" prefHeight="30.0" />
+                              <RowConstraints minHeight="10.0" prefHeight="30.0" />
                           </rowConstraints>
                            <children>
                               <Label text="First Name" />
@@ -56,7 +59,7 @@
                               <TextField fx:id="telephone" minHeight="18.0" minWidth="50.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
                               <Label text="Password" GridPane.rowIndex="7" />
                               <PasswordField fx:id="password" minHeight="18.0" minWidth="50.0" GridPane.columnIndex="1" GridPane.rowIndex="7" />
-                              <Label fx:id="messageLabel" prefHeight="17.0" prefWidth="475.0" text="Status" textOverrun="CENTER_ELLIPSIS" wrapText="true" GridPane.rowIndex="8">
+                              <Label fx:id="messageLabel" prefHeight="92.0" prefWidth="475.0" text="Status" textOverrun="CENTER_ELLIPSIS" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="9">
                                  <font>
                                     <Font name="System Bold" size="14.0" />
                                  </font></Label>
@@ -68,6 +71,12 @@
                                     <Button fx:id="createEmployeeButton" mnemonicParsing="false" onAction="#createEmployee" prefHeight="25.0" prefWidth="199.0" text="Create Account" />
                                 </buttons>
                               </ButtonBar>
+                              <HBox spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="11">
+                                 <children>
+                                    <Button mnemonicParsing="false" onAction="#handleActivate" text="Activate" />
+                                    <Button mnemonicParsing="false" onAction="#handleDeactivate" text="Deactivate" />
+                                 </children>
+                              </HBox>
                            </children>
                            <padding>
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
@@ -80,7 +89,7 @@
                   </VBox>
                </children>
             </AnchorPane>
-          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="192.0" prefWidth="685.0">
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="246.0" prefWidth="685.0">
                <children>
                   <HBox spacing="12.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                      <children>
@@ -119,11 +128,5 @@
             </AnchorPane>
         </items>
       </SplitPane>
-      <HBox layoutX="10.0" layoutY="10.0" spacing="10.0" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0">
-         <children>
-            <Button mnemonicParsing="false" onAction="#handleActivate" text="Activate" />
-            <Button mnemonicParsing="false" onAction="#handleDeactivate" text="Deactivate" />
-         </children>
-      </HBox>
    </children>
 </AnchorPane>

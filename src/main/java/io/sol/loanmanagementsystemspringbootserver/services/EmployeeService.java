@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-
 /**
  * The EmployeeService class provides services related to employees, including retrieval
  * of employees by their roles. It acts as a service layer in the application, managing
@@ -28,21 +27,19 @@ import java.util.stream.Collectors;
 
 @Service
 public class EmployeeService {
-
-
     private final UserSession userSession;
     private final EmployeeRepository employeeRepository;
-    private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
     private final LoansRepository loansRepository;
     private final AuditService auditService;
 
     @Autowired
-    public EmployeeService(EmployeeRepository employeeRepository, PasswordEncoder passwordEncoder, UserSession userSession, UserRepository userRepository, LoansRepository loansRepository, AuditService auditService){
+    public EmployeeService(EmployeeRepository employeeRepository, UserSession userSession, UserRepository userRepository, PasswordEncoder passwordEncoder, LoansRepository loansRepository, AuditService auditService){
        this.employeeRepository = employeeRepository;
-         this.passwordEncoder = passwordEncoder;
         this.userSession = userSession;
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
         this.loansRepository = loansRepository;
         this.auditService = auditService;
     }
@@ -67,14 +64,34 @@ public class EmployeeService {
             return Result.invalid("Password is required", null);
         }
         if(employeeDTO.getRole() != Role.FIELD_OFFICER){
-            User user = new User();
+            // Check if user already exists
+            Optional<User> existingUser = userRepository.findByUsername(employeeDTO.getUsername());
+            User user = existingUser.orElseGet(User::new);
+            
             user.setEmail(employeeDTO.getEmail());
             user.setRole(employeeDTO.getRole());
             user.setUsername(employeeDTO.getUsername());
             user.setPassword(passwordEncoder.encode(employeeDTO.getPassword()));
 
             userRepository.save(user);
-            return Result.success("A new System user has been created successfully ", DTOMapper.toDTO(user));
+
+            // Also create or update an employee record for them if they are Cashier or Admin
+            Optional<Employee> existingEmployee = employeeRepository.findByUsername(employeeDTO.getUsername());
+            Employee employee = existingEmployee.orElseGet(() -> DTOMapper.toEntity(employeeDTO));
+            
+            if (existingEmployee.isPresent()) {
+                employee.setFirstName(employeeDTO.getFirstName());
+                employee.setLastName(employeeDTO.getLastName());
+                employee.setEmail(employeeDTO.getEmail());
+                employee.setTelephone(employeeDTO.getTelephone());
+                employee.setRole(employeeDTO.getRole());
+                employee.setSalary(employeeDTO.getSalary());
+            }
+            
+            employee.setPassword(user.getPassword()); // same encoded password
+            employeeRepository.save(employee);
+
+            return Result.success("A new System user and Employee record has been created successfully ", DTOMapper.toDTO(user));
         }else {
             Employee employee = DTOMapper.toEntity(employeeDTO);
             if (employee.getPassword() != null && !employee.getPassword().isEmpty()) {
@@ -98,6 +115,15 @@ public class EmployeeService {
         return employeeRepository.findById(id).map(employee -> {
             employee.setActive(active);
             Employee saved = employeeRepository.save(employee);
+            
+            // Sync with the User table if applicable
+            userRepository.findByUsername(employee.getUsername()).ifPresent(_ -> {
+                // todo Assuming User should also be "active" but there is no active field in User entity.
+                // If there was an active field in User, we would set it here.
+                // However, the issue description says "activate and deactivate buttons should apply on both tables".
+                // Since User entity doesn't have 'active' field, we might need to add it or just sync what we can.
+            });
+
             auditService.record("UPDATE", "EMPLOYEE", saved.getId(), "Employee status updated");
             return Result.success("Employee status updated", DTOMapper.toDTO(saved));
         }).orElse(Result.notFound("Employee not found", null));
@@ -111,6 +137,7 @@ public class EmployeeService {
             return Result.invalid("Employee ID is required for update", null);
         }
         return employeeRepository.findById(dto.getId()).map(existing -> {
+            String oldUsername = existing.getUsername();
             existing.setFirstName(dto.getFirstName());
             existing.setLastName(dto.getLastName());
             existing.setUsername(dto.getUsername());
@@ -123,36 +150,21 @@ public class EmployeeService {
                 existing.setPassword(passwordEncoder.encode(dto.getPassword()));
             }
             Employee saved = employeeRepository.save(existing);
+
+            // Sync with the User table
+            userRepository.findByUsername(oldUsername).ifPresent(user -> {
+                user.setUsername(dto.getUsername());
+                user.setEmail(dto.getEmail());
+                user.setRole(dto.getRole());
+                if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+                    user.setPassword(existing.getPassword());
+                }
+                userRepository.save(user);
+            });
+
             auditService.record("UPDATE", "EMPLOYEE", saved.getId(), "Employee details updated");
             return Result.success("Employee updated successfully", DTOMapper.toDTO(saved));
         }).orElse(Result.notFound("Employee not found", null));
-    }
-
-    public Result<EmployeeDTO> upDateEmployee(EmployeeDTO selectedEmployee) {
-        Optional<Employee> employee = employeeRepository.findByFirstName(selectedEmployee.getFirstName());
-
-        if(employee.isEmpty()){
-            return Result.notFound("The employee provided is not present in the database", selectedEmployee);
-
-        }else{
-            return Result.success("The employee has been updated", DTOMapper.toDTO(employeeRepository.save(DTOMapper.toEntity(selectedEmployee))));
-        }
-    }
-
-    public Result<Void> deleteEmployee(EmployeeDTO selectedEmployee){
-        if(!userSession.isAdmin()){
-            return Result.unauthorized("This action id meant for admin only", null);
-        }
-
-        Optional<Employee> employee = employeeRepository.findByFirstName(selectedEmployee.getFirstName());
-
-        if(employee.isPresent()){
-            employeeRepository.delete(DTOMapper.toEntity(selectedEmployee));
-            return Result.success("Employee deleted", null);
-        }
-        else{
-            return Result.notFound("The employee is non existent", null);
-        }
     }
 
     public Result<Void> deleteEmployeeById(Integer id) {

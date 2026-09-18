@@ -5,22 +5,25 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane id="dashboardLabel" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.sol.loanmanagementsystemspringbootserver.controllers.DashboardController">
+<AnchorPane id="dashboardLabel" prefHeight="400.0" prefWidth="756.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.sol.loanmanagementsystemspringbootserver.controllers.DashboardController">
    <children>
-      <BorderPane layoutX="14.0" layoutY="14.0" prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <BorderPane layoutX="14.0" layoutY="14.0" prefHeight="488.0" prefWidth="756.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <top>
-            <HBox fx:id="topBar" fillHeight="false" nodeOrientation="LEFT_TO_RIGHT" prefHeight="48.0" prefWidth="600.0" spacing="12.0" BorderPane.alignment="CENTER">
+            <HBox fx:id="topBar" fillHeight="false" nodeOrientation="LEFT_TO_RIGHT" spacing="2.0" BorderPane.alignment="CENTER">
                <children>
-                  <HBox alignment="CENTER_LEFT" prefHeight="48.0" prefWidth="270.0" spacing="5.0">
+                  <HBox alignment="CENTER_LEFT" prefHeight="48.0" prefWidth="185.0" spacing="1.0">
                      <children>
-                        <Label fx:id="cashAtHandLabel" text="CASH AT HAND">
+                        <Label fx:id="cashAtHandLabel" text="CASH AT HAND" HBox.hgrow="ALWAYS">
                            <graphic>
                               <Label text="CASH AT HAND: " />
                            </graphic>
                         </Label>
                      </children>
+                     <padding>
+                        <Insets left="2.0" />
+                     </padding>
                   </HBox>
-                  <HBox alignment="CENTER_LEFT" prefHeight="48.0" prefWidth="220.0">
+                  <HBox alignment="CENTER_LEFT" prefHeight="48.0" prefWidth="127.0" spacing="1.0" HBox.hgrow="ALWAYS">
                      <children>
                         <Label fx:id="bankBalanceLabel" text="0.00">
                            <graphic>
@@ -28,8 +31,11 @@
                            </graphic>
                         </Label>
                      </children>
+                     <padding>
+                        <Insets left="2.0" />
+                     </padding>
                   </HBox>
-                  <HBox alignment="CENTER_LEFT" prefHeight="48.0" prefWidth="260.0">
+                  <HBox alignment="CENTER_LEFT" prefHeight="48.0" prefWidth="193.0" spacing="1.0" HBox.hgrow="ALWAYS">
                      <children>
                         <Label fx:id="availableLiquidityLabel" text="0.00">
                            <graphic>
@@ -37,15 +43,21 @@
                            </graphic>
                         </Label>
                      </children>
+                     <HBox.margin>
+                        <Insets left="2.0" right="2.0" />
+                     </HBox.margin>
                   </HBox>
-                  <HBox alignment="CENTER_LEFT" layoutX="115.0" layoutY="10.0" prefHeight="48.0" prefWidth="270.0">
+                  <HBox alignment="CENTER_LEFT" layoutX="115.0" layoutY="10.0" prefHeight="48.0" prefWidth="270.0" spacing="1.0" HBox.hgrow="ALWAYS">
                      <children>
-                        <Label fx:id="totalLoanPortifolioLabel" text="portifolio">
+                        <Label fx:id="totalLoanPortifolioLabel" prefHeight="17.0" prefWidth="262.0" text="portifolio">
                            <graphic>
-                              <Label text="TOTAL LOAN PORTIFOLIO: " />
+                              <Label prefHeight="17.0" prefWidth="149.0" text="TOTAL LOAN PORTIFOLIO: " />
                            </graphic>
                         </Label>
                      </children>
+                     <padding>
+                        <Insets left="2.0" />
+                     </padding>
                   </HBox>
                </children>
                <cursor>

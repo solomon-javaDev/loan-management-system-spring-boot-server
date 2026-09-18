@@ -253,9 +253,7 @@ public class PaymentsController {
         Result<PaymentDTO> result = paymentsService.savePayment(date.getValue(), amount, selectedLoan.getId());
 
         if (result.isSuccess()) {
-            if (!documentService.printPaymentReceipt(result.value())) {
-                UIHelper.exportPdfBytes("PaymentReceipt", documentService.generatePaymentReceipt(result.value()));
-            }
+            UIHelper.exportPdfBytes("PaymentReceipt", documentService.generatePaymentReceipt(result.value()));
         }
         UIHelper.updateStatusLabel(messageLabel, result);
 
