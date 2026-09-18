@@ -1,12 +1,12 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
-import io.sol.loanmanagementsystemspringbootserver.entities.Role;
 import io.sol.loanmanagementsystemspringbootserver.repositories.UserRepository;
-import io.sol.loanmanagementsystemspringbootserver.services.ActivityLoggingService;
+import io.sol.loanmanagementsystemspringbootserver.utilities.Logger;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.utilities.StageManager;
-import io.sol.loanmanagementsystemspringbootserver.entities.User;
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.User;
 import io.sol.loanmanagementsystemspringbootserver.services.AuthenticationService;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
 import org.springframework.context.ApplicationContext;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
@@ -35,7 +35,6 @@ import java.io.IOException;
 public class LoginController {
 
     private final StageManager stageManager;
-    private final ActivityLoggingService activityLoggingService;
     private final UserRepository userRepository;
 
     @FXML
@@ -54,11 +53,12 @@ public class LoginController {
     private Button creatAccountButton;
 
     private final AuthenticationService authenticationService;
-    public LoginController(AuthenticationService authenticationService, ApplicationContext applicationContext, StageManager stageManager, ActivityLoggingService activityLoggingService, UserRepository userRepository) {
+    private final UserSession userSession;
+    public LoginController(AuthenticationService authenticationService, ApplicationContext applicationContext, StageManager stageManager, UserRepository userRepository, UserSession userSession) {
         this.authenticationService = authenticationService;
         this.stageManager = stageManager;
-        this.activityLoggingService = activityLoggingService;
         this.userRepository = userRepository;
+        this.userSession = userSession;
     }
 
     @FXML
@@ -66,29 +66,9 @@ public class LoginController {
 
     }
 
-//    @FXML
-//    private void handleCreateAccountClick(){
-//        String userName = usernameField.getText() == null ? " ": usernameField.getText().trim();
-//
-//        String password = passwordField.getText() == null ? " ": passwordField.getText();
-//
-//        User user = new User();
-//        user.setUsername(userName);
-//        user.setPassword(password);
-//        user.setRole(Role.ADMIN);
-//
-//
-//        try {
-//            userRepository.save(user);
-//        } catch (Exception e) {
-//            activityLoggingService.logActivity("User - ", "Attempted to save a new user, but an error ocurred: "+ e.getLocalizedMessage());
-//
-//        }
-//
-//    }
-
     @FXML
     private void onLoginClicked() {
+        Logger.logInfo("Login clicked");
         String username = usernameField.getText() == null ? "" : usernameField.getText().trim();
         String password = passwordField.getText() == null ? "" : passwordField.getText();
 
@@ -96,6 +76,7 @@ public class LoginController {
         messageLabel.setText(authResult.message());
 
         if (authResult.isSuccess()) {
+            userSession.login(authResult.value());
             loadDashboard();
         }
     }
@@ -113,8 +94,8 @@ public class LoginController {
             stage.setTitle("Create Account - LMS");
             stage.setResizable(false);
         }catch(Exception e){
+            Logger.logError(e.getMessage());
             messageLabel.setText("Unable to load the Create Account form!");
-            activityLoggingService.logActivity("User - tried creating an account!", e.getLocalizedMessage());
         }
     }
 
@@ -129,7 +110,7 @@ public class LoginController {
             stage.setResizable(true);
         } catch (IOException e) {
             messageLabel.setText("Unable to open dashboard. Please contact support.");
-            e.printStackTrace();
+            Logger.logError(e.getMessage());
         }
     }
 }

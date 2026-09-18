@@ -1,17 +1,58 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
-import io.sol.loanmanagementsystemspringbootserver.services.SystemSettingService;
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import java.math.BigDecimal;
+
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.ExpenseCategory;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.FeeBucket;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.CashTransaction;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.CashTransactionType;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.SystemFinancialState;
+import io.sol.loanmanagementsystemspringbootserver.events.FinancialStateUpdatedEvent;
+import io.sol.loanmanagementsystemspringbootserver.mailing.EmailDetails;
+import io.sol.loanmanagementsystemspringbootserver.mailing.EmailsService;
+import io.sol.loanmanagementsystemspringbootserver.services.ExpenseCategoryService;
+import io.sol.loanmanagementsystemspringbootserver.services.FeeBucketService;
+import io.sol.loanmanagementsystemspringbootserver.services.FinancialStateService;
+import io.sol.loanmanagementsystemspringbootserver.services.CashTransactionService;
+import io.sol.loanmanagementsystemspringbootserver.utilities.MoneyHelper;
+import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UiControlUtilities;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
 
 @Component
 public class SettingsController {
 
-    private final SystemSettingService settingService;
+    private final ExpenseCategoryService expenseCategoryService;
+    private final FinancialStateService financialStateService;
+    private final FeeBucketService feeBucketService;
+    private final EmailsService emailsService;
+    private final UserSession userSession;
+    private final CashTransactionService cashTransactionService;
 
     @FXML
     private TextField adminEmailsField;
+
+    @FXML
+    private Label totalCapitalLabel;
+
+    @FXML
+    private Label totalCashOutLabel;
 
     @FXML
     private CheckBox dailyReportCheckbox;
@@ -25,34 +66,291 @@ public class SettingsController {
     @FXML
     private Label messageLabel;
 
-    public SettingsController(SystemSettingService settingService) {
-        this.settingService = settingService;
+    @FXML
+    private TextField expenseCategory;
+
+    @FXML
+    private TextField cashOnHandField;
+    @FXML
+    private TextField bankBalanceField;
+    @FXML
+    private TextField ownersCapitalField;
+
+    @FXML
+    private TextField transactionAmount;
+
+    @FXML
+    private ComboBox<CashTransactionType> transactionType;
+
+    @FXML private TextField feeMinAmountField;
+    @FXML private TextField feeMaxAmountField;
+    @FXML private TextField feeAmountField;
+    @FXML private TableView<FeeBucket> feeBucketsTable;
+    @FXML private TableColumn<FeeBucket, BigDecimal> feeMinColumn;
+    @FXML private TableColumn<FeeBucket, BigDecimal> feeMaxColumn;
+    @FXML private TableColumn<FeeBucket, BigDecimal> feeAmountColumn;
+
+    public SettingsController(ExpenseCategoryService expenseCategoryService, FinancialStateService financialStateService,
+                              FeeBucketService feeBucketService, EmailsService emailsService, UserSession userSession,
+                              CashTransactionService cashTransactionService) {
+        this.expenseCategoryService = expenseCategoryService;
+        this.financialStateService = financialStateService;
+        this.feeBucketService = feeBucketService;
+        this.emailsService = emailsService;
+        this.userSession = userSession;
+        this.cashTransactionService = cashTransactionService;
     }
 
     @FXML
     public void initialize() {
-        agingFreq.getItems().addAll("Daily","Every 3 days","Weekly","Monthly");
-        
-        String savedEmails = settingService.getSetting("report.emails", "");
-        adminEmailsField.setText(savedEmails);
-        
-        String reportEnabled = settingService.getSetting("report.enabled", "true");
-        dailyReportCheckbox.setSelected(Boolean.parseBoolean(reportEnabled));
-        
-        String reportTime = settingService.getSetting("report.time", "07:00");
-        dailyTimeField.setText(reportTime);
-        
-        String agingF = settingService.getSetting("report.aging.freq", "Daily");
-        agingFreq.setValue(agingF);
+        agingFreq.getItems().addAll("Daily", "Every 3 days", "Weekly", "Monthly");
+        transactionType.getItems().setAll(CashTransactionType.BANK_DEPOSIT, CashTransactionType.BANK_WITHDRAWAL);
+        feeMinColumn.setCellValueFactory(new PropertyValueFactory<>("minAmount"));
+        feeMinColumn.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
+
+        feeMaxColumn.setCellValueFactory(new PropertyValueFactory<>("maxAmount"));
+        feeMaxColumn.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
+
+        feeAmountColumn.setCellValueFactory(new PropertyValueFactory<>("feeAmount"));
+        feeAmountColumn.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
+
+        loadFeeBuckets();
+        refreshUI();
+    }
+
+    private void refreshUI() {
+        SystemFinancialState state = financialStateService.getCurrentState();
+        if (state != null && totalCapitalLabel != null) {
+            totalCapitalLabel.setText(MoneyHelper.formatMoney(state.getOwnerCapital()));
+            if (totalCashOutLabel != null) totalCashOutLabel.setText(MoneyHelper.formatMoney(state.getTotalExpenses()));
+            if (bankBalanceField != null) bankBalanceField.setText(toEditableAmount(state.getBankBalance()));
+            if (ownersCapitalField != null) ownersCapitalField.setText(toEditableAmount(state.getOwnerCapital()));
+            if (cashOnHandField != null) cashOnHandField.setText(toEditableAmount(state.getCashOnHand()));
+            if (adminEmailsField != null) adminEmailsField.setText(state.getAdminEmails());
+        }
+    }
+
+    @EventListener
+    public void onFinancialStateUpdated(FinancialStateUpdatedEvent event) {
+        try {
+            if (Platform.isFxApplicationThread()) {
+                refreshUI();
+                return;
+            }
+            Platform.runLater(this::refreshUI);
+        } catch (IllegalStateException | IllegalArgumentException | UnsupportedOperationException ignored) {
+            // JavaFX is not initialized during non-UI bootstrap.
+        }
     }
 
     @FXML
     private void handleSave() {
-        settingService.saveSetting("report.emails", adminEmailsField.getText());
-        settingService.saveSetting("report.enabled", String.valueOf(dailyReportCheckbox.isSelected()));
-        settingService.saveSetting("report.time", dailyTimeField.getText());
-        settingService.saveSetting("report.aging.freq", agingFreq.getValue());
-        
-        messageLabel.setText("Settings saved successfully.");
+        financialSave();
+    }
+
+    private void financialSave() {
+
+        if (!userSession.isAdmin()) {
+            showAlert(Alert.AlertType.ERROR, "Authorization required", "Only an administrator can change capital and cash settings.");
+            return;
+        }
+
+        String bankBalance = bankBalanceField.getText() == null ? "" : bankBalanceField.getText().trim();
+        String ownersCapital = ownersCapitalField.getText() == null ? "" : ownersCapitalField.getText().trim();
+        String cashOnHand = cashOnHandField.getText() == null ? "" : cashOnHandField.getText().trim();
+
+        if(bankBalance.isBlank() || ownersCapital.isBlank() || cashOnHand.isBlank()){
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Error");
+            alert.setHeaderText("Financial Save Error");
+            alert.setContentText("Please fill in the fields for Bank balance, Liquidity, and Cash On Hand");
+            ButtonType buttonTypeSave = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
+            alert.setResult(buttonTypeSave);
+            alert.showAndWait();
+        }else{
+            try {
+                BigDecimal bank = new BigDecimal(bankBalance);
+                BigDecimal capital = new BigDecimal(ownersCapital);
+                BigDecimal cash = new BigDecimal(cashOnHand);
+                String adminEmails = adminEmailsField.getText() == null ? "" : adminEmailsField.getText().trim();
+                SystemFinancialState previous = financialStateService.getCurrentState();
+                if (!confirmFinancialChange(previous, bank, capital, cash)) return;
+                Result<Void> result = financialStateService.makeFinancialSetting(bank, capital, cash, adminEmails);
+                if (result.isFailure()) {
+                    showAlert(Alert.AlertType.ERROR, "Settings not saved", result.message());
+                    return;
+                }
+                sendFinancialSettingsSnapshot(previous, bank, capital, cash, adminEmails);
+                messageLabel.setText(result.message());
+            } catch (NumberFormatException e) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText("Invalid Input");
+                alert.setContentText("Please enter valid numeric values for financial fields.");
+                alert.showAndWait();
+            }
+        }
+    }
+
+    @FXML
+    private void recordBankTransaction() {
+        if (!userSession.isAdmin()) {
+            showAlert(Alert.AlertType.ERROR, "Authorization required", "Only an administrator can record bank transfers.");
+            return;
+        }
+
+        CashTransactionType type = transactionType.getValue();
+        BigDecimal amount;
+        try {
+            amount = new BigDecimal(transactionAmount.getText().trim());
+        } catch (Exception exception) {
+            showAlert(Alert.AlertType.ERROR, "Invalid transaction", "Enter a valid transfer amount.");
+            return;
+        }
+
+        if (type == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            showAlert(Alert.AlertType.ERROR, "Invalid transaction", "Select a transfer type and enter an amount greater than zero.");
+            return;
+        }
+    try {
+        CashTransaction transaction = new CashTransaction();
+        transaction.setType(type);
+        transaction.setAmount(amount);
+        transaction.setDate(java.time.LocalDateTime.now());
+        transaction.setDescription(type == CashTransactionType.BANK_DEPOSIT
+                ? "Cash transferred to bank"
+                : "Cash withdrawn from bank");
+
+        Result<CashTransaction> result = cashTransactionService.recordTransaction(transaction);
+        messageLabel.setText(result.message());
+        if (result.isSuccess()) {
+            transactionAmount.clear();
+            transactionType.getSelectionModel().clearSelection();
+        }
+    }catch(Exception exception){
+        showAlert(Alert.AlertType.ERROR, "An error has occurred", exception.getLocalizedMessage());
+    }
+    }
+
+    private String toEditableAmount(BigDecimal amount) {
+        return amount == null ? "0" : amount.toPlainString();
+    }
+
+    @FXML
+    private void saveFeeBucket() {
+        if (!userSession.isAdmin()) {
+            showAlert(Alert.AlertType.ERROR, "Authorization required", "Only an administrator can edit fee buckets.");
+            return;
+        }
+        try {
+            FeeBucket selected = feeBucketsTable.getSelectionModel().getSelectedItem();
+            FeeBucket bucket = selected == null ? new FeeBucket() : selected;
+            bucket.setMinAmount(new BigDecimal(feeMinAmountField.getText().trim()));
+            bucket.setMaxAmount(new BigDecimal(feeMaxAmountField.getText().trim()));
+            bucket.setFeeAmount(new BigDecimal(feeAmountField.getText().trim()));
+            Result<FeeBucket> result = feeBucketService.saveBucket(bucket);
+            messageLabel.setText(result.message());
+            if (result.isSuccess()) {
+                loadFeeBuckets();
+                clearFeeBucketFields();
+            }
+        } catch (NumberFormatException exception) {
+            showAlert(Alert.AlertType.ERROR, "Invalid fee bucket", "Enter valid numeric values for all fee bucket fields.");
+        }
+    }
+
+    @FXML
+    private void selectFeeBucket() {
+        FeeBucket bucket = feeBucketsTable.getSelectionModel().getSelectedItem();
+        if (bucket == null) return;
+        feeMinAmountField.setText(bucket.getMinAmount().toPlainString());
+        feeMaxAmountField.setText(bucket.getMaxAmount().toPlainString());
+        feeAmountField.setText(bucket.getFeeAmount().toPlainString());
+    }
+
+    private void loadFeeBuckets() {
+        feeBucketsTable.setItems(FXCollections.observableArrayList(feeBucketService.getAllBuckets()));
+    }
+
+    @FXML
+    private void clearFeeBucketFields() {
+        feeMinAmountField.clear();
+        feeMaxAmountField.clear();
+        feeAmountField.clear();
+        feeBucketsTable.getSelectionModel().clearSelection();
+    }
+
+    private boolean confirmFinancialChange(SystemFinancialState previous, BigDecimal bank, BigDecimal capital, BigDecimal cash) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirm financial settings");
+        alert.setHeaderText("Capital and cash settings will be changed");
+        alert.setContentText("A snapshot of the previous settings will be recorded and emailed to the configured administrators. Continue?");
+        return alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK;
+    }
+
+    private void sendFinancialSettingsSnapshot(SystemFinancialState previous, BigDecimal bank, BigDecimal capital,
+                                               BigDecimal cash, String adminEmails) {
+        if (adminEmails == null || adminEmails.isBlank()) return;
+        String body = "Capital and cash settings have been updated by an administrator.\n\n"
+                + "Previous settings (snapshot):\n" + formatFinancialSettings(previous.getBankBalance(), previous.getOwnerCapital(), previous.getCashOnHand())
+                + "\nNew settings:\n" + formatFinancialSettings(bank, capital, cash);
+        for (String email : adminEmails.split(",")) {
+            String recipient = email.trim();
+            if (!recipient.isBlank()) {
+                emailsService.sendSimpleMail(new EmailDetails(recipient, "Capital and cash settings updated", body));
+            }
+        }
+    }
+
+    private String formatFinancialSettings(BigDecimal bank, BigDecimal capital, BigDecimal cash) {
+        return "Bank balance: " + bank + "\nOwner capital: " + capital + "\nCash on hand: " + cash + "\n";
+    }
+
+    private void showAlert(Alert.AlertType type, String header, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle("Settings");
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+
+    @FXML
+    private void addCategory() {
+        String description = expenseCategory.getText();
+        if (description.isBlank()) {
+            messageLabel.setText("Fill in a category");
+            return;
+        }
+        if (expenseCategoryService.getCategoryByDescription(description).isSuccess()) {
+            messageLabel.setText("Category already exists");
+            return;
+        }
+        if (!description.isBlank()) {
+            ExpenseCategory expenseCategory1 = new ExpenseCategory(description);
+            expenseCategoryService.saveCategory(expenseCategory1);
+            messageLabel.setText("A new expense category has been saved: " + description);
+            expenseCategory.clear();
+        }
+    }
+
+    public void updateFeeBucket() {
+        if(feeBucketsTable.getSelectionModel().getSelectedItem() == null){
+            showAlert(Alert.AlertType.WARNING, "No selected Item", "There has been no selection made");
+            return;
+        }
+
+        FeeBucket feeBucket = feeBucketsTable.getSelectionModel().getSelectedItem();
+        feeBucketService.updateBucket(feeBucket);
+    }
+
+    public void deleteFeeBucket() {
+        if(feeBucketsTable.getSelectionModel().getSelectedItem() == null){
+            showAlert(Alert.AlertType.WARNING, "No selected Item", "There has been no selection made");
+            return;
+        }
+
+        FeeBucket feeBucket = feeBucketsTable.getSelectionModel().getSelectedItem();
+        feeBucketService.deleteBucket(feeBucket.getId());
     }
 }

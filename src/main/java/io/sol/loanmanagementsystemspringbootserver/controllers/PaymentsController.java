@@ -1,31 +1,41 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
-import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO;
-import io.sol.loanmanagementsystemspringbootserver.dtos.LoanDTO;
-import io.sol.loanmanagementsystemspringbootserver.dtos.PaymentDTO;
-import io.sol.loanmanagementsystemspringbootserver.entities.LoanStatus;
-import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
-import io.sol.loanmanagementsystemspringbootserver.services.LoansService;
-import io.sol.loanmanagementsystemspringbootserver.services.PaymentsService;
-import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
-import io.sol.loanmanagementsystemspringbootserver.utilities.UiControlUtilities;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
-import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+
+import org.springframework.stereotype.Component;
+
+import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO;
+import io.sol.loanmanagementsystemspringbootserver.dtos.LoanDTO;
+import io.sol.loanmanagementsystemspringbootserver.dtos.PaymentDTO;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.LoanStatus;
+import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
+import io.sol.loanmanagementsystemspringbootserver.services.DocumentService;
+import io.sol.loanmanagementsystemspringbootserver.services.LoansService;
+import io.sol.loanmanagementsystemspringbootserver.services.PaymentsService;
+import io.sol.loanmanagementsystemspringbootserver.utilities.MoneyHelper;
+import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UiControlUtilities;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
 
 /**
  * The PaymentsController class is responsible for managing the user interface interactions
  * related to payment operations in the application. It is a part of the UI layer and interacts
  * with various services to perform payment-related actions such as saving, updating, deleting,
  * and filtering payment records.
- *
  * Responsibilities of this controller include:
  * - Configuring and initializing UI components such as tables, dropdowns, and other controls.
  * - Handling user actions and binding data to UI components.
@@ -38,11 +48,9 @@ import java.util.List;
  * - LoansService: For retrieving and managing loan-related data.
  * - PaymentsService: For performing operations related to payments, such as fetching, saving,
  *   updating, and deleting payment records.
- *
- * The class uses FXML annotations to map UI components, ensuring seamless interaction with the
+ * * The class uses FXML annotations to map UI components, ensuring seamless interaction with the
  * JavaFX framework.
- *
- * Key Features:
+ * * Key Features:
  * - TableView for displaying a list of payments with columns for date, customer, amount, and loan reference.
  * - Dropdowns for selecting customers and loans.
  * - Basic CRUD operations for payments.
@@ -76,6 +84,8 @@ public class PaymentsController {
     private final UiControlUtilities uiControlUtilities;
     private final LoansService loansService;
     private final PaymentsService paymentsService;
+    private final UserSession userSession;
+    private final DocumentService documentService;
 
     @FXML
     private DatePicker date;
@@ -102,6 +112,9 @@ public class PaymentsController {
     private TableColumn<PaymentDTO, BigDecimal> amountColumn;
 
     @FXML
+    private TableColumn<PaymentDTO, BigDecimal> remainingColumn;
+
+    @FXML
     private TableColumn<PaymentDTO, String> loanRefColumn;
 
     @FXML
@@ -119,17 +132,21 @@ public class PaymentsController {
     @FXML
     private Label messageLabel;
 
-    public PaymentsController(CustomerService customerService, UiControlUtilities uiControlUtilities, LoansService loansService, PaymentsService paymentsService) {
+    public PaymentsController(CustomerService customerService, UiControlUtilities uiControlUtilities, LoansService loansService, PaymentsService paymentsService, UserSession userSession, DocumentService documentService) {
         this.customerService = customerService;
         this.uiControlUtilities = uiControlUtilities;
         this.loansService = loansService;
         this.paymentsService = paymentsService;
+        this.userSession = userSession;
+        this.documentService = documentService;
     }
 
     @FXML
     public void initialize(){
         configureTable();
         loadData();
+
+        date.setValue(LocalDate.now());
 
         customerName.valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
@@ -146,13 +163,19 @@ public class PaymentsController {
         });
 
         paymentSaveButton.disableProperty().bind(paymentsTable.getSelectionModel().selectedItemProperty().isNotNull());
-        paymentUpdateButton.disableProperty().bind(paymentsTable.getSelectionModel().selectedItemProperty().isNull());
-        paymentDeleteButton.disableProperty().bind(paymentsTable.getSelectionModel().selectedItemProperty().isNull());
+        paymentUpdateButton.disableProperty().bind(paymentsTable.getSelectionModel().selectedItemProperty().isNull()
+            .or(new javafx.beans.property.ReadOnlyBooleanWrapper(!userSession.isAdmin())));
+        paymentDeleteButton.disableProperty().bind(paymentsTable.getSelectionModel().selectedItemProperty().isNull()
+            .or(new javafx.beans.property.ReadOnlyBooleanWrapper(!userSession.isAdmin())));
     }
 
     private void configureTable() {
         dateColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
         amountColumn.setCellValueFactory(new PropertyValueFactory<>("amountReceived"));
+        amountColumn.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
+
+        remainingColumn.setCellValueFactory(new PropertyValueFactory<>("remainingBalance"));
+        remainingColumn.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
 
         customerColumn.setCellValueFactory(cellData -> {
             PaymentDTO payment = cellData.getValue();
@@ -165,11 +188,13 @@ public class PaymentsController {
             String ref = payment.getLoanReference();
             return new SimpleStringProperty(ref != null ? ref : "");
         });
+        UiControlUtilities.autoSizeColumns(paymentsTable);
+
     }
 
     @FXML
     public void loadData() {
-        uiControlUtilities.configureDropDown(customerName, customerService.getAllCustomers().value(),
+        uiControlUtilities.configureSearchableDropDown(customerName, customerService.getAllCustomers().value(),
                 c -> c.getFirstName() + " " + c.getLastName());
         
         uiControlUtilities.configureDropDown(loanReference, loansService.getAllLoans().value(),
@@ -177,6 +202,7 @@ public class PaymentsController {
 
         Result<List<PaymentDTO>> payments = paymentsService.getAllPayments();
         paymentsTable.setItems(FXCollections.observableArrayList(payments.value()));
+        UiControlUtilities.autoSizeColumns(paymentsTable);
     }
 
     private void filterLoansByCustomer(CustomerDTO customer) {
@@ -185,7 +211,9 @@ public class PaymentsController {
         Result<List<LoanDTO>> result = loansService.getAllLoans();
         List<LoanDTO> filteredLoans = result.value().stream()
                 .filter(loan -> loan.getCustomerId() != null && loan.getCustomerId() == customer.getId())
-                .filter(loan -> loan.getStatus() == LoanStatus.PENDING || loan.getStatus() == LoanStatus.ACTIVE)
+                .filter(loan -> loan.getStatus() == LoanStatus.PENDING
+                    || loan.getStatus() == LoanStatus.ACTIVE
+                    || loan.getStatus() == LoanStatus.DEFAULTED)
                 .toList();
         
         uiControlUtilities.configureDropDown(loanReference, filteredLoans, LoanDTO::getReference);
@@ -223,11 +251,22 @@ public class PaymentsController {
 
         BigDecimal amount = parseBigDecimal(amountRecieved.getText());
         Result<PaymentDTO> result = paymentsService.savePayment(date.getValue(), amount, selectedLoan.getId());
-        messageLabel.setText(result.message());
+
+        if (result.isSuccess()) {
+            UIHelper.exportPdfBytes("PaymentReceipt", documentService.generatePaymentReceipt(result.value()));
+        }
+        UIHelper.updateStatusLabel(messageLabel, result);
+
         if (result.isSuccess()) {
             loadData();
             handleClearForm();
+
+            // Show alert for loan closure or excess payment
+            if (result.message().contains("loan fully paid and cleared") || result.message().contains("added to savings")) {
+                UIHelper.showInfo("Loan Status Update", result.message());
+            }
         }
+        
     }
 
     @FXML
@@ -235,9 +274,11 @@ public class PaymentsController {
         PaymentDTO selected = paymentsTable.getSelectionModel().getSelectedItem();
         if (selected == null) return;
 
+        UIHelper.showWarning("WARNING: ", "Avoid updating payments!");
+
         BigDecimal amount = parseBigDecimal(amountRecieved.getText());
         Result<PaymentDTO> result = paymentsService.updatePayment(selected.getId(), date.getValue(), amount);
-        messageLabel.setText(result.message());
+        UIHelper.updateStatusLabel(messageLabel, result);
         if (result.isSuccess()) {
             loadData();
             handleClearForm();
@@ -250,7 +291,7 @@ public class PaymentsController {
         if (selected == null) return;
 
         Result<Void> result = paymentsService.deletePayment(selected.getId());
-        messageLabel.setText(result.message());
+        UIHelper.updateStatusLabel(messageLabel, result);
         if (result.isSuccess()) {
             loadData();
             handleClearForm();
@@ -259,7 +300,7 @@ public class PaymentsController {
 
     @FXML
     private void handleClearForm() {
-        date.setValue(null);
+        date.setValue(LocalDate.now());
         customerName.setValue(null);
         amountRecieved.clear();
         loanReference.setValue(null);

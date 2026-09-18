@@ -1,0 +1,378 @@
+LMS - JAVAFX SYSTEM
+Started: 9th July 2026
+TAT: 28th August 2026
+
+Phase 1: Foundation and core records (13–27 July)
+>Sprint1; App architecture and startup
+	  Database design: Role (ADMIN, CASHIER, FIELD_OFFICER, MANAGER)
+	  Customer
+          Guarantor
+	  Loan
+		Define relationships between customers, guarantors, employees, users
+		
+
+Authentication: Login & CreateAccount
+
+Services and Controllers
+
+
+Phase 2: LOAN OPERATIONS (28 July - 12 Aug)
+
+Sprint 5: Loan Management
+
+ 5.2 Create LoanInstallment entity (loan, due date, principal portion, interest portion, paid amount, status)
+ 5.3 Create LoanStatus enum (PENDING, ACTIVE, CLOSED, DEFAULTED)
+ 5.4 LoanRepository, LoanInstallmentRepository
+ 5.5 LoanCalculationService — processing fee, total interest, installment schedule (flat or declining balance — decide and document)
+ 5.6 LoanService — create loan, generate schedule, assign officer/guarantor, change status
+ 5.7 LoanCreateView.fxml — select customer, product, officer, guarantor; enter amount
+ 5.8 LoanListView.fxml — filter by status, customer, officer
+ 5.9 LoanDetailView.fxml — show schedule, balances, status
+ 5.10 Test end-to-end loan creation with installment schedule
+
+
+Sprint 6: repayment workflow
+ 6.1 Create Repayment entity (loan, installment, amount, date, received by, receipt number)
+ 6.2 RepaymentService — apply payment, update installment, update loan balances
+ 6.3 Balance tracking — outstanding principal, outstanding interest, total paid
+ 6.4 RepaymentView.fxml — find loan, select installment, enter amount
+ 6.5 Receipt generation — printable view or PDF (start with on-screen receipt)
+ 6.6 Auto-close loan when fully paid
+ 6.7 Test repayment flow — partial payment, full payment, overpayment blocked
+
+Sprint 7: Cash management
+ 7.1 Create CashTransaction entity (type, amount, date, description, reference, user)
+ 7.2 Create CashSession entity (opening balance, closing balance, date, cashier, status)
+ 7.3 Transaction types enum — CASH_IN, CASH_OUT, BANK_DEPOSIT, REPAYMENT_RECEIVED
+ 7.4 CashService — open day, record transactions, close day, compute closing balance
+ 7.5 Link repayments to cash-in automatically
+ 7.6 CashierDashboardView.fxml — opening/closing, transaction list, running balance
+ 7.7 CashTransactionForm.fxml — manual cash in/out, bank deposit
+ 7.8 Test full cashier day — open → receive repayments → deposit → close
+Phase 2 acceptance: Create a loan, receive repayments, complete a cashier day.
+
+
+Phase 3: Reporting, polish, deployment (13 - 28 Aug)
+
+Sprint 8: Reports and audit
+ 8.1 Create AuditLog entity (user, action, entity type, entity id, timestamp, details)
+ 8.2 AuditService — log create/update/delete on loans, repayments, cash
+ 8.3 Daily cash report — opening, transactions, closing
+ 8.4 Loan portfolio report — active loans, totals by status
+ 8.5 Repayment report — payments by date range
+ 8.6 Aging analysis — overdue installments by bucket (30/60/90 days)
+ 8.7 Report views FXML + export to CSV or PDF (CSV first)
+ 8.8 AuditLogView.fxml — searchable audit trail
+
+
+Sprint 9: Validation and business rules
+
+ 9.1 Prevent overpayments on installments
+ 9.2 Prevent negative or zero payment amounts
+ 9.3 Validate loan dates (disbursement ≤ first due date)
+ 9.4 Validate interest rate within product limits
+ 9.5 Prevent duplicate customers (ID number / phone)
+ 9.6 Prevent closing cash session with unmatched balance
+ 9.7 Role-based access — cashier vs admin vs field officer screens
+ 9.8 Centralize validation in service layer with clear user-facing messages
+
+Sprint 10: UI polish and packaging
+
+ 10.1 Consistent navigation shell across all screens
+ 10.2 Standard confirm dialogs for delete/destructive actions
+ 10.3 Status badges (.status-badge) for loan/installment states
+ 10.4 Form validation feedback (red borders, inline messages)
+ 10.5 App icon and window title
+ 10.6 application.properties profiles — dev vs prod DB
+ 10.7 DB setup script (setup-db.sql or Flyway migrations)
+ 10.8 Package as runnable JAR with jpackage or installer (Windows .msi/.exe)
+ 10.9 Short user manual (login, daily workflow, reports)
+ 10.10 Version 1.0 smoke test on clean machine
+
+
+
+
+30/07/2026
+1. The search bar at the top, I want to sync it with every view that is selected from the navigation bar,.. e.g. when one clicks loans and they start typing a name, the table starts showing results of loans associated with that name or having in characters similar to the ones being typed,... same applies for customers, payments, and all other tabs I haven't worked on yet. 
+
+2. After login, the window should then maximize automatically to occupy the whole screen.
+
+3. Work on the payment workflow: Select the date (today), select the customer paying, input amount received at hand, select the loan bein g paid from a list (auto populated based on active loans.
+ In the payments view, how should I display the payments of the day(s)? Is it possiblie to add filters to display by day, week, and month?
+
+
+
+
+
+I’ll take this as a design-and-architecture request rather than a code bug, so I’ll map the current app structure against the new views and the required reporting workflow before suggesting concrete shape and integration points.
+
+Searched for regex `DashboardController|HomeController|ReportService|payment|email|mail|settings|application|applications` (`**/src/main/java/**`), 316 results
+
+Read [](file:///b%3A/My%20Java%20Projects/loan-management-system-spring-boot-server/src/main/java/io/sol/loanmanagementsystemspringbootserver/controllers/DashboardController.java)
+
+Read [](file:///b%3A/My%20Java%20Projects/loan-management-system-spring-boot-server/src/main/java/io/sol/loanmanagementsystemspringbootserver/services/ReportService.java)
+
+## Recommended design direction
+
+The shape you described fits a two-stage loan lifecycle rather than a one-screen workflow:
+
+1. A customer submits a loan application in an “Applications” area.
+2. An admin reviews and approves or rejects that application.
+3. A privileged user with issuance rights creates the actual loan record in the Loans area.
+
+That is a cleaner separation than trying to issue a loan straight from the customer form, because it makes the business approval step explicit and prevents the “duplicate issue” problem from being exposed at the wrong layer.
+
+The dashboard shell already has those view-navigation hooks defined in DashboardController.java, but the methods for `showReportsView()` and `showSettingsView()` are still empty, so those are your next UI integration points.
+
+---
+
+## Suggested domain and workflow
+
+### 1. Add a loan application model
+Create a new entity like `LoanApplication`:
+
+- `id`
+- `customer`
+- `principal`
+- `interestRate`
+- `maturityDate`
+- `tenor`
+- `collateral`
+- `fees`
+- `requestedAt`
+- `status` values such as:
+  - `PENDING_ADMIN_REVIEW`
+  - `APPROVED`
+  - `REJECTED`
+  - `WITHDRAWN`
+- `reviewedBy`
+- `reviewedAt`
+- `adminNote`
+
+The `Loan` entity should remain the actual issued credit instrument.
+
+This lets “applications” and “issued loans” stay distinct:
+- Application = request made by a customer
+- Loan = approved and issued account movement
+
+---
+
+### 2. Customer-facing application flow
+In the Applications view, the customer flow should look like this:
+
+- A customer enters the application form.
+- The application stores a row in the new application table.
+- The staff/admin sees the pending applications.
+- Admin decides:
+  - `APPROVE` → the application can be used to derive an issued `Loan`
+  - `REJECT` → the application is declined and should not become a loan
+
+That is the right place for the “approved loan application -> issued loan” handoff.
+
+---
+
+### 3. Issuance workflow in the Loans view
+Once an application is approved, the privileged user opens the Loans view and selects or creates a loan from that approved request.
+
+A good rule for the UI:
+- “Save” must be disabled when a selection is present and the user is trying to create a new record from the table
+- Updating an existing loan must be a real update, not “save as new”
+- “Issue” should locate the approved application, copy its fields to a `Loan`, and persist the real loan record.
+
+That is where your duplicate prevention rule belongs.
+
+---
+
+## Reports view design
+
+The existing reporting service already shows the right starting point in ReportService.java:
+
+- daily cash totals
+- portfolio summary
+- aging logic
+- collection buckets
+
+I would expand the Reports UI into three grouped panels:
+
+### Daily summary report
+This panel should answer:
+- total loans issued today
+- total repayments today
+- total collection value today
+- number of active/pending/defaulted loans
+- total outstanding balance
+- active field officer performance summary
+
+### Aging analysis report
+This should be a table or chart with buckets such as:
+- 0–30 days
+- 31–60 days
+- 61–90 days
+- 90+ days
+
+It can draw from the `getAgingAnalysis()` logic already present in the report service. You can expose:
+- customers in each bucket
+- amount outstanding per bucket
+- oldest overdue loan date
+
+### Portfolio/reporting dashboard
+This should include:
+- loan status counts
+- total principal issued
+- total principal outstanding
+- loan approvals/rejections count
+- daily collection trend
+- field officer productivity summary
+
+A clean reports tab can be built with:
+- top summary cards
+- table below it
+- charts (optional) once the report models are stable
+
+---
+
+## Email delivery design
+
+Because the owner wants reports emailed, I would create a small reporting/email layer:
+
+### New service objects
+Add a service or orchestration layer like:
+
+- `EmailService`
+  - sends SMTP text/HTML email
+  - uses Spring Mail or a JavaMailSender adapter
+- `ReportEmailJobService`
+  - composes daily or weekly report payloads
+  - selects recipients from admin settings
+- `ReportScheduleSettings`
+  - stores frequency and time windows
+
+### Report types
+Define two concrete email bundles:
+
+1. Daily statistics email
+   - summary totals for the day
+   - customer/payment collection totals
+   - active loan count
+   - loan status counts
+   - administrators should receive it daily
+
+2. Aging analysis email
+   - outstanding amount by aging bucket
+   - most overdue customer accounts
+   - account officers assigned to overdue loans
+   - should be sent weekly or a configured interval
+
+---
+
+## Scheduling and settings
+
+The settings view should hold a configuration table or entity such as:
+
+- `AdminEmailSettings`
+  - admin email recipients
+  - default timezone
+  - send daily statistics report: `true/false`
+  - aging email cadence: `daily`, `weekly`, `every-3-days`, `fortnightly`, etc.
+  - delivery time: e.g. `07:00`
+
+The setup is flexible enough to support:
+- once a week
+- every three days
+- monthly
+- configurable custom schedule
+
+I’d recommend storing these settings in the database rather than hardcoding them in code.
+
+You can expose them as:
+- `reportSchedule.dailySummaryEnabled`
+- `reportSchedule.dailySummaryHour`
+- `reportSchedule.agingSchedule`
+- `reportSchedule.agingHour`
+- `reportSchedule.adminRecipients`
+
+---
+
+## Implementation order
+
+I’d do it in this order:
+
+1. Add the `LoanApplication` entity and repository
+2. Add the applications table and approval workflow in the UI
+3. Hook approved applications to the Loans issuance workflow
+4. Expand the report service with stable daily and weekly aggregations
+5. Introduce `EmailService` and SMTP configuration
+6. Add settings persistence for email cadence and admin recipients
+7. Create the scheduler around the settings
+
+---
+
+## The minimum architecture you need today
+
+If you want this to move quickly, use these building blocks:
+
+- `LoanApplication` domain entity
+- `ApplicationController`/`ApplicationService`
+- `LoanIssueService` or existing `LoansService` extension
+- `ReportService` extension for `dailyStatistics` and `aging`
+- `EmailService`
+- `ReportScheduleSettings` entity
+- `SettingsController` and `SettingsView.fxml` shell
+- `ReportsController` and `ReportsView.fxml` shell
+
+The system should keep the feature boundaries clear:
+- Customer-facing submissions belong in applications
+- Admin approval belongs in applications
+- Admin/issuer actions belong in loans
+- Operations/reporting belongs in reports
+- Email schedule/recipient setup belongs in settings
+
+---
+
+## Practical recommendation
+
+For the first pass, use a very simple report model instead of trying to make the reports “smart” immediately:
+
+- A daily job generates a summary dataset
+- A weekly job generates an aging dataset
+- Both are sent as a simple HTML email to configured admin users
+- The scheduling is driven from a settings table
+
+That gives you a working reporting spine now and room to make the report content richer later.
+
+If you want, I can do the next step and create the scaffolding for the new applications, reports, and settings UI screens so the dashboard navigation is wired end-to-end.
+
+
+20/08/2026 SHIFT FROM DEVELOPMENT TO PRODUCTION MODE: FINAL TOUCHES
+
+1. Implement broad error handling mechanism.
+- Create a global error handling class/utility for JavaFX.
+- Integrate it into the existing controllers (Home, Loan, Customer, Payments, Reports, Settings, Search).
+2. Improve Home View functionalities.
+- Implement PDF export logic in `HomeController`.
+- Implement Excel export logic in `HomeController`.
+- Enhance 'Send Email' logic in `HomeController`.
+- Update `HomeView.fxml` to ensure buttons are correctly linked.
+3. Enhance Loan View.
+- Add placeholders to text fields in `LoanView.fxml`.
+- Implement restrictions on updating loan parameters in `LoansController`.
+- Add warning/alert dialogs for sensitive updates in `LoansController` using `UIHelper`.
+- Implement admin alerts for loan parameter changes in `LoansService`.
+4. Improve Customer View.
+- Update `messageLabel` styling (red for error, green for success) using `UIHelper`.
+5. Enhance Payments View.
+- Add 'Remaining Balance' column to `PaymentsView.fxml` and `PaymentsController`.
+6. Update Reports View.
+- Implement cumulative data for the line chart (Money vs. Time) in `ReportsController`.
+- Add toggle options for Time Range (Day, Week, Month) in `ReportsView.fxml`.
+- Improve UI layout for distinct sections in `ReportsView.fxml`.
+7. Refine Settings View.
+- Re-organize `SettingsView.fxml` for modern sectioning.
+- Improve error messages display in `SettingsController` using `UIHelper`.
+8. Update Search Engine.
+- Ensure broad error handling is applied to search operations in `DashboardController`.
+9. Final Verification and Cleanup.
+- Run the application to verify all UI changes.
+- Verify PDF and Excel exports.
+- Test restricted loan updates and admin alerts.
+

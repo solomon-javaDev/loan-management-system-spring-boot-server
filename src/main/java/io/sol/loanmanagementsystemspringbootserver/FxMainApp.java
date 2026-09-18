@@ -1,15 +1,15 @@
 package io.sol.loanmanagementsystemspringbootserver;
 
+import io.sol.loanmanagementsystemspringbootserver.utilities.DatabaseMigrationUtility;
+import io.sol.loanmanagementsystemspringbootserver.utilities.GlobalExceptionHandler;
+import io.sol.loanmanagementsystemspringbootserver.utilities.StageManager;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
-
-import java.util.Objects;
 
 public class FxMainApp extends Application {
 
@@ -17,19 +17,38 @@ public class FxMainApp extends Application {
 
     @Override
     public void init() {
+    DatabaseMigrationUtility.migrateDataDirectory();
+
+    Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+        GlobalExceptionHandler.handleException(throwable);
+    });
+
+    try {
         applicationContext = new SpringApplicationBuilder(LoanManagementSystemSpringBootServerApplication.class)
-            .headless(false)
-            .run(getParameters().getRaw().toArray(new String[0]));
+                .headless(false)
+                .run(getParameters().getRaw().toArray(new String[0]));
+    } catch (Throwable throwable) {
+        throwable.printStackTrace();
+        throw throwable;
+    }
+        //1. Catch exceptions thrown on any background or worker thread
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable)->{
+            GlobalExceptionHandler.handleException(throwable);
+        });
     }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/login/LoginView.fxml"));
-        loader.setControllerFactory(applicationContext::getBean);
-        Parent root = loader.load();
+
+        //2. Catch exceptions thrown on the main JavaFX UI
+        Thread.currentThread().setUncaughtExceptionHandler((thread, throwable)->{
+            GlobalExceptionHandler.handleException(throwable);
+        });
+
+        StageManager stageManager = applicationContext.getBean(StageManager.class);
+        Parent root = stageManager.loadView("/ui/login/LoginView.fxml");
 
         Scene scene = new Scene(root);
-        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/styles.css")).toExternalForm());
 
         primaryStage.setTitle("Loan Management System");
         primaryStage.setScene(scene);

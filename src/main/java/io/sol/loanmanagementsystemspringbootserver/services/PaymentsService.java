@@ -1,20 +1,26 @@
 package io.sol.loanmanagementsystemspringbootserver.services;
 
-import io.sol.loanmanagementsystemspringbootserver.dtos.LoanDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.PaymentDTO;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Loan;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.LoanStatus;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Payment;
+import io.sol.loanmanagementsystemspringbootserver.events.RepaymentReceivedEvent;
+import io.sol.loanmanagementsystemspringbootserver.events.SavingsTransactionEvent;
 import io.sol.loanmanagementsystemspringbootserver.mappers.DTOMapper;
-import io.sol.loanmanagementsystemspringbootserver.entities.Loan;
-import io.sol.loanmanagementsystemspringbootserver.entities.LoanStatus;
-import io.sol.loanmanagementsystemspringbootserver.entities.Payment;
 import io.sol.loanmanagementsystemspringbootserver.repositories.PaymentRepository;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static java.time.temporal.ChronoUnit.DAYS;
 
 /**
  * Service class responsible for handling payment operations and related functionalities.
@@ -26,10 +32,17 @@ public class PaymentsService {
 
     private final PaymentRepository paymentRepository;
     private final LoansService loansService;
+    private final ApplicationEventPublisher applicationEventPublisher;
+    private final UserSession userSession;
+    private final AuditService auditService;
 
-    public PaymentsService(LoansService loansService, PaymentRepository paymentRepository) {
+    public PaymentsService(LoansService loansService, PaymentRepository paymentRepository, ApplicationEventPublisher applicationEventPublisher,
+                           UserSession userSession, AuditService auditService) {
         this.loansService = loansService;
         this.paymentRepository = paymentRepository;
+        this.applicationEventPublisher = applicationEventPublisher;
+        this.userSession = userSession;
+        this.auditService = auditService;
     }
 
     @Transactional
@@ -39,24 +52,123 @@ public class PaymentsService {
         }
 
         return loansService.getLoanEntityById(loanID).map(loan -> {
+             LocalDate paymentDate = date != null ? date : LocalDate.now();
+             
+             // 1. Calculate what is owed as of today
+             BigDecimal surchargeOwed = loan.calculateSurcharge(paymentDate);
+             BigDecimal totalInterest = loan.getPrincipal().multiply(loan.getInterestRate());
+             BigDecimal feesOwed = loan.getFees(); 
+             
+             // Allocation Logic:
+             BigDecimal remaining = amountReceived;
+             
+             // First: Surcharge
+             BigDecimal surchargeToPay = surchargeOwed.subtract(getPaidSurcharge(loan));
+             surchargeToPay = remaining.min(surchargeToPay.max(BigDecimal.ZERO));
+             remaining = remaining.subtract(surchargeToPay);
+             
+             // Second: Fees
+             BigDecimal feesToPay = feesOwed.subtract(getPaidFees(loan));
+             feesToPay = remaining.min(feesToPay.max(BigDecimal.ZERO));
+             remaining = remaining.subtract(feesToPay);
+             
+             // Third: Interest
+             BigDecimal interestToPay = totalInterest.subtract(getPaidInterest(loan));
+             interestToPay = remaining.min(interestToPay.max(BigDecimal.ZERO));
+             remaining = remaining.subtract(interestToPay);
+             
+             // Fourth: Principal
+             BigDecimal outstandingPrincipal = loan.getPrincipal().subtract(getPaidPrincipal(loan));
+             BigDecimal principalToPay = remaining.min(outstandingPrincipal);
+             remaining = remaining.subtract(principalToPay);
+
+             // Excess goes to savings
+             BigDecimal excess = remaining;
+             if (excess.compareTo(BigDecimal.ZERO) > 0 && loan.getCustomer() != null) {
+                 loan.getCustomer().setSavingsBalance(
+                     loan.getCustomer().getSavingsBalance().add(excess)
+                 );
+                 // Publish Savings Event for FinancialState
+                 applicationEventPublisher.publishEvent(new SavingsTransactionEvent(
+                     loan.getCustomer().getId(),
+                     excess,
+                     true,
+                     paymentDate
+                 ));
+             }
+
              Payment payment = new Payment();
              payment.setLoan(loan);
-             payment.setDate(date != null ? date : LocalDate.now());
-             payment.setAmountReceived(amountReceived);
+             payment.setDate(paymentDate);
+             payment.setAmountReceived(amountReceived.subtract(excess)); // The actual payment amount credited to loan
+             payment.setPrincipalAmount(principalToPay);
+             payment.setInterestAmount(interestToPay);
+             payment.setFeeAmount(feesToPay);
+             payment.setSurchargeAmount(surchargeToPay);
+             
              loan.addPayment(payment);
 
+             // Calculate and set remaining balance for this payment record
+             payment.setRemainingBalance(loan.getOutstandingBalance());
+
              Payment savedPayment = paymentRepository.save(payment);
-        
+
              updateLoanStatus(loan, savedPayment.getDate());
              loansService.saveLoanEntity(loan);
 
+             // Publish Event
+             applicationEventPublisher.publishEvent(new RepaymentReceivedEvent(
+                 savedPayment.getId(),
+                 loan.getId(),
+                 principalToPay,
+                 interestToPay,
+                 feesToPay,
+                 surchargeToPay,
+                 amountReceived.subtract(excess),
+                 paymentDate
+             ));
+
              String message = "Successful payment" + (loan.getStatus() == LoanStatus.CLOSED ? ", loan fully paid and cleared." : "");
+             if (excess.compareTo(BigDecimal.ZERO) > 0) {
+                 message += " Excess of " + excess + " added to savings.";
+             }
              return Result.success(message, DTOMapper.toDTO(savedPayment));
         }).orElse(Result.notFound("Loan not found", null));
     }
 
+    private BigDecimal getPaidSurcharge(Loan loan) {
+        return loan.getPayments().stream()
+                .map(Payment::getSurchargeAmount)
+                .filter(a -> a != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal getPaidFees(Loan loan) {
+        return loan.getPayments().stream()
+                .map(Payment::getFeeAmount)
+                .filter(a -> a != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal getPaidInterest(Loan loan) {
+        return loan.getPayments().stream()
+                .map(Payment::getInterestAmount)
+                .filter(a -> a != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal getPaidPrincipal(Loan loan) {
+        return loan.getPayments().stream()
+                .map(Payment::getPrincipalAmount)
+                .filter(a -> a != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+
     @Transactional
     public Result<PaymentDTO> updatePayment(int paymentId, LocalDate date, BigDecimal amountReceived) {
+        Result<Void> authorization = userSession.requireAdmin();
+        if (authorization.isFailure()) return Result.forbidden(authorization.message(), null);
         return paymentRepository.findById(paymentId).map(payment -> {
             payment.setDate(date);
             payment.setAmountReceived(amountReceived);
@@ -64,6 +176,7 @@ public class PaymentsService {
             
             updateLoanStatus(payment.getLoan(), updated.getDate());
             loansService.saveLoanEntity(payment.getLoan());
+            auditService.record("UPDATE", "PAYMENT", paymentId, "Payment details updated");
             
             return Result.success("Payment updated successfully", DTOMapper.toDTO(updated));
         }).orElse(Result.notFound("Payment not found", null));
@@ -71,6 +184,8 @@ public class PaymentsService {
 
     @Transactional
     public Result<Void> deletePayment(int paymentId) {
+        Result<Void> authorization = userSession.requireAdmin();
+        if (authorization.isFailure()) return Result.forbidden(authorization.message(), null);
         return paymentRepository.findById(paymentId).map(payment -> {
             Loan loan = payment.getLoan();
             loan.removePayment(payment);
@@ -78,6 +193,7 @@ public class PaymentsService {
             
             updateLoanStatus(loan, getLastPaymentDate(loan));
             loansService.saveLoanEntity(loan);
+            auditService.record("SOFT_DELETE", "PAYMENT", paymentId, "Payment soft deleted");
             
             return Result.success("Payment deleted successfully", (Void) null);
         }).orElse(Result.notFound("Payment not found", null));
@@ -115,7 +231,7 @@ public class PaymentsService {
         return loansService.getLoanEntityById(loanId).map(loan -> 
              Result.success("Payments for loan loaded", 
                 loan.getPayments().stream().map(p -> DTOMapper.toDTO(p)).collect(Collectors.toList()))
-        ).orElse(Result.notFound("Loan not found", null));
+        ).orElse(Result.notFound("Loan not found", new ArrayList<>()));
     }
 
     @Transactional(readOnly = true)

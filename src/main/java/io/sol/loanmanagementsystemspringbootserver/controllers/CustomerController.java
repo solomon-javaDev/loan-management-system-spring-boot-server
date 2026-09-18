@@ -3,19 +3,25 @@ package io.sol.loanmanagementsystemspringbootserver.controllers;
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerCreateDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerResponseDTO;
-import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import io.sol.loanmanagementsystemspringbootserver.dtos.EmployeeDTO;
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
+import io.sol.loanmanagementsystemspringbootserver.utilities.*;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
+import javafx.collections.transformation.FilteredList;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.util.List;
+
 /**
  * This class is a Spring-managed component that serves as the controller for managing customer-related
  * functionalities within a JavaFX application. It interacts with the UI elements defined in the FXML and
  * facilitates the CRUD operations for customers by interfacing with a `CustomerService`.
- *
  * Responsibilities include initializing the customer table, handling form events, enabling or disabling
  * appropriate buttons based on context, and updating the UI to reflect operations performed on customer data.
  */
@@ -23,6 +29,8 @@ import org.springframework.stereotype.Component;
 public class CustomerController {
 
     private final CustomerService customerService;
+    private final UserSession userSession;
+    private final UiControlUtilities uiControlUtilities;
 
     @FXML
     private TextField firstNameField;
@@ -34,7 +42,10 @@ public class CustomerController {
     private TextField otherNamesField;
 
     @FXML
-    private TextField emailField;
+    private TextField ninField;
+
+    @FXML
+    private TextField customerSearchField;
 
     @FXML
     private TextField telephoneField;
@@ -74,7 +85,7 @@ public class CustomerController {
     private TableColumn<CustomerDTO, String> otherNamesColumn;
 
     @FXML
-    private TableColumn<CustomerDTO, String> emailColumn;
+    private TableColumn<CustomerDTO, String> ninColumn;
 
     @FXML
     private TableColumn<CustomerDTO, String> telephoneColumn;
@@ -86,19 +97,38 @@ public class CustomerController {
     private TableColumn<CustomerDTO, Number> numberOfLoans;
 
     @FXML
+    private TableColumn<CustomerDTO, BigDecimal> savingsBalanceColumn;
+
+    @FXML
     private TableColumn<CustomerDTO, String> addressColumn;
+
+    @FXML
+    private TableColumn<CustomerDTO, Boolean> activeColumn;
+
+    @FXML
+    private ComboBox<EmployeeDTO> fieldOfficerCombo;
+
+    @FXML
+    private CheckBox activeCheckbox;
 
     @FXML
     private Label messageLabel;
 
-    public CustomerController(CustomerService customerService) {
+    private FilteredList<CustomerDTO> filteredCustomers;
+
+    public CustomerController(CustomerService customerService, UserSession userSession, UiControlUtilities uiControlUtilities) {
         this.customerService = customerService;
+        this.userSession = userSession;
+        this.uiControlUtilities = uiControlUtilities;
     }
 
     @FXML
     public void initialize() {
         configureTable();
+        Logger.logInfo("Customer Table has been configured");
         loadCustomers();
+
+        customerSearchField.textProperty().addListener((obs, oldValue, newValue) -> applyCustomerFilter(newValue));
 
         customersTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, selectedCustomer) -> {
             if (selectedCustomer != null) {
@@ -113,10 +143,16 @@ public class CustomerController {
 
         //Disable the update button if no row has been selected
         customerUpdateButton.disableProperty().bind(
-                customersTable.getSelectionModel().selectedItemProperty().isNull()
+            customersTable.getSelectionModel().selectedItemProperty().isNull()
+                .or(new javafx.beans.property.ReadOnlyBooleanWrapper(!userSession.isAdmin()))
+        );
+        customerDeleteButton.disableProperty().bind(
+            customersTable.getSelectionModel().selectedItemProperty().isNull()
+                .or(new javafx.beans.property.ReadOnlyBooleanWrapper(!userSession.isAdmin()))
         );
 
 
+        UiControlUtilities.autoSizeColumns(customersTable);
     }
 
     @FXML
@@ -128,12 +164,12 @@ public class CustomerController {
         createDTO.setFirstName(customer.getFirstName());
         createDTO.setLastName(customer.getLastName());
         createDTO.setOtherNames(customer.getOtherNames());
-        createDTO.setEmail(customer.getEmail());
+        createDTO.setNin(customer.getNin());
         createDTO.setTelephone(customer.getTelephone());
         createDTO.setAddress(customer.getAddress());
 
         Result<CustomerResponseDTO> result = customerService.createCustomer(createDTO);
-        messageLabel.setText(result.message());
+        UIHelper.updateStatusLabel(messageLabel, result);
 
         if (result.isSuccess()) {
             loadCustomers();
@@ -153,7 +189,7 @@ public class CustomerController {
         CustomerDTO updatedCustomer = buildCustomerFromForm();
         updatedCustomer.setId(selectedCustomer.getId());
         Result<CustomerResponseDTO> result = customerService.updateCustomer(updatedCustomer);
-        messageLabel.setText(result.message());
+        UIHelper.updateStatusLabel(messageLabel, result);
 
         if (result.isSuccess()) {
             loadCustomers();
@@ -171,7 +207,7 @@ public class CustomerController {
         }
 
         Result<Void> result = customerService.deleteCustomer(selectedCustomer);
-        messageLabel.setText(result.message());
+        UIHelper.updateStatusLabel(messageLabel, result);
 
         if (result.isSuccess()) {
             loadCustomers();
@@ -189,9 +225,10 @@ public class CustomerController {
         firstNameColumn.setCellValueFactory(new PropertyValueFactory<>("firstName"));
         lastNameColumn.setCellValueFactory(new PropertyValueFactory<>("lastName"));
         otherNamesColumn.setCellValueFactory(new PropertyValueFactory<>("otherNames"));
-        emailColumn.setCellValueFactory(new PropertyValueFactory<>("email"));
+        ninColumn.setCellValueFactory(new PropertyValueFactory<>("nin"));
         telephoneColumn.setCellValueFactory(new PropertyValueFactory<>("telephone"));
         addressColumn.setCellValueFactory(new PropertyValueFactory<>("address"));
+        activeColumn.setCellValueFactory(new PropertyValueFactory<>("active"));
         numberOfLoans.setCellValueFactory(cellData -> {
             CustomerDTO customer = cellData.getValue();
             if (customer != null) {
@@ -199,11 +236,37 @@ public class CustomerController {
             }
             return new javafx.beans.property.SimpleIntegerProperty(0);
         });
+        savingsBalanceColumn.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(
+                cellData.getValue().getSavingsBalance() == null ? BigDecimal.ZERO : cellData.getValue().getSavingsBalance()
+        ));
+        savingsBalanceColumn.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
     }
 
     private void loadCustomers() {
-        Result<java.util.List<CustomerDTO>> result = customerService.getAllCustomers();
-        customersTable.setItems(FXCollections.observableArrayList(result.value()));
+        UiControlUtilities.autoSizeColumns(customersTable);
+        Result<List<CustomerDTO>> result = customerService.getAllCustomers();
+        filteredCustomers = new FilteredList<>(FXCollections.observableArrayList(result.value()), customer -> true);
+        customersTable.setItems(filteredCustomers);
+        Logger.logInfo("Customer Table has been loaded");
+    }
+
+
+    private void applyCustomerFilter(String searchText) {
+        if (filteredCustomers == null) return;
+        String query = searchText == null ? "" : searchText.trim().toLowerCase();
+        filteredCustomers.setPredicate(customer -> query.isEmpty()
+                || contains(customer.getFirstName(), query)
+                || contains(customer.getLastName(), query)
+                || contains(customer.getOtherNames(), query)
+                || contains(customer.getAccountNumber(), query)
+                || contains(customer.getTelephone(), query)
+                || contains(customer.getNin(), query)
+                );
+        Logger.logInfo("Customer Filter has been applied");
+    }
+
+    private boolean contains(String value, String query) {
+        return value != null && value.toLowerCase().contains(query);
     }
 
     private CustomerDTO buildCustomerFromForm() {
@@ -211,9 +274,13 @@ public class CustomerController {
         customer.setFirstName(firstNameField.getText() == null ? "" : firstNameField.getText().trim());
         customer.setLastName(lastNameField.getText() == null ? "" : lastNameField.getText().trim());
         customer.setOtherNames(otherNamesField.getText() == null ? "" : otherNamesField.getText().trim());
-        customer.setEmail(emailField.getText() == null ? "" : emailField.getText().trim());
+        customer.setNin(ninField.getText() == null ? "" : ninField.getText().trim());
         customer.setTelephone(telephoneField.getText() == null ? "" : telephoneField.getText().trim());
         customer.setAddress(addressField.getText()== null ?  " " : addressField.getText().trim());
+        customer.setActive(activeCheckbox.isSelected());
+
+        Logger.logInfo("Customer Form has been created");
+
         return customer;
     }
 
@@ -222,9 +289,12 @@ public class CustomerController {
         firstNameField.setText(customer.getFirstName());
         lastNameField.setText(customer.getLastName());
         otherNamesField.setText(customer.getOtherNames());
-        emailField.setText(customer.getEmail());
+        ninField.setText(customer.getNin());
         telephoneField.setText(customer.getTelephone());
         addressField.setText(customer.getAddress());
+        activeCheckbox.setSelected(customer.isActive());
+
+        Logger.logInfo("Customer Form has been populated");
     }
 
     private void clearForm() {
@@ -232,9 +302,12 @@ public class CustomerController {
         firstNameField.clear();
         lastNameField.clear();
         otherNamesField.clear();
-        emailField.clear();
+        ninField.clear();
         telephoneField.clear();
-        addressField.clear();;
+        addressField.clear();
+        activeCheckbox.setSelected(true);
          customersTable.getSelectionModel().clearSelection();
+
+         Logger.logInfo("Customer Form has been cleared");
     }
 }

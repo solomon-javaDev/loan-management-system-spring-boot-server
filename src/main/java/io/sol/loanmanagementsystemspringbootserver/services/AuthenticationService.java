@@ -1,7 +1,7 @@
 package io.sol.loanmanagementsystemspringbootserver.services;
 
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
-import io.sol.loanmanagementsystemspringbootserver.entities.User;
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 

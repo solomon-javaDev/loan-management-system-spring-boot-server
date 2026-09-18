@@ -12,6 +12,8 @@ public class PaymentDTO implements Serializable {
     private String loanReference;
     private Integer customerId;
     private String customerName;
+    private BigDecimal remainingBalance;
+    private long agingDays;
 
     public PaymentDTO() {}
 
@@ -35,4 +37,10 @@ public class PaymentDTO implements Serializable {
 
     public String getCustomerName() { return customerName; }
     public void setCustomerName(String customerName) { this.customerName = customerName; }
+
+    public BigDecimal getRemainingBalance() { return remainingBalance; }
+    public void setRemainingBalance(BigDecimal remainingBalance) { this.remainingBalance = remainingBalance; }
+
+    public long getAgingDays() { return agingDays; }
+    public void setAgingDays(long agingDays) { this.agingDays = agingDays; }
 }

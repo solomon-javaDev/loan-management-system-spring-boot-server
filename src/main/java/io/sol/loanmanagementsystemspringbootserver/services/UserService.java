@@ -1,13 +1,15 @@
 package io.sol.loanmanagementsystemspringbootserver.services;
 
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
-import io.sol.loanmanagementsystemspringbootserver.entities.User;
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.User;
 import io.sol.loanmanagementsystemspringbootserver.repositories.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * The UserService class provides business logic related to user operations.
- * It interacts with the UserRepository to persist and retrieve user data.
+ * It interacts with the UserRepository to persist and retrieve user data
  */
 @Service
 public class UserService {
@@ -25,7 +27,7 @@ public class UserService {
 
         return userRepository.findById(id)
                 .map(user -> Result.success("User loaded successfully.", user))
-                .orElseGet(() -> Result.notFound("User not found.", null));
+                .orElseGet(() -> Result.notFound("User not found.", new User()));
     }
 
     public Result<User> findByUsername(String username) {
@@ -44,5 +46,9 @@ public class UserService {
         }
 
         return Result.success("User saved successfully.", userRepository.save(user));
+    }
+
+    public Result<List<User>> getAllUsers() {
+        return Result.success("Users loaded successfully.", userRepository.findAll());
     }
 }

@@ -3,19 +3,21 @@ package io.sol.loanmanagementsystemspringbootserver.controllers;
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.EmployeeDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.LoanDTO;
-import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
-import io.sol.loanmanagementsystemspringbootserver.entities.LoanStatus;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.LoanStatus;
 import io.sol.loanmanagementsystemspringbootserver.entities.Role;
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
 import io.sol.loanmanagementsystemspringbootserver.services.EmployeeService;
 import io.sol.loanmanagementsystemspringbootserver.services.LoansService;
+import io.sol.loanmanagementsystemspringbootserver.utilities.MoneyHelper;
+import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UiControlUtilities;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.util.StringConverter;
+import javafx.util.Callback;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -23,6 +25,7 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Controller class for managing loan-related operations in a UI context.
@@ -48,6 +51,8 @@ public class LoansController {
     private final EmployeeService employeeService;
     private final CustomerService customerService;
     private final UiControlUtilities uiControlUtilities;
+    private final io.sol.loanmanagementsystemspringbootserver.services.FeeBucketService feeBucketService;
+    private final io.sol.loanmanagementsystemspringbootserver.utilities.UserSession userSession;
 
     @FXML
     private TableView<LoanDTO> loansTable;
@@ -113,6 +118,12 @@ public class LoansController {
     private TextField feesField;
 
     @FXML
+    private TextField surchargeRateField;
+
+    @FXML
+    private TextField surchargeAmountField;
+
+    @FXML
     private ComboBox<LoanStatus> statusField;
 
     @FXML
@@ -134,13 +145,18 @@ public class LoansController {
     private Button clearButton;
 
     @FXML
+    private ComboBox<CustomerDTO> guarantorDropDown;
+
+    @FXML
     private Label messageLabel;
 
-    public LoansController(LoansService loansService, EmployeeService employeeService, CustomerService customerService, UiControlUtilities uiControlUtilities) {
+    public LoansController(LoansService loansService, EmployeeService employeeService, CustomerService customerService, UiControlUtilities uiControlUtilities, io.sol.loanmanagementsystemspringbootserver.services.FeeBucketService feeBucketService, io.sol.loanmanagementsystemspringbootserver.utilities.UserSession userSession) {
         this.loansService = loansService;
         this.employeeService = employeeService;
         this.customerService = customerService;
         this.uiControlUtilities = uiControlUtilities;
+        this.feeBucketService = feeBucketService;
+        this.userSession = userSession;
     }
 
     @FXML
@@ -148,19 +164,35 @@ public class LoansController {
         System.out.println("Loaded the loans view");
         configureTable();
 
-        uiControlUtilities.configureDropDown(customerList, customerService.getAllCustomers().value(),
-                c -> c.getFirstName() + " " + c.getLastName()
+        startDatePicker.setValue(LocalDate.now());
+
+       uiControlUtilities.configureSearchableDropDown(customerList,
+                customerService.getAllCustomers().value(), customer -> customer.getFirstName() + " " +customer.getLastName()+" - "+ customer.getNin()
                 );
 
-        uiControlUtilities.configureDropDown(fieldOfficerField, employeeService.getEmployeeByRole(Role.FIELD_OFFICER).value(),
-                e -> e.getFirstName() + " " + e.getLastName()
-                );
+        uiControlUtilities.configureSearchableDropDown(fieldOfficerField,
+                employeeService.getEmployeeByRole(Role.FIELD_OFFICER).value(), fieldOfficer -> fieldOfficer.getFirstName() +" " +fieldOfficer.getLastName());
+
+        uiControlUtilities.configureSearchableDropDown(guarantorDropDown,
+                customerService.getAllCustomers().value(), customer -> customer.getFirstName() + " " +customer.getLastName()+" - "+ customer.getNin()
+        );
 
         statusField.setItems(FXCollections.observableArrayList(LoanStatus.values()));
         statusField.setValue(LoanStatus.PENDING);
 
         maturityDatePicker.valueProperty().addListener((obs, oldValue, newValue) -> computeTenorFromDates());
         startDatePicker.valueProperty().addListener((obs, oldValue, newValue) -> computeTenorFromDates());
+        principalField.textProperty().addListener((obs, oldValue, newValue) -> {
+            if (newValue != null && !newValue.isEmpty()) {
+                try {
+                    BigDecimal principal = new BigDecimal(newValue);
+                    BigDecimal fee = feeBucketService.calculateFee(principal);
+                    feesField.setText(fee.toPlainString());
+                } catch (NumberFormatException e) {
+                    // Ignore invalid numbers
+                }
+            }
+        });
 
         saveButton.disableProperty().bind(loansTable.getSelectionModel().selectedItemProperty().isNotNull());
         updateButton.disableProperty().bind(loansTable.getSelectionModel().selectedItemProperty().isNull());
@@ -179,12 +211,20 @@ public class LoansController {
 
     
     private void loadLoans() {
+        loansService.updateOverdueLoansSurcharges();
         Result<List<LoanDTO>> result = loansService.getAllLoans();
         loansTable.setItems(FXCollections.observableArrayList(result.value()));
+        UiControlUtilities.autoSizeColumns(loansTable);
+        long overdueLoans = result.value().stream()
+                .filter(loan -> loan.getStatus() == LoanStatus.DEFAULTED)
+                .count();
+        if (overdueLoans > 0) {
+            messageLabel.setText("Warning: " + overdueLoans + " loan(s) have passed maturity and remain unpaid.");
+        }
     }
 
 
-        private LoanDTO buildLoanFromForm() {
+       private LoanDTO buildLoanFromForm() {
         LoanDTO loan = new LoanDTO();
         loan.setStartDate(startDatePicker.getValue());
         loan.setMaturityDate(maturityDatePicker.getValue());
@@ -193,6 +233,10 @@ public class LoansController {
         loan.setTenor(parseInt(tenorField.getText()));
         loan.setCollateral(collateralField.getText() == null ? "" : collateralField.getText().trim());
         loan.setFees(parseBigDecimal(feesField.getText()));
+        BigDecimal surchargeRatePercent = parseBigDecimal(surchargeRateField.getText());
+        loan.setSurchargeRate(surchargeRatePercent == null
+            ? BigDecimal.ZERO : surchargeRatePercent.divide(BigDecimal.valueOf(100)));
+        loan.setSurchargeAmount(parseBigDecimal(surchargeAmountField.getText()));
         loan.setStatus(statusField.getValue() != null ? statusField.getValue() : LoanStatus.PENDING);
         if (fieldOfficerField.getValue() != null) {
             loan.setFieldOfficerId(fieldOfficerField.getValue().getId());
@@ -201,6 +245,10 @@ public class LoansController {
         if (customerList.getValue() != null) {
             loan.setCustomerId(customerList.getValue().getId());
             loan.setCustomerName(customerList.getValue().getCustomerName());
+        }
+        if (guarantorDropDown.getValue() != null) {
+            loan.setGuarantorId((long) guarantorDropDown.getValue().getId());
+            loan.setGuarantorName(guarantorDropDown.getValue().getCustomerName());
         }
         return loan;
     }
@@ -213,6 +261,9 @@ public class LoansController {
         tenorField.setText(String.valueOf(loan.getTenor()));
         collateralField.setText(loan.getCollateral());
         feesField.setText(loan.getFees() == null ? "" : loan.getFees().toPlainString());
+        surchargeRateField.setText(loan.getSurchargeRate() == null
+            ? "" : loan.getSurchargeRate().multiply(BigDecimal.valueOf(100)).stripTrailingZeros().toPlainString());
+        surchargeAmountField.setText(loan.getSurchargeAmount() == null ? "" : loan.getSurchargeAmount().toPlainString());
         statusField.setValue(loan.getStatus() != null ? loan.getStatus() : LoanStatus.PENDING);
 
         if (loan.getFieldOfficerId() != null) {
@@ -233,41 +284,83 @@ public class LoansController {
         } else {
             customerList.getSelectionModel().clearSelection();
         }
+
+        if (loan.getGuarantorId() != null) {
+            guarantorDropDown.getItems().stream()
+                .filter(c -> c.getId() == loan.getGuarantorId().intValue())
+                .findFirst()
+                .ifPresent(c -> guarantorDropDown.setValue(c));
+        } else {
+            guarantorDropDown.getSelectionModel().clearSelection();
+        }
     }
 
 
     @FXML
     private void handleSaveLoan() {
         LoanDTO loan = buildLoanFromForm();
+
         if (loan.getCustomerId() == null) {
-            messageLabel.setText("Select a customer first.");
+            UIHelper.showError("Error", "Select a customer first.");
             return;
         }
-        Result<LoanDTO> result = loansService.issueLoan(loan.getCustomerId(), loan);
-        messageLabel.setText(result.message());
+        
+        if (loan.getStartDate() != null && !loan.getStartDate().equals(LocalDate.now())) {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Loan Date Warning");
+            alert.setHeaderText("Non-Standard Loan Date");
+            alert.setContentText("The loan date is not today. This requires admin approval. Do you wish to proceed?");
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isEmpty() || result.get() != ButtonType.OK) {
+                return;
+            }
+        }
 
+        Result<LoanDTO> result = loansService.issueLoan(loan.getCustomerId(), loan);
+        UIHelper.updateStatusLabel(messageLabel, result);
 
         if (result.isSuccess()) {
             loadLoans();
             clearForm();
         }
+
+        clearForm();
     }
 
     @FXML
     private void handleUpdateLoan() {
         LoanDTO selectedLoan = loansTable.getSelectionModel().getSelectedItem();
         if (selectedLoan == null) {
-            messageLabel.setText("Select a loan from the table first.");
+            UIHelper.showError("Error", "Select a loan from the table first.");
             return;
         }
 
         LoanDTO loan = buildLoanFromForm();
-        loan.setId(selectedLoan.getId());        if (loansTable.getSelectionModel().getSelectedItem() != null) {
-            messageLabel.setText("Clear the current selection before creating a new loan.");
-            return;
+        loan.setId(selectedLoan.getId());
+        
+        boolean sensitiveChange = !loan.getPrincipal().equals(selectedLoan.getPrincipal()) ||
+                                  !loan.getInterestRate().equals(selectedLoan.getInterestRate()) ||
+                                  !loan.getFees().equals(selectedLoan.getFees()) ||
+                                  !loan.getStartDate().equals(selectedLoan.getStartDate());
+        
+        if (sensitiveChange) {
+            Optional<ButtonType> result = getButtonType();
+            if (result.isEmpty() || result.get() != ButtonType.OK) {
+                return;
+            }
+
+            if (userSession.isCashier()) {
+                Alert cashierAlert = new Alert(Alert.AlertType.INFORMATION);
+                cashierAlert.setTitle("Administrator Approval Required");
+                cashierAlert.setHeaderText("Critical loan changes require administrator approval");
+                cashierAlert.setContentText("Please inform the administrator about this requested change.");
+                cashierAlert.showAndWait();
+                return;
+            }
         }
+
         Result<LoanDTO> result = loansService.updateLoan(loan);
-        messageLabel.setText(result.message());
+        UIHelper.updateStatusLabel(messageLabel, result);
 
         if (result.isSuccess()) {
             loadLoans();
@@ -275,8 +368,24 @@ public class LoansController {
         }
     }
 
+    private static Optional<ButtonType> getButtonType() {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Sensitive Update Warning");
+        alert.setHeaderText("Critical Parameter Change Detected");
+        alert.setContentText("You are attempting to change critical loan parameters (Principal, Interest Rate, Fees, or Date). " +
+                            "This action will be permanently recorded and an alert will be sent to the administrator. " +
+                            "Do you want to proceed?");
+        Optional<ButtonType> result = alert.showAndWait();
+        return result;
+    }
+
     @FXML
     private void handleDeleteLoan() {
+        if (!userSession.isAdmin()) {
+            messageLabel.setText("Only Admin can delete loans.");
+            return;
+        }
+
         LoanDTO selectedLoan = loansTable.getSelectionModel().getSelectedItem();
         if (selectedLoan == null) {
             messageLabel.setText("Select a loan to delete.");
@@ -307,30 +416,42 @@ public class LoansController {
         maturityDateColumn.setCellValueFactory(new PropertyValueFactory<>("maturityDate"));
         fullPaidDateColumn.setCellValueFactory(new PropertyValueFactory<>("fullPaidDate"));
         principalColumn.setCellValueFactory(new PropertyValueFactory<>("principal"));
+        principalColumn.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
+
         interestRateColumn.setCellValueFactory(new PropertyValueFactory<>("interestRate"));
         tenorColumn.setCellValueFactory(new PropertyValueFactory<>("tenor"));
         collateralColumn.setCellValueFactory(new PropertyValueFactory<>("collateral"));
+
         feesColumn.setCellValueFactory(new PropertyValueFactory<>("fees"));
+        feesColumn.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
+
         statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
         fullPayment.setCellValueFactory(new PropertyValueFactory<>("fullPayment"));
+
+        fullPayment.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
 
         fieldOfficerColumn.setCellValueFactory(cellData -> {
             String name = cellData.getValue().getFieldOfficerName();
             return new SimpleStringProperty(name != null ? name : "");
         });
+        UiControlUtilities.autoSizeColumns(loansTable);
+
     }
 
     private void clearForm() {
-        startDatePicker.setValue(null);
+        startDatePicker.setValue(LocalDate.now());
         maturityDatePicker.setValue(null);
         principalField.clear();
         interestRateField.clear();
         tenorField.clear();
         collateralField.clear();
         feesField.clear();
+        surchargeRateField.clear();
+        surchargeAmountField.clear();
         statusField.setValue(LoanStatus.PENDING);
-        fieldOfficerField.getSelectionModel().clearSelection(); // Reset dropdown state
-        loansTable.getSelectionModel().clearSelection();
+        fieldOfficerField.getSelectionModel().clearSelection();
+        customerList.getSelectionModel().clearSelection();
+        guarantorDropDown.getSelectionModel().clearSelection();
         loansTable.getSelectionModel().clearSelection();
     }
 
@@ -349,13 +470,9 @@ public class LoansController {
             return;
         }
 
-        int months = Period.between(start, maturity).getYears() * 12 + Period.between(start, maturity).getMonths();
-        int days = Period.between(start, maturity).getDays();
-        if (days > 0) {
-            months += 1;
-        }
+        long days = java.time.temporal.ChronoUnit.DAYS.between(start, maturity);
 
-        tenorField.setText(String.valueOf(Math.max(months, 0)));
+        tenorField.setText(String.valueOf(Math.max(days, 0)));
         messageLabel.setText("");
     }
 

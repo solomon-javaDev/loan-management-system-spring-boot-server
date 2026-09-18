@@ -1,194 +1,123 @@
 package io.sol.loanmanagementsystemspringbootserver.config;
 
-import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerCreateDTO;
-import io.sol.loanmanagementsystemspringbootserver.entities.*;
-import io.sol.loanmanagementsystemspringbootserver.mappers.DTOMapper;
-import io.sol.loanmanagementsystemspringbootserver.repositories.CustomerRepository;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.SystemFinancialState;
+import io.sol.loanmanagementsystemspringbootserver.entities.Role;
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.Employee;
+import io.sol.loanmanagementsystemspringbootserver.entities.custom.User;
 import io.sol.loanmanagementsystemspringbootserver.repositories.EmployeeRepository;
-import io.sol.loanmanagementsystemspringbootserver.repositories.LoansRepository;
 import io.sol.loanmanagementsystemspringbootserver.repositories.UserRepository;
-import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
+import io.sol.loanmanagementsystemspringbootserver.services.FinancialStateService;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
-import static java.lang.Boolean.FALSE;
+@Component
+public class SeedDataConfig implements CommandLineRunner {
 
-@Configuration
-public class SeedDataConfig {
+    private final EmployeeRepository employeeRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
 
-    @Bean
-    public CommandLineRunner initDatabase(UserRepository userRepository, PasswordEncoder passwordEncoder, CustomerRepository customerRepository, LoansRepository loansRepository, EmployeeRepository employeeRepository, CustomerService customerService){
-            return args ->  {
-                if(userRepository.count() == 0){
-                    User adminUser = new User();
-                    adminUser.setEmail("admin@lms.com");
-                    adminUser.setUsername("admin");
-                    adminUser.setRole(Role.ADMIN);
-                    adminUser.setPassword(passwordEncoder.encode("admin123"));
-                    userRepository.save(adminUser);
+    public static final UUID SYSTEM_ACCOUNT_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+    private final FinancialStateService financialStateService;
 
-                                    }
-                if(customerRepository.count() == 0){
-                    List<Customer> customers = List.of(
-                            new Customer("Anita","Nannungi", "", "nannungi@gmail.com", "0778909762",  "Kampala"),
-                            new Customer("Nigel","Ukasha", "Jo", "fjk671gi@gmail.com", "0778908762",  "Entebbe"),
-                            new Customer("Indl","Lindl", "", "lin90@gmail.com", "0778908763","Jinja"),
-                            new Customer("Aws","Sseki", "Emma", "EmmanuelSeed9@gmail.com", "0768908762", "Mbarara"),
-                            new Customer("John","Doe", "", "john.doe@example.com", "0777000001", "Kampala"),
-                            new Customer("Mary","Smith", "Ann", "mary.smith@example.com", "0777000002", "Entebbe"),
-                            new Customer("Peter","Pan", "", "peter.pan@example.com", "0777000003", "Jinja"),
-                            new Customer("Alice","Johnson", "", "alice.j@example.com", "0777000004", "Mbarara"),
-                            new Customer("Bob","Brown", "", "bob.brown@example.com", "0777000005", "Kampala"),
-                            new Customer("Charles","Kato", "", "charles.kato@example.com", "0777000006", "Gulu"),
-                            new Customer("Diana","Nalu", "", "diana.nalu@example.com", "0777000007", "Mbale"),
-                            new Customer("Eric","Omara", "", "eric.omara@example.com", "0777000008", "Fort Portal")
-                    );
 
-                    customers.forEach(customer -> {
-                        customer.setDeleted(FALSE);
-                        customer.setAccountNumber(customerService.generateAccountNumber());
-                        customerService.createCustomer(DTOMapper.toCreateDTO(customer));
+    public SeedDataConfig(EmployeeRepository employeeRepository,
+                          PasswordEncoder passwordEncoder,
+                          UserRepository userRepository, FinancialStateService financialStateService) {
+        this.employeeRepository = employeeRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.userRepository = userRepository;
+        this.financialStateService = financialStateService;
+    }
+
+    @Override
+    public void run(String... args) {
+
+//        SystemFinancialState initialSystemState = getSystemFinancialState();
+//
+//        financialStateService.initialiseSystemState(initialSystemState);
+//
+//        System.out.println("PRINTING ------------- "+financialStateService.getAvailableLiquidity() );
+
+        userRepository.findByUsername("admin")
+                .ifPresentOrElse(admin -> {
+                    if (isPlainTextPassword(admin.getPassword())) {
+                        admin.setPassword(passwordEncoder.encode(admin.getPassword()));
+                        userRepository.save(admin);
+                    }
+                }, () -> {
+                    User admin = new User();
+                    admin.setUsername("admin");
+                    admin.setEmail("admin@lms.com");
+                    admin.setRole(Role.ADMIN);
+                    admin.setPassword(passwordEncoder.encode("admin123"));
+                    userRepository.save(admin);
+                });
+
+        List<Employee> seeds = List.of(
+                make("Wendy",   "Heaven",  20000, "wens@wen.com",      "093728923")
+        );
+        for (Employee e : seeds) {
+            employeeRepository.findByEmailIncludingDeleted(e.getEmail())
+                    .ifPresentOrElse(existing -> {
+                        if (existing.isDeleted()) {
+                            employeeRepository.restoreById(existing.getId());
+                        } else if (isPlainTextPassword(existing.getPassword())) {
+                            existing.setPassword(passwordEncoder.encode(existing.getPassword()));
+                            employeeRepository.save(existing);
+                        }
+                    }, () -> {
+                        employeeRepository.save(e);
                     });
+        }
+    }
 
-                    System.out.println("Saved a List of customers "+customerRepository.count());
-                }else{
-                    System.out.println("All is well, customers are present");
-                }
+    private static SystemFinancialState getSystemFinancialState() {
+        SystemFinancialState initialSystemState = new SystemFinancialState();
+        initialSystemState.setOwnerCapital(BigDecimal.valueOf(10000000));
+        initialSystemState.setAvailableLiquidity(BigDecimal.valueOf(10000000));
+        initialSystemState.setCashOnHand(BigDecimal.valueOf(10000000));
+        initialSystemState.setBankBalance(BigDecimal.ZERO);
+        initialSystemState.setTotalCashDisbursedInLoans(BigDecimal.ZERO);
+        initialSystemState.setExpectedCash(BigDecimal.ZERO);
+        initialSystemState.setCustomerSavings(BigDecimal.ZERO);
+        initialSystemState.setGrossLiquidity(BigDecimal.ZERO);
+        initialSystemState.setGrossLoanPortfolio(BigDecimal.ZERO);
+        initialSystemState.setTotalFeesCollected(BigDecimal.ZERO);
+        initialSystemState.setTotalSurchargeCollected(BigDecimal.ZERO);
+        initialSystemState.setNetProfit(BigDecimal.ZERO);
+        initialSystemState.setExpectedCash(BigDecimal.ZERO);
+        initialSystemState.setTotalCollections(BigDecimal.ZERO);
+        initialSystemState.setOutstandingPrincipal(BigDecimal.ZERO);
+        return initialSystemState;
+    }
 
-                if(employeeRepository.count() <= 2){
+    private Employee make(String first, String last, int salary, String email, String phone) {
+        Employee e = new Employee();
+        e.setUsername(first + " " + last);
+        e.setFirstName(first);
+        e.setLastName(last);
+        e.setSalary(salary);
+        e.setEmail(email);
+        e.setTelephone(phone);
+        e.setRole(Role.FIELD_OFFICER);
+        e.setActive(true);
+        e.setPassword("123");
+        e.setActive(true);
+        e.setDeleted(false);
 
+        return e;
+    }
 
-                    List<Employee> field_officers = new ArrayList<>();
-                    field_officers.add(new Employee("Solomon", "Twist", 20000, "solomon@twist.com", Role.FIELD_OFFICER));
-                    field_officers.add(new Employee("Nisha", "Twist", 20300, "nisha@twist.com", Role.FIELD_OFFICER));
-                    field_officers.add(new Employee("Hansa", "Gans", 20000, "hans@gans.com", Role.FIELD_OFFICER));
-                    field_officers.add(new Employee("Hasifa", "Muus", 12000, "has@has.com", Role.FIELD_OFFICER));
-                    field_officers.add(new Employee("Wendy", "Glav", 20000, "wens@wen.com", Role.FIELD_OFFICER));
-
-                    employeeRepository.saveAll(field_officers);
-
-                }
-                if(loansRepository.count() == 0){
-
-                    // Create a variety of loans to cover PENDING, ACTIVE, CLOSED, DEFAULTED scenarios
-                    Employee sol = employeeRepository.findByFirstName("Solomon");
-                    Employee nisha = employeeRepository.findByFirstName("Nisha");
-                    Employee hansa = employeeRepository.findByFirstName("Hansa");
-                    Employee hasifa = employeeRepository.findByFirstName("Hasifa");
-
-                    Customer nigel = customerRepository.findByFirstName("Nigel");
-                    Customer john = customerRepository.findByFirstName("John");
-                    Customer mary = customerRepository.findByFirstName("Mary");
-                    Customer peter = customerRepository.findByFirstName("Peter");
-                    Customer alice = customerRepository.findByFirstName("Alice");
-                    Customer bob = customerRepository.findByFirstName("Bob");
-
-                    List<Loan> loans = new ArrayList<>();
-
-                    // 1) Pending loan (no payments yet)
-                    Loan l1 = new Loan();
-                    l1.setStartDate(LocalDate.now().minusDays(2));
-                    l1.setMaturityDate(LocalDate.now().plusMonths(6));
-                    l1.setPrincipal(new BigDecimal("1000.00"));
-                    l1.setInterestRate(new BigDecimal("0.05"));
-                    l1.setFees(new BigDecimal("10"));
-                    l1.setCollateral("Phone, Motorola Edge 24");
-                    l1.setTenor(6);
-                    l1.setStatus(LoanStatus.PENDING);
-                    l1.setCustomer(nigel);
-                    l1.setFieldOfficer(sol);
-                    loans.add(l1);
-
-                    // 2) Active loan with partial payments
-                    Loan l2 = new Loan();
-                    l2.setStartDate(LocalDate.now().minusMonths(3));
-                    l2.setMaturityDate(LocalDate.now().plusMonths(3));
-                    l2.setPrincipal(new BigDecimal("5000.00"));
-                    l2.setInterestRate(new BigDecimal("0.10"));
-                    l2.setFees(new BigDecimal("25"));
-                    l2.setCollateral("Motorbike");
-                    l2.setTenor(6);
-                    l2.setStatus(LoanStatus.ACTIVE);
-                    l2.setCustomer(john);
-                    l2.setFieldOfficer(nisha);
-                    Payment p21 = new Payment(); p21.setDate(LocalDate.now().minusMonths(2)); p21.setAmountReceived(new BigDecimal("1000")); l2.addPayment(p21);
-                    Payment p22 = new Payment(); p22.setDate(LocalDate.now().minusMonths(1)); p22.setAmountReceived(new BigDecimal("500")); l2.addPayment(p22);
-                    loans.add(l2);
-
-                    // 3) Closed (fully paid)
-                    Loan l3 = new Loan();
-                    l3.setStartDate(LocalDate.of(2025, 1, 1));
-                    l3.setMaturityDate(LocalDate.of(2025, 7, 1));
-                    l3.setPrincipal(new BigDecimal("2000.00"));
-                    l3.setInterestRate(new BigDecimal("0.10"));
-                    l3.setFees(new BigDecimal("20"));
-                    l3.setCollateral("Laptop");
-                    l3.setTenor(6);
-                    l3.setStatus(LoanStatus.CLOSED);
-                    l3.setCustomer(mary);
-                    l3.setFieldOfficer(hansa);
-                    Payment p31 = new Payment(); p31.setDate(LocalDate.of(2025,2,1)); p31.setAmountReceived(new BigDecimal("1100")); l3.addPayment(p31);
-                    Payment p32 = new Payment(); p32.setDate(LocalDate.of(2025,4,1)); p32.setAmountReceived(new BigDecimal("1200")); l3.addPayment(p32);
-                    l3.setFullPaidDate(LocalDate.of(2025,4,1));
-                    loans.add(l3);
-
-                    // 4) Defaulted (partial payments but still outstanding)
-                    Loan l4 = new Loan();
-                    l4.setStartDate(LocalDate.now().minusMonths(12));
-                    l4.setMaturityDate(LocalDate.now().minusMonths(6));
-                    l4.setPrincipal(new BigDecimal("8000.00"));
-                    l4.setInterestRate(new BigDecimal("0.15"));
-                    l4.setFees(new BigDecimal("50"));
-                    l4.setCollateral("Shop inventory");
-                    l4.setTenor(12);
-                    l4.setStatus(LoanStatus.DEFAULTED);
-                    l4.setCustomer(peter);
-                    l4.setFieldOfficer(hasifa);
-                    Payment p41 = new Payment(); p41.setDate(LocalDate.now().minusMonths(10)); p41.setAmountReceived(new BigDecimal("1000")); l4.addPayment(p41);
-                    loans.add(l4);
-
-                    // 5) Active, multiple payments
-                    Loan l5 = new Loan();
-                    l5.setStartDate(LocalDate.now().minusMonths(2));
-                    l5.setMaturityDate(LocalDate.now().plusMonths(10));
-                    l5.setPrincipal(new BigDecimal("15000.00"));
-                    l5.setInterestRate(new BigDecimal("0.08"));
-                    l5.setFees(new BigDecimal("100"));
-                    l5.setCollateral("Car");
-                    l5.setTenor(12);
-                    l5.setStatus(LoanStatus.ACTIVE);
-                    l5.setCustomer(alice);
-                    l5.setFieldOfficer(sol);
-                    Payment p51 = new Payment(); p51.setDate(LocalDate.now().minusMonths(2)); p51.setAmountReceived(new BigDecimal("2000")); l5.addPayment(p51);
-                    Payment p52 = new Payment(); p52.setDate(LocalDate.now().minusMonths(1)); p52.setAmountReceived(new BigDecimal("2500")); l5.addPayment(p52);
-                    loans.add(l5);
-
-                    // 6) Small pending loan
-                    Loan l6 = new Loan();
-                    l6.setStartDate(LocalDate.now());
-                    l6.setMaturityDate(LocalDate.now().plusMonths(1));
-                    l6.setPrincipal(new BigDecimal("300.00"));
-                    l6.setInterestRate(new BigDecimal("0.02"));
-                    l6.setFees(new BigDecimal("5"));
-                    l6.setCollateral("Bicycle");
-                    l6.setTenor(1);
-                    l6.setStatus(LoanStatus.PENDING);
-                    l6.setCustomer(bob);
-                    l6.setFieldOfficer(nisha);
-                    loans.add(l6);
-
-                    // Save all loans (payments cascade)
-                    loansRepository.saveAll(loans);
-
-                    System.out.println("Saved a List of loans "+loansRepository.count());
-                }
-        };
+    private boolean isPlainTextPassword(String value) {
+        if (value == null || value.isBlank()) {
+            return false;
+        }
+        return !(value.startsWith("$2a$") || value.startsWith("$2b$") || value.startsWith("$2y$"));
     }
 }
