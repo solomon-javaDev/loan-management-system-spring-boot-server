@@ -13,6 +13,7 @@ import io.sol.loanmanagementsystemspringbootserver.repositories.LoansRepository;
 import io.sol.loanmanagementsystemspringbootserver.services.*;
 import io.sol.loanmanagementsystemspringbootserver.utilities.MoneyHelper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
+import io.sol.loanmanagementsystemspringbootserver.utilities.DocumentIdGenerator;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.concurrent.ScheduledService;
@@ -95,6 +96,8 @@ public class HomeController {
     private Label processingFeesLabel; //describes the amount of money taken from the principal as a fee
     @FXML
     private Label bankDepositsLabel; //expense showing how much has been deposited into the bank
+    @FXML
+    private Label availableLiquidityLabel;
     @FXML
     private Label totalExpensesLabel; //total expenses in a day
     @FXML
@@ -238,6 +241,7 @@ public class HomeController {
         updateStat("Interest Collected", MoneyHelper.formatMoney(state.getInterestReceived()), interestCollectedLabel);
         updateStat("Processing Fees", MoneyHelper.formatMoney(state.getTotalFeesCollected()), processingFeesLabel);
         updateStat("Bank Balance", MoneyHelper.formatMoney(state.getBankBalance()), bankDepositsLabel);
+        updateStat("Available Liquidity", MoneyHelper.formatMoney(state.getAvailableLiquidity()), availableLiquidityLabel);
         updateStat("Total Expenses", MoneyHelper.formatMoney(state.getTotalExpenses()), totalExpensesLabel);
         updateStat("Loan Disbursements (Total)", MoneyHelper.formatMoney(state.getTotalCashDisbursedInLoans()), loanDisbursementsLabel);
         updateStat("Cash On Hand", MoneyHelper.formatMoney(state.getCashOnHand()), checkoutCashLabel);
@@ -282,9 +286,10 @@ public class HomeController {
                  Document document = new Document(pdf)) {
 
                 document.add(new Paragraph("Daily Summary Report - " + LocalDate.now()).setBold().setFontSize(18));
+                document.add(new Paragraph("Document ID: " + DocumentIdGenerator.report("DSUM", LocalDate.now().toString())));
                 document.add(new Paragraph(" "));
 
-                Table table = new Table(2);
+                Table table = new Table(2).useAllAvailableWidth().setFixedLayout().setFontSize(8);
                 for (Map.Entry<String, String> entry : statsMap.entrySet()) {
                     table.addCell(entry.getKey());
                     table.addCell(entry.getValue());

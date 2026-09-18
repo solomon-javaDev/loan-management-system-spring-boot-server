@@ -1,21 +1,17 @@
-.root {
-    -fx-font-family: "Segoe UI", "Inter", "System";
-    -fx-font-size: 16px;
-    -fx-base: #f4f7fa;
-    -fx-background: #f4f7fa;
-    -fx-control-inner-background: #ffffff;
-}
+    .root{
+        -fx-font-size: 15px;
+        -fx-font-family: "Courier New";
+        -fx-base: rgb(78, 220, 123);
+        -fx-background: rgb(227, 228, 223);
+    }
+
 
 .label {
     -fx-text-fill: #34495e;
 }
 
-.table-cell, .table-column, .text-field, .date-picker, .combo-box,
-.button, .check-box, .radio-button, .list-cell, .menu-button {
-    -fx-font-size: 20px;
-}
 
-.button {
+    .button {
     -fx-background-radius: 4px;
     -fx-cursor: hand;
     -fx-padding: 8px 16px;
@@ -54,7 +50,7 @@
     -fx-border-color: #dcdde1;
     -fx-border-radius: 4px;
     -fx-background-radius: 4px;
-    -fx-padding: 6px;
+    -fx-padding: 2px;
 }
 
 .text-field:focused, .date-picker:focused, .combo-box:focused {

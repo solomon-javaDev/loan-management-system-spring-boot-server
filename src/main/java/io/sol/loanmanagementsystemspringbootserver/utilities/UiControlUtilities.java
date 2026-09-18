@@ -3,10 +3,9 @@ package io.sol.loanmanagementsystemspringbootserver.utilities;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TextField;
+import javafx.application.Platform;
+import javafx.scene.control.*;
+import javafx.scene.text.Text;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.springframework.stereotype.Component;
@@ -21,7 +20,30 @@ import java.util.function.Function;
 @Component
 public class UiControlUtilities {
 
+    public static void autoSizeColumns(TableView<?> tableView){
+        if (tableView == null) return;
 
+        Runnable resize = () -> {
+            Text text = new Text();
+            for (TableColumn<?, ?> column : tableView.getColumns()) {
+                text.setText(column.getText() == null ? "" : column.getText());
+                double maxWidth = text.getLayoutBounds().getWidth() + 30;
+
+                for (int row = 0; row < tableView.getItems().size(); row++) {
+                    Object value = column.getCellData(row);
+                    if (value != null) {
+                        text.setText(value.toString());
+                        maxWidth = Math.max(maxWidth, text.getLayoutBounds().getWidth() + 24);
+                    }
+                }
+                column.setMinWidth(maxWidth);
+                column.setPrefWidth(maxWidth);
+            }
+            tableView.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
+        };
+
+        Platform.runLater(resize);
+    }
 
     /**
      *

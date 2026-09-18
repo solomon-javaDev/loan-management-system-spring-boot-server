@@ -129,6 +129,10 @@ public class CustomerService {
             return Result.invalid("Select a customer to delete.", null);
         }
 
+        if(customerDto.getLoanCount() == 0 || customerDto.isActive()){
+            return Result.forbidden("This is an active customer: Deleting them results in loss of data", null);
+        }
+
         repository.deleteById(customerDto.getId());
         auditService.record("SOFT_DELETE", "CUSTOMER", customerDto.getId(), "Customer soft deleted");
         return Result.success("Customer deleted successfully.", null);

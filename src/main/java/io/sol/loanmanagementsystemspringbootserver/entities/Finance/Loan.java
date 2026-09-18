@@ -131,7 +131,8 @@ public class Loan {
     }
 
     public BigDecimal getTotalDue(){
-        return this.principal.add(this.principal.multiply(this.interestRate)).add(getSurchargeAmount());
+        return this.principal.add(this.principal.multiply(this.interestRate))
+                .add(calculateSurcharge(LocalDate.now()));
     }
 
     public BigDecimal calculateSurcharge(LocalDate asAt) {
@@ -139,7 +140,10 @@ public class Loan {
             return BigDecimal.ZERO;
         }
         long daysLate = java.time.temporal.ChronoUnit.DAYS.between(maturityDate, asAt);
-        return principal.multiply(surchargeRate).multiply(BigDecimal.valueOf(daysLate));
+        BigDecimal rate = surchargeRate == null ? BigDecimal.ZERO : surchargeRate;
+        BigDecimal fixedAmount = surchargeAmount == null ? BigDecimal.ZERO : surchargeAmount;
+        BigDecimal dailyCharge = principal.multiply(rate).add(fixedAmount);
+        return dailyCharge.multiply(BigDecimal.valueOf(daysLate));
     }
 
 

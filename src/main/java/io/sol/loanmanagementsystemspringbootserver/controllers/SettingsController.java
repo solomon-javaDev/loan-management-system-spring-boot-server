@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.ExpenseCategory;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.FeeBucket;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.CashTransaction;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.CashTransactionType;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.SystemFinancialState;
 import io.sol.loanmanagementsystemspringbootserver.events.FinancialStateUpdatedEvent;
 import io.sol.loanmanagementsystemspringbootserver.mailing.EmailDetails;
@@ -14,6 +16,7 @@ import io.sol.loanmanagementsystemspringbootserver.mailing.EmailsService;
 import io.sol.loanmanagementsystemspringbootserver.services.ExpenseCategoryService;
 import io.sol.loanmanagementsystemspringbootserver.services.FeeBucketService;
 import io.sol.loanmanagementsystemspringbootserver.services.FinancialStateService;
+import io.sol.loanmanagementsystemspringbootserver.services.CashTransactionService;
 import io.sol.loanmanagementsystemspringbootserver.utilities.MoneyHelper;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UiControlUtilities;
@@ -40,6 +43,7 @@ public class SettingsController {
     private final FeeBucketService feeBucketService;
     private final EmailsService emailsService;
     private final UserSession userSession;
+    private final CashTransactionService cashTransactionService;
 
     @FXML
     private TextField adminEmailsField;
@@ -60,9 +64,6 @@ public class SettingsController {
     private ComboBox<String> agingFreq;
 
     @FXML
-    private TextField surchargeRateField;
-
-    @FXML
     private Label messageLabel;
 
     @FXML
@@ -75,6 +76,12 @@ public class SettingsController {
     @FXML
     private TextField ownersCapitalField;
 
+    @FXML
+    private TextField transactionAmount;
+
+    @FXML
+    private ComboBox<CashTransactionType> transactionType;
+
     @FXML private TextField feeMinAmountField;
     @FXML private TextField feeMaxAmountField;
     @FXML private TextField feeAmountField;
@@ -84,17 +91,20 @@ public class SettingsController {
     @FXML private TableColumn<FeeBucket, BigDecimal> feeAmountColumn;
 
     public SettingsController(ExpenseCategoryService expenseCategoryService, FinancialStateService financialStateService,
-                              FeeBucketService feeBucketService, EmailsService emailsService, UserSession userSession) {
+                              FeeBucketService feeBucketService, EmailsService emailsService, UserSession userSession,
+                              CashTransactionService cashTransactionService) {
         this.expenseCategoryService = expenseCategoryService;
         this.financialStateService = financialStateService;
         this.feeBucketService = feeBucketService;
         this.emailsService = emailsService;
         this.userSession = userSession;
+        this.cashTransactionService = cashTransactionService;
     }
 
     @FXML
     public void initialize() {
         agingFreq.getItems().addAll("Daily", "Every 3 days", "Weekly", "Monthly");
+        transactionType.getItems().setAll(CashTransactionType.BANK_DEPOSIT, CashTransactionType.BANK_WITHDRAWAL);
         feeMinColumn.setCellValueFactory(new PropertyValueFactory<>("minAmount"));
         feeMinColumn.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
 
@@ -113,9 +123,9 @@ public class SettingsController {
         if (state != null && totalCapitalLabel != null) {
             totalCapitalLabel.setText(MoneyHelper.formatMoney(state.getOwnerCapital()));
             if (totalCashOutLabel != null) totalCashOutLabel.setText(MoneyHelper.formatMoney(state.getTotalExpenses()));
-            if (bankBalanceField != null) bankBalanceField.setText(MoneyHelper.formatMoney(state.getBankBalance()));
-            if (ownersCapitalField != null) ownersCapitalField.setText(MoneyHelper.formatMoney(state.getOwnerCapital()));
-            if (cashOnHandField != null) cashOnHandField.setText(MoneyHelper.formatMoney(state.getCashOnHand()));
+            if (bankBalanceField != null) bankBalanceField.setText(toEditableAmount(state.getBankBalance()));
+            if (ownersCapitalField != null) ownersCapitalField.setText(toEditableAmount(state.getOwnerCapital()));
+            if (cashOnHandField != null) cashOnHandField.setText(toEditableAmount(state.getCashOnHand()));
             if (adminEmailsField != null) adminEmailsField.setText(state.getAdminEmails());
         }
     }
@@ -180,6 +190,50 @@ public class SettingsController {
                 alert.showAndWait();
             }
         }
+    }
+
+    @FXML
+    private void recordBankTransaction() {
+        if (!userSession.isAdmin()) {
+            showAlert(Alert.AlertType.ERROR, "Authorization required", "Only an administrator can record bank transfers.");
+            return;
+        }
+
+        CashTransactionType type = transactionType.getValue();
+        BigDecimal amount;
+        try {
+            amount = new BigDecimal(transactionAmount.getText().trim());
+        } catch (Exception exception) {
+            showAlert(Alert.AlertType.ERROR, "Invalid transaction", "Enter a valid transfer amount.");
+            return;
+        }
+
+        if (type == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            showAlert(Alert.AlertType.ERROR, "Invalid transaction", "Select a transfer type and enter an amount greater than zero.");
+            return;
+        }
+    try {
+        CashTransaction transaction = new CashTransaction();
+        transaction.setType(type);
+        transaction.setAmount(amount);
+        transaction.setDate(java.time.LocalDateTime.now());
+        transaction.setDescription(type == CashTransactionType.BANK_DEPOSIT
+                ? "Cash transferred to bank"
+                : "Cash withdrawn from bank");
+
+        Result<CashTransaction> result = cashTransactionService.recordTransaction(transaction);
+        messageLabel.setText(result.message());
+        if (result.isSuccess()) {
+            transactionAmount.clear();
+            transactionType.getSelectionModel().clearSelection();
+        }
+    }catch(Exception exception){
+        showAlert(Alert.AlertType.ERROR, "An error has occurred", exception.getLocalizedMessage());
+    }
+    }
+
+    private String toEditableAmount(BigDecimal amount) {
+        return amount == null ? "0" : amount.toPlainString();
     }
 
     @FXML

@@ -3,6 +3,7 @@ package io.sol.loanmanagementsystemspringbootserver.services;
 import io.sol.loanmanagementsystemspringbootserver.dtos.LoanDTO;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Loan;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.LoanStatus;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.SystemFinancialState;
 import io.sol.loanmanagementsystemspringbootserver.entities.custom.Customer;
 import io.sol.loanmanagementsystemspringbootserver.entities.custom.Employee;
 import io.sol.loanmanagementsystemspringbootserver.events.LoanDisbursedEvent;
@@ -96,9 +97,17 @@ public class LoansService {
 
 
         // Validate liquidity
-        BigDecimal availableLiquidity = financialStateService.getAvailableLiquidity();
+        SystemFinancialState state = financialStateService.getCurrentState();
+        BigDecimal availableLiquidity = state.getAvailableLiquidity();
+        BigDecimal cashOnHand = state.getCashOnHand();
+
         if (loanDto.getPrincipal().compareTo(availableLiquidity) > 0) {
-            return Result.invalid("Insufficient funds to disburse this loan. Available: " + availableLiquidity, loanDto);
+            return Result.invalid("Insufficient funds to disburse this loan. Available Liquidity: " + availableLiquidity, loanDto);
+        }
+
+        if (loanDto.getPrincipal().compareTo(cashOnHand) > 0) {
+            return Result.invalid("Insufficient Cash on Hand to disburse this loan. Current Cash: " + cashOnHand + 
+                ". If you have enough liquidity, please record a bank withdrawal or update cash settings.", loanDto);
         }
 
         // Validate customer
@@ -212,6 +221,15 @@ public class LoansService {
     @Scheduled(cron = "0 0 1 * * ?") // Every day at 1 AM
     @Transactional
     public void updateOverdueLoansSurcharges() {
-
+        LocalDate today = LocalDate.now();
+        loansRepository.findByStatusIn(List.of(LoanStatus.PENDING, LoanStatus.ACTIVE))
+            .stream()
+            .filter(loan -> loan.getMaturityDate() != null
+                && today.isAfter(loan.getMaturityDate())
+                && loan.getOutstandingBalance().compareTo(BigDecimal.ZERO) > 0)
+            .forEach(loan -> {
+                loan.setStatus(LoanStatus.DEFAULTED);
+                loansRepository.save(loan);
+            });
     }
 }

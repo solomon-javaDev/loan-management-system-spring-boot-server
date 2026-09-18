@@ -16,6 +16,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * This class is a Spring-managed component that serves as the controller for managing customer-related
@@ -29,6 +30,7 @@ public class CustomerController {
 
     private final CustomerService customerService;
     private final UserSession userSession;
+    private final UiControlUtilities uiControlUtilities;
 
     @FXML
     private TextField firstNameField;
@@ -114,9 +116,10 @@ public class CustomerController {
 
     private FilteredList<CustomerDTO> filteredCustomers;
 
-    public CustomerController(CustomerService customerService, UserSession userSession) {
+    public CustomerController(CustomerService customerService, UserSession userSession, UiControlUtilities uiControlUtilities) {
         this.customerService = customerService;
         this.userSession = userSession;
+        this.uiControlUtilities = uiControlUtilities;
     }
 
     @FXML
@@ -149,6 +152,7 @@ public class CustomerController {
         );
 
 
+        UiControlUtilities.autoSizeColumns(customersTable);
     }
 
     @FXML
@@ -239,7 +243,8 @@ public class CustomerController {
     }
 
     private void loadCustomers() {
-        Result<java.util.List<CustomerDTO>> result = customerService.getAllCustomers();
+        UiControlUtilities.autoSizeColumns(customersTable);
+        Result<List<CustomerDTO>> result = customerService.getAllCustomers();
         filteredCustomers = new FilteredList<>(FXCollections.observableArrayList(result.value()), customer -> true);
         customersTable.setItems(filteredCustomers);
         Logger.logInfo("Customer Table has been loaded");

@@ -15,7 +15,7 @@
 
                   <GridPane hgap="10.0" vgap="8.0">
                      <columnConstraints>
-                        <ColumnConstraints minWidth="120.0" />
+                        <ColumnConstraints fillWidth="false" halignment="RIGHT" hgrow="NEVER" />
                         <ColumnConstraints halignment="LEFT" hgrow="ALWAYS" minWidth="200.0" />
                      </columnConstraints>
                      <children>
@@ -54,6 +54,12 @@
                         <RowConstraints />
                         <RowConstraints />
                      </rowConstraints>
+                     <VBox.margin>
+                        <Insets bottom="5.0" left="8.0" right="8.0" top="5.0" />
+                     </VBox.margin>
+                     <padding>
+                        <Insets left="2.0" top="2.0" />
+                     </padding>
                   </GridPane>
 
                   <TextField fx:id="customerSearchField" promptText="Search customers, loans, account number, telephone or NIN" />
@@ -87,6 +93,6 @@
       </ScrollPane>
    </children>
    <padding>
-      <Insets left="8.0" right="8.0" />
+      <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
    </padding>
 </AnchorPane>

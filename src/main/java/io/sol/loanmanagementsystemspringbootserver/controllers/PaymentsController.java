@@ -1,24 +1,35 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
+import org.springframework.stereotype.Component;
+
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.LoanDTO;
 import io.sol.loanmanagementsystemspringbootserver.dtos.PaymentDTO;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.LoanStatus;
 import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
+import io.sol.loanmanagementsystemspringbootserver.services.DocumentService;
 import io.sol.loanmanagementsystemspringbootserver.services.LoansService;
 import io.sol.loanmanagementsystemspringbootserver.services.PaymentsService;
-import io.sol.loanmanagementsystemspringbootserver.services.DocumentService;
-import io.sol.loanmanagementsystemspringbootserver.utilities.*;
+import io.sol.loanmanagementsystemspringbootserver.utilities.MoneyHelper;
+import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UiControlUtilities;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
-import org.springframework.stereotype.Component;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
 
 /**
  * The PaymentsController class is responsible for managing the user interface interactions
@@ -177,6 +188,8 @@ public class PaymentsController {
             String ref = payment.getLoanReference();
             return new SimpleStringProperty(ref != null ? ref : "");
         });
+        UiControlUtilities.autoSizeColumns(paymentsTable);
+
     }
 
     @FXML
@@ -189,6 +202,7 @@ public class PaymentsController {
 
         Result<List<PaymentDTO>> payments = paymentsService.getAllPayments();
         paymentsTable.setItems(FXCollections.observableArrayList(payments.value()));
+        UiControlUtilities.autoSizeColumns(paymentsTable);
     }
 
     private void filterLoansByCustomer(CustomerDTO customer) {
@@ -197,7 +211,9 @@ public class PaymentsController {
         Result<List<LoanDTO>> result = loansService.getAllLoans();
         List<LoanDTO> filteredLoans = result.value().stream()
                 .filter(loan -> loan.getCustomerId() != null && loan.getCustomerId() == customer.getId())
-                .filter(loan -> loan.getStatus() == LoanStatus.PENDING || loan.getStatus() == LoanStatus.ACTIVE)
+                .filter(loan -> loan.getStatus() == LoanStatus.PENDING
+                    || loan.getStatus() == LoanStatus.ACTIVE
+                    || loan.getStatus() == LoanStatus.DEFAULTED)
                 .toList();
         
         uiControlUtilities.configureDropDown(loanReference, filteredLoans, LoanDTO::getReference);
@@ -237,7 +253,9 @@ public class PaymentsController {
         Result<PaymentDTO> result = paymentsService.savePayment(date.getValue(), amount, selectedLoan.getId());
 
         if (result.isSuccess()) {
-            UIHelper.exportPdfBytes("PaymentReceipt", documentService.generatePaymentReceipt(result.value()));
+            if (!documentService.printPaymentReceipt(result.value())) {
+                UIHelper.exportPdfBytes("PaymentReceipt", documentService.generatePaymentReceipt(result.value()));
+            }
         }
         UIHelper.updateStatusLabel(messageLabel, result);
 

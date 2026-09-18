@@ -16,6 +16,9 @@ import java.net.URL;
  */
 @Component
 public class StageManager {
+
+        public static final String STYLESHEET = "/styles.css";
+
         private final ApplicationContext springContext;
 
         public StageManager(ApplicationContext springContext) {
@@ -25,9 +28,17 @@ public class StageManager {
         public Parent loadView(String fxmlPath) throws IOException {
             URL fxmlUrl = getClass().getResource(fxmlPath);
             FXMLLoader loader = new FXMLLoader(fxmlUrl);
-
             loader.setControllerFactory(springContext::getBean);
 
-            return loader.load();
+            Parent root = loader.load();
+            applyStylesheet(root);
+            return root;
+        }
+
+        private void applyStylesheet(Parent root) {
+            URL stylesheetUrl = getClass().getResource(STYLESHEET);
+            if (stylesheetUrl != null) {
+                root.getStylesheets().add(stylesheetUrl.toExternalForm());
+            }
         }
 }

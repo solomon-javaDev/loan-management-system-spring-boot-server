@@ -29,11 +29,29 @@ public class CashTransactionService {
     private final ApplicationEventPublisher eventPublisher;
     private final UserSession userSession;
     private final AuditService auditService;
+    private final FinancialStateService financialStateService;
 
     @Transactional
     public Result<CashTransaction> recordTransaction(CashTransaction transaction) {
         if (transaction.getAmount() == null || transaction.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             return Result.invalid("Amount must be greater than zero", null);
+        }
+
+        if (transaction.getType() == CashTransactionType.BANK_DEPOSIT
+                && transaction.getAmount().compareTo(financialStateService.getCurrentState().getCashOnHand()) > 0) {
+            return Result.invalid("Bank deposit exceeds available cash on hand", null);
+        }
+        if (transaction.getType() == CashTransactionType.BANK_WITHDRAWAL
+                && transaction.getAmount().compareTo(financialStateService.getCurrentState().getBankBalance()) > 0) {
+            return Result.invalid("Bank withdrawal exceeds the bank balance", null);
+        }
+        if (transaction.getType() == CashTransactionType.CAPITAL_WITHDRAWAL
+                && transaction.getAmount().compareTo(financialStateService.getCurrentState().getCashOnHand()) > 0) {
+            return Result.invalid("Capital withdrawal exceeds available cash on hand", null);
+        }
+        if (transaction.getType() == CashTransactionType.SAVINGS_WITHDRAWAL
+                && transaction.getAmount().compareTo(financialStateService.getCurrentState().getCashOnHand()) > 0) {
+            return Result.invalid("Savings withdrawal exceeds available cash on hand", null);
         }
 
         if (transaction.getType() == CashTransactionType.SAVINGS_DEPOSIT

@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="700.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.sol.loanmanagementsystemspringbootserver.controllers.LoansController">
+<AnchorPane cache="true" cacheShape="false" nodeOrientation="LEFT_TO_RIGHT" prefHeight="700.0" prefWidth="1000.0" scaleShape="false" stylesheets="@../../styles.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.sol.loanmanagementsystemspringbootserver.controllers.LoansController">
     <children>
         <!-- A SplitPane allows the user to drag and resize the form vs table spaces dynamically -->
         <SplitPane dividerPositions="0.55" orientation="VERTICAL" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
@@ -36,6 +36,7 @@
                                       <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
                               <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                       <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                              <RowConstraints />
                                   </rowConstraints>
                                   <children>
                                       <Label text="DATE TAKEN" GridPane.columnIndex="0" GridPane.rowIndex="0" />
@@ -62,11 +63,17 @@
                                       <Label text="FEES" GridPane.columnIndex="0" GridPane.rowIndex="8" />
                                       <TextField fx:id="feesField" promptText="Enter additional fees" GridPane.columnIndex="1" GridPane.rowIndex="8" />
 
+                                      <Label text="SURCHARGE RATE" GridPane.columnIndex="0" GridPane.rowIndex="10" />
+                                      <TextField fx:id="surchargeRateField" promptText="Daily percentage, e.g. 2 for 2%" GridPane.columnIndex="1" GridPane.rowIndex="10" />
+
+                                      <Label text="SURCHARGE AMOUNT" GridPane.columnIndex="0" GridPane.rowIndex="11" />
+                                      <TextField fx:id="surchargeAmountField" promptText="Daily fixed amount" GridPane.columnIndex="1" GridPane.rowIndex="11" />
+
                                       <Label text="STATUS" GridPane.columnIndex="0" GridPane.rowIndex="9" />
                                       <ComboBox fx:id="statusField" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="9" />
 
-                                      <Label text="FIELD OFFICER" GridPane.columnIndex="0" GridPane.rowIndex="11" />
-                                      <ComboBox fx:id="fieldOfficerField" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="11" />
+                                      <Label text="FIELD OFFICER" GridPane.columnIndex="0" GridPane.rowIndex="12" />
+                                      <ComboBox fx:id="fieldOfficerField" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="12" />
                               <Label text="GUARANTOR" GridPane.rowIndex="3" />
                               <ComboBox fx:id="guarantorDropDown" prefHeight="25.0" prefWidth="546.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                                   </children>
@@ -110,4 +117,10 @@
             </items>
         </SplitPane>
     </children>
+   <opaqueInsets>
+      <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+   </opaqueInsets>
+   <padding>
+      <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+   </padding>
 </AnchorPane>

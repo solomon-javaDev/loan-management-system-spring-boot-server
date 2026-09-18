@@ -1,21 +1,5 @@
 package io.sol.loanmanagementsystemspringbootserver.services;
 
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.kernel.geom.PageSize;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.properties.UnitValue;
-import io.sol.loanmanagementsystemspringbootserver.entities.Finance.*;
-import io.sol.loanmanagementsystemspringbootserver.repositories.CashTransactionRepository;
-import io.sol.loanmanagementsystemspringbootserver.repositories.ExpenseRepository;
-import io.sol.loanmanagementsystemspringbootserver.repositories.LoansRepository;
-import io.sol.loanmanagementsystemspringbootserver.repositories.PaymentRepository;
-import io.sol.loanmanagementsystemspringbootserver.utilities.Logger;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -23,8 +7,31 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+
+import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.properties.UnitValue;
+
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.CashTransaction;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.CashTransactionType;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Expense;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Loan;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Payment;
+import io.sol.loanmanagementsystemspringbootserver.repositories.CashTransactionRepository;
+import io.sol.loanmanagementsystemspringbootserver.repositories.ExpenseRepository;
+import io.sol.loanmanagementsystemspringbootserver.repositories.LoansRepository;
+import io.sol.loanmanagementsystemspringbootserver.repositories.PaymentRepository;
+import io.sol.loanmanagementsystemspringbootserver.utilities.DocumentIdGenerator;
+import io.sol.loanmanagementsystemspringbootserver.utilities.Logger;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -35,15 +42,21 @@ public class ReportService {
     private final ExpenseRepository expenseRepository;
     private final CashTransactionRepository cashTransactionRepository;
 
-    private void addHeader(Document document, String title) {
-        String uniqueId = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    private void addHeader(Document document, String title, String documentId) {
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         
         document.add(new Paragraph(title).setBold().setFontSize(18));
         document.add(new Paragraph("Generated on: " + now.format(formatter)));
-        document.add(new Paragraph("Report ID: " + uniqueId));
+        document.add(new Paragraph("Document ID: " + documentId));
         document.add(new Paragraph("\n"));
+    }
+
+    private Table createTable(float... widths) {
+        return new Table(UnitValue.createPercentArray(widths))
+                .setWidth(UnitValue.createPercentValue(100))
+                .setFixedLayout()
+                .setFontSize(8);
     }
 
     public byte[] generateDailyLoanReport(LocalDate date) {
@@ -54,10 +67,10 @@ public class ReportService {
              PdfDocument pdf = new PdfDocument(writer);
              Document document = new Document(pdf)) {
 
-            addHeader(document, "DAILY LOANS REPORT - " + date);
+                addHeader(document, "DAILY LOANS REPORT - " + date,
+                    DocumentIdGenerator.report("DLR", date.toString()));
 
-            Table table = new Table(UnitValue.createPercentArray(new float[]{3, 2, 2, 1, 2, 2, 2}));
-            table.setWidth(UnitValue.createPercentValue(100));
+                Table table = createTable(3, 2, 2, 1, 2, 2, 2);
             table.addCell("Customer");
             table.addCell("Contact");
             table.addCell("Disbursed");
@@ -102,10 +115,10 @@ public class ReportService {
              PdfDocument pdf = new PdfDocument(writer);
              Document document = new Document(pdf)) {
 
-            addHeader(document, "DAILY EXPENSES REPORT - " + date);
+                addHeader(document, "DAILY EXPENSES REPORT - " + date,
+                    DocumentIdGenerator.report("DER", date.toString()));
 
-            Table table = new Table(UnitValue.createPercentArray(new float[]{4, 2, 2, 2}));
-            table.setWidth(UnitValue.createPercentValue(100));
+                Table table = createTable(4, 2, 2, 2);
             table.addCell("Description");
             table.addCell("Category");
             table.addCell("Amount");
@@ -141,10 +154,10 @@ public class ReportService {
              PdfDocument pdf = new PdfDocument(writer);
              Document document = new Document(pdf)) {
 
-            addHeader(document, "DAILY SAVINGS REPORT - " + date);
+                addHeader(document, "DAILY SAVINGS REPORT - " + date,
+                    DocumentIdGenerator.report("DSR", date.toString()));
 
-            Table table = new Table(UnitValue.createPercentArray(new float[]{3, 2, 2, 3}));
-            table.setWidth(UnitValue.createPercentValue(100));
+                Table table = createTable(3, 2, 2, 3);
             table.addCell("Customer ID");
             table.addCell("Type");
             table.addCell("Amount");
@@ -181,14 +194,13 @@ public class ReportService {
              PdfDocument pdf = new PdfDocument(writer);
              Document document = new Document(pdf)) {
 
-            addHeader(document, "LOAN STATEMENT");
+            addHeader(document, "LOAN STATEMENT", DocumentIdGenerator.report("LST", String.valueOf(loanId)));
             document.add(new Paragraph("Customer: " + loan.getCustomer().getCustomerName()));
             document.add(new Paragraph("Loan ID: " + loan.getId()));
             document.add(new Paragraph("Disbursed Date: " + loan.getStartDate()));
             document.add(new Paragraph("\n"));
 
-            Table table = new Table(UnitValue.createPercentArray(new float[]{3, 3, 4}));
-            table.setWidth(UnitValue.createPercentValue(100));
+            Table table = createTable(3, 3, 4);
             table.addCell("Date");
             table.addCell("Amount Paid");
             table.addCell("Balance");
@@ -223,25 +235,23 @@ public class ReportService {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              PdfWriter writer = new PdfWriter(baos);
              PdfDocument pdf = new PdfDocument(writer);
-             Document document = new Document(pdf, PageSize.A4.rotate())) {
+             Document document = new Document(pdf)) {
 
-            addHeader(document, "AGING ANALYSIS");
+            addHeader(document, "AGING ANALYSIS", DocumentIdGenerator.report("AGE", null));
 
-            Table table = new Table(UnitValue.createPercentArray(new float[]{2.4f, 1.7f, 2.2f, 1.7f, 1.7f, 1.7f, 1.8f, 1.8f, 1.6f, 1.0f, 1.7f}));
-            table.setWidth(UnitValue.createPercentValue(100));
-            table.setFontSize(6.5f);
+            Table table = createTable(2.4f, 1.7f, 2.2f, 1.7f, 1.7f, 1.7f, 1.8f, 1.8f, 1.6f, 1.0f, 1.7f);
             table.setMarginTop(4);
-            table.addCell("Customer");
-            table.addCell("Contact");
-            table.addCell("Guarantor");
-            table.addCell("G. Contact");
-            table.addCell("Disbursed Date");
-            table.addCell("Due Date");
-            table.addCell("Disbursed Amt");
-            table.addCell("Outstanding");
-            table.addCell("Arrears");
-            table.addCell("Aging");
-            table.addCell("Maturity");
+            table.addHeaderCell("Customer").setBold();
+            table.addHeaderCell("Contact").setBold();
+            table.addHeaderCell("Guarantor").setBold();
+            table.addHeaderCell("G. Contact").setBold();
+            table.addHeaderCell("Disbursed Date").setBold();
+            table.addHeaderCell("Due Date").setBold();
+            table.addHeaderCell("Disbursed Amt").setBold();
+            table.addHeaderCell("Outstanding").setBold();
+            table.addHeaderCell("Arrears").setBold();
+            table.addHeaderCell("Aging").setBold();
+            table.addHeaderCell("Maturity").setBold();
 
             for (Loan l : loans) {
                 table.addCell(l.getCustomer().getCustomerName());
@@ -257,7 +267,7 @@ public class ReportService {
                 BigDecimal ir = l.getInterestRate() == null ? BigDecimal.ZERO : l.getInterestRate();
                 BigDecimal scheduledTotal = l.getPrincipal().add(l.getPrincipal().multiply(ir));
                 BigDecimal dailyInstallment = scheduledTotal.divide(BigDecimal.valueOf(l.getTenor()), 10, RoundingMode.HALF_UP);
-                long elapsed = java.time.temporal.ChronoUnit.DAYS.between(l.getStartDate(), LocalDate.now()) + 1;
+                long elapsed = ChronoUnit.DAYS.between(l.getStartDate(), LocalDate.now()) + 1;
                 BigDecimal expectedSoFar = dailyInstallment.multiply(BigDecimal.valueOf(Math.min(elapsed, l.getTenor())));
                 BigDecimal arrears = expectedSoFar.subtract(l.getTotalPaid()).max(BigDecimal.ZERO);
                 

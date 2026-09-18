@@ -2,8 +2,8 @@ package io.sol.loanmanagementsystemspringbootserver.controllers;
 
 import java.io.IOException;
 
+import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -17,7 +17,6 @@ import io.sol.loanmanagementsystemspringbootserver.utilities.StageManager;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -39,7 +38,6 @@ import javafx.stage.Stage;
  *   Applications, Payments, Settings, and Reports.
  * - Handling the user logout functionality by switching to the login view.
  * - Synchronizing the search bar's text field with the SearchService for real-time search updates.
- *
  * The class uses JavaFX annotations (@FXML) to bind methods and UI components from the
  * respective FXML files. It also leverages dependency injection for managing its dependencies,
  * such as SearchService and StageManager.
@@ -75,6 +73,12 @@ public class DashboardController {
     private Label cashAtHandLabel;
 
     @FXML
+    private Label bankBalanceLabel;
+
+    @FXML
+    private Label availableLiquidityLabel;
+
+    @FXML
     private Label totalLoanPortifolioLabel;
 
     @FXML
@@ -86,10 +90,7 @@ public class DashboardController {
     @FXML
     private StackPane mainContent;
 
-    private final ApplicationContext applicationContext;
-
-    public DashboardController(ApplicationContext applicationContext, StageManager stageManager, AutoupdateService autoupdateService, io.sol.loanmanagementsystemspringbootserver.services.FinancialStateService financialStateService, io.sol.loanmanagementsystemspringbootserver.utilities.UserSession userSession, JdbcTemplate jdbcTemplate) {
-        this.applicationContext = applicationContext;
+    public DashboardController(StageManager stageManager, AutoupdateService autoupdateService, io.sol.loanmanagementsystemspringbootserver.services.FinancialStateService financialStateService, io.sol.loanmanagementsystemspringbootserver.utilities.UserSession userSession, JdbcTemplate jdbcTemplate) {
         this.stageManager = stageManager;
         this.autoupdateService = autoupdateService;
         this.financialStateService = financialStateService;
@@ -131,6 +132,8 @@ public class DashboardController {
             } catch (Exception exception) {
                 databaseStatusLabel.setText("DB: OFFLINE - " + exception.getClass().getSimpleName());
                 databaseStatusLabel.setStyle("-fx-text-fill: red;");
+                UIHelper.showError("THE DATABASE PATH CORRUPTED", "A fatal error occurred in the system. Contact the developers");
+
             }
         }
     }
@@ -139,6 +142,12 @@ public class DashboardController {
         SystemFinancialState state = financialStateService.getCurrentState();
         if (cashAtHandLabel != null) {
             cashAtHandLabel.setText(MoneyHelper.formatMoney(state.getCashOnHand()));
+        }
+        if (bankBalanceLabel != null) {
+            bankBalanceLabel.setText(MoneyHelper.formatMoney(state.getBankBalance()));
+        }
+        if (availableLiquidityLabel != null) {
+            availableLiquidityLabel.setText(MoneyHelper.formatMoney(state.getAvailableLiquidity()));
         }
         if (totalLoanPortifolioLabel != null) {
             totalLoanPortifolioLabel.setText(MoneyHelper.formatMoney(state.getGrossLoanPortfolio()));
@@ -154,6 +163,8 @@ public class DashboardController {
             }
             Platform.runLater(this::updateTopBar);
         } catch (IllegalStateException | IllegalArgumentException | UnsupportedOperationException ignored) {
+            UIHelper.showError("ERROR LOADING", "A fatal error occurred in the system. Contact the developers");
+
             // The JavaFX toolkit is not initialised in headless/test startup paths.
         }
     }
@@ -161,16 +172,15 @@ public class DashboardController {
     @FXML
     private void onLogoutClicked() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/login/LoginView.fxml"));
-            loader.setControllerFactory(applicationContext::getBean);
-            Parent loginRoot = loader.load();
+            Parent loginRoot = stageManager.loadView("/ui/login/LoginView.fxml");
 
             Stage stage = (Stage) dashboardLabel.getScene().getWindow();
             stage.setScene(new Scene(loginRoot));
             stage.setTitle("Loan Management System");
             stage.setResizable(false);
         } catch (IOException e) {
-            e.printStackTrace();
+            UIHelper.showError("ERROR LOADING", "A fatal error occurred in the system. Contact the developers");
+
         }
     }
 
@@ -180,6 +190,8 @@ public class DashboardController {
             Parent homeView = stageManager.loadView("/ui/dashboard/HomeView.fxml");
             mainContent.getChildren().setAll(homeView);
         } catch (IOException e) {
+            UIHelper.showError("ERROR LOADING DASHBOARD DAILY STATS", "A fatal error occurred in the system. Contact the developers");
+
             throw new RuntimeException(e);
         }
     }
@@ -189,6 +201,8 @@ public class DashboardController {
             Parent customerView = stageManager.loadView("/ui/dashboard/CustomerView.fxml");
             mainContent.getChildren().setAll(customerView);
         } catch (IOException e) {
+            UIHelper.showError("ERROR LOADING CUSTOMERS", "A fatal error occurred in the system. Contact the developers");
+
             throw new RuntimeException(e);
         }
     }
@@ -199,6 +213,8 @@ public class DashboardController {
             Parent loanView = stageManager.loadView("/ui/dashboard/LoanView.fxml");
             mainContent.getChildren().setAll(loanView);
         } catch (IOException e) {
+            UIHelper.showError("ERROR LOADING LOANS", "A fatal error occurred in the system. Contact the developers");
+
             throw new RuntimeException(e);
         }
     }
@@ -209,6 +225,8 @@ public class DashboardController {
             Parent paymentsView = stageManager.loadView("/ui/dashboard/PaymentsView.fxml");
             mainContent.getChildren().setAll(paymentsView);
         } catch (IOException e) {
+            UIHelper.showError("ERROR LOADING PAYMENTS", "A fatal error occurred in the system. Contact the developers");
+
             throw new RuntimeException(e);
         }
     }
@@ -219,6 +237,8 @@ public class DashboardController {
             Parent reportsView = stageManager.loadView("/ui/dashboard/ReportsView.fxml");
             mainContent.getChildren().setAll(reportsView);
         } catch (IOException e) {
+            UIHelper.showError("ERROR LOADING REPORTS", "A fatal error occurred in the system. Contact the developers");
+
             throw new RuntimeException(e);
         }
     }
@@ -229,6 +249,8 @@ public class DashboardController {
             Parent settingsView = stageManager.loadView("/ui/dashboard/SettingsView.fxml");
             mainContent.getChildren().setAll(settingsView);
         } catch (IOException e) {
+            UIHelper.showError("ERROR LOADING SETTINGS", "A fatal error occurred in the system. Contact the developers");
+
             throw new RuntimeException(e);
         }
     }
@@ -238,6 +260,8 @@ public class DashboardController {
         try {
             mainContent.getChildren().setAll(stageManager.loadView("/ui/dashboard/FinanceView.fxml"));
         } catch (IOException e) {
+            UIHelper.showError("ERROR LOADING FINANCE", "A fatal error occurred in the system. Contact the developers");
+
             throw new RuntimeException(e);
         }
     }
@@ -247,6 +271,7 @@ public class DashboardController {
         try {
             mainContent.getChildren().setAll(stageManager.loadView("/ui/dashboard/EmployeesView.fxml"));
         } catch (IOException e) {
+            UIHelper.showError("ERROR LOADING EMPLOYEES", "A fatal error occurred in the system. Contact the developers");
             throw new RuntimeException(e);
         }
     }

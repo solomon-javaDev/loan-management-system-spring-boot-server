@@ -118,6 +118,12 @@ public class LoansController {
     private TextField feesField;
 
     @FXML
+    private TextField surchargeRateField;
+
+    @FXML
+    private TextField surchargeAmountField;
+
+    @FXML
     private ComboBox<LoanStatus> statusField;
 
     @FXML
@@ -205,8 +211,16 @@ public class LoansController {
 
     
     private void loadLoans() {
+        loansService.updateOverdueLoansSurcharges();
         Result<List<LoanDTO>> result = loansService.getAllLoans();
         loansTable.setItems(FXCollections.observableArrayList(result.value()));
+        UiControlUtilities.autoSizeColumns(loansTable);
+        long overdueLoans = result.value().stream()
+                .filter(loan -> loan.getStatus() == LoanStatus.DEFAULTED)
+                .count();
+        if (overdueLoans > 0) {
+            messageLabel.setText("Warning: " + overdueLoans + " loan(s) have passed maturity and remain unpaid.");
+        }
     }
 
 
@@ -219,6 +233,10 @@ public class LoansController {
         loan.setTenor(parseInt(tenorField.getText()));
         loan.setCollateral(collateralField.getText() == null ? "" : collateralField.getText().trim());
         loan.setFees(parseBigDecimal(feesField.getText()));
+        BigDecimal surchargeRatePercent = parseBigDecimal(surchargeRateField.getText());
+        loan.setSurchargeRate(surchargeRatePercent == null
+            ? BigDecimal.ZERO : surchargeRatePercent.divide(BigDecimal.valueOf(100)));
+        loan.setSurchargeAmount(parseBigDecimal(surchargeAmountField.getText()));
         loan.setStatus(statusField.getValue() != null ? statusField.getValue() : LoanStatus.PENDING);
         if (fieldOfficerField.getValue() != null) {
             loan.setFieldOfficerId(fieldOfficerField.getValue().getId());
@@ -243,6 +261,9 @@ public class LoansController {
         tenorField.setText(String.valueOf(loan.getTenor()));
         collateralField.setText(loan.getCollateral());
         feesField.setText(loan.getFees() == null ? "" : loan.getFees().toPlainString());
+        surchargeRateField.setText(loan.getSurchargeRate() == null
+            ? "" : loan.getSurchargeRate().multiply(BigDecimal.valueOf(100)).stripTrailingZeros().toPlainString());
+        surchargeAmountField.setText(loan.getSurchargeAmount() == null ? "" : loan.getSurchargeAmount().toPlainString());
         statusField.setValue(loan.getStatus() != null ? loan.getStatus() : LoanStatus.PENDING);
 
         if (loan.getFieldOfficerId() != null) {
@@ -413,6 +434,8 @@ public class LoansController {
             String name = cellData.getValue().getFieldOfficerName();
             return new SimpleStringProperty(name != null ? name : "");
         });
+        UiControlUtilities.autoSizeColumns(loansTable);
+
     }
 
     private void clearForm() {
@@ -423,6 +446,8 @@ public class LoansController {
         tenorField.clear();
         collateralField.clear();
         feesField.clear();
+        surchargeRateField.clear();
+        surchargeAmountField.clear();
         statusField.setValue(LoanStatus.PENDING);
         fieldOfficerField.getSelectionModel().clearSelection();
         customerList.getSelectionModel().clearSelection();

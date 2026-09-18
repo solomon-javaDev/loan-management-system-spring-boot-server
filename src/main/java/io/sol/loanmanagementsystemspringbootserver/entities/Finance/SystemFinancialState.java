@@ -52,8 +52,8 @@ public class SystemFinancialState {
     private BigDecimal totalCollections = BigDecimal.ZERO;
 
     // Liquidity
-    private BigDecimal grossLiquidity = BigDecimal.ZERO;
-    private BigDecimal availableLiquidity = BigDecimal.ZERO;
+    private BigDecimal grossLiquidity = BigDecimal.ZERO;// grossLiquidity = cashOnHand + bankBalance
+    private BigDecimal availableLiquidity = BigDecimal.ZERO;     // availableLiquidity = grossLiquidity - customerSavings (Simplest rule for MVP)
 
     // Cash Control
     private BigDecimal expectedCash = BigDecimal.ZERO;

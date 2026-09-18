@@ -22,12 +22,14 @@ public class FinancialStateService {
     private final SystemFinancialStateRepository repository;
     private final ApplicationEventPublisher eventPublisher;
     private final UserSession userSession;
+    private final AuditService auditService;
 
     public FinancialStateService(SystemFinancialStateRepository systemFinancialStateRepository,
-                                 ApplicationEventPublisher eventPublisher, UserSession userSession) {
+                                 ApplicationEventPublisher eventPublisher, UserSession userSession, AuditService auditService) {
         this.repository = systemFinancialStateRepository;
         this.eventPublisher = eventPublisher;
         this.userSession = userSession;
+        this.auditService = auditService;
     }
 
     @Transactional
@@ -191,6 +193,11 @@ public class FinancialStateService {
         state.setOwnerCapital(ownersCapital);
         state.setCashOnHand(cashOnHand);
         state.setAdminEmails(adminEmails);
+
+        String auditDetails = String.format("Manual balance update - Bank: %s, Capital: %s, Cash: %s",
+                bankBalance, ownersCapital, cashOnHand);
+        auditService.record("MANUAL_ADJUSTMENT", "FINANCIAL_STATE", state.getId(), auditDetails);
+
         updateDerivedValues(state);
         repository.save(state);
         eventPublisher.publishEvent(new FinancialStateUpdatedEvent(state));

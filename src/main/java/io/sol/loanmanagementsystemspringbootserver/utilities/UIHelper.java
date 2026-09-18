@@ -1,22 +1,21 @@
 package io.sol.loanmanagementsystemspringbootserver.utilities;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Map;
+
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
+
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.time.LocalDate;
-import java.util.Map;
 
 public class UIHelper {
 
@@ -74,7 +73,7 @@ public class UIHelper {
             Document document = new Document(pdf)){
             // 1. Add Heading
             document.add(new Paragraph(title + " - " + java.time.LocalDateTime.now()).setBold().setFontSize(18));
-            document.add(new Paragraph("Report ID: " + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase()));
+            document.add(new Paragraph("Document ID: " + DocumentIdGenerator.report(deafultPrefix.toUpperCase(), null)));
             document.add(new Paragraph(" ")); // Spacing
 
             // 2. Dynamically build the table

@@ -12,6 +12,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
@@ -81,12 +82,34 @@ public class UpdateManagerService {
 
     private boolean isNewerVersion(String latest, String current) {
         if (latest == null || latest.isEmpty()) return false;
-        
+
         String normalizedLatest = normalizeVersion(latest);
         String normalizedCurrent = normalizeVersion(current);
-        
-        log.debug("Comparing normalized versions - Latest: {}, Current: {}", normalizedLatest, normalizedCurrent);
-        return !normalizedLatest.equals(normalizedCurrent);
+
+        if (normalizedLatest.equals(normalizedCurrent)) return false;
+
+        String[] latestParts = normalizedLatest.split("\\.");
+        String[] currentParts = normalizedCurrent.split("\\.");
+
+        int length = Math.max(latestParts.length, currentParts.length);
+        for (int i = 0; i < length; i++) {
+            try {
+                int latestPart = i < latestParts.length ? Integer.parseInt(latestParts[i].replaceAll("\\D", "")) : 0;
+                int currentPart = i < currentParts.length ? Integer.parseInt(currentParts[i].replaceAll("\\D", "")) : 0;
+
+                if (latestPart > currentPart) return true;
+                if (latestPart < currentPart) return false;
+            } catch (NumberFormatException e) {
+                // If not numeric, fallback to string comparison for this part
+                String l = i < latestParts.length ? latestParts[i] : "";
+                String c = i < currentParts.length ? currentParts[i] : "";
+                int comp = l.compareTo(c);
+                if (comp > 0) return true;
+                if (comp < 0) return false;
+            }
+        }
+
+        return false;
     }
 
     private String normalizeVersion(String version) {
@@ -133,12 +156,18 @@ public class UpdateManagerService {
 
             if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 Path appDir = getApplicationDirectory();
+                Path stagingDir = appDir.resolve("updates").resolve("staging");
+                if (!Files.exists(stagingDir)) {
+                    Files.createDirectories(stagingDir);
+                }
+                
+                Path tempPath = stagingDir.resolve("update.jar.tmp");
                 Path targetPath = appDir.resolve("update.jar");
                 
-                log.info("Downloading update to: {}", targetPath.toAbsolutePath());
+                log.info("Downloading update to staging: {}", tempPath.toAbsolutePath());
                 
                 try (InputStream in = connection.getInputStream();
-                     FileOutputStream out = new FileOutputStream(targetPath.toFile())) {
+                     FileOutputStream out = new FileOutputStream(tempPath.toFile())) {
                     
                     byte[] buffer = new byte[8192];
                     int bytesRead;
@@ -146,12 +175,28 @@ public class UpdateManagerService {
                         out.write(buffer, 0, bytesRead);
                     }
                 }
-                log.info("Update downloaded successfully and saved as update.jar in {}", appDir.toAbsolutePath());
+                
+                // Verify JAR integrity
+                if (isValidJar(tempPath)) {
+                    Files.move(tempPath, targetPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                    log.info("Update verified and ready: {}. It will be applied on next restart.", targetPath.toAbsolutePath());
+                } else {
+                    log.error("Downloaded update is not a valid JAR file. Deleting temp file.");
+                    Files.deleteIfExists(tempPath);
+                }
             } else {
                 log.warn("Failed to download update. Server responded with: {}", connection.getResponseCode());
             }
         } catch (Exception e) {
-            log.error("Silent failure during update download: {}", e.getMessage());
+            log.error("Failure during update download: {}", e.getMessage());
+        }
+    }
+
+    private boolean isValidJar(Path path) {
+        try (java.util.jar.JarFile jarFile = new java.util.jar.JarFile(path.toFile())) {
+            return true;
+        } catch (IOException e) {
+            return false;
         }
     }
 }

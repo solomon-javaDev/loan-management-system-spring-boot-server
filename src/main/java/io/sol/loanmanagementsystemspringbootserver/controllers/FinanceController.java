@@ -1,24 +1,39 @@
 package io.sol.loanmanagementsystemspringbootserver.controllers;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Component;
+
 import io.sol.loanmanagementsystemspringbootserver.dtos.CustomerDTO;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.CashTransaction;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.CashTransactionType;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Expense;
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.ExpenseCategory;
-import io.sol.loanmanagementsystemspringbootserver.services.*;
-import io.sol.loanmanagementsystemspringbootserver.utilities.*;
+import io.sol.loanmanagementsystemspringbootserver.services.CashTransactionService;
+import io.sol.loanmanagementsystemspringbootserver.services.CustomerService;
+import io.sol.loanmanagementsystemspringbootserver.services.DocumentService;
+import io.sol.loanmanagementsystemspringbootserver.services.ExpenseCategoryService;
+import io.sol.loanmanagementsystemspringbootserver.services.ExpenseService;
+import io.sol.loanmanagementsystemspringbootserver.utilities.MoneyHelper;
+import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UIHelper;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UiControlUtilities;
+import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.collections.FXCollections;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
-import org.springframework.stereotype.Component;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.stream.Collectors;
 
 @Component
 public class FinanceController {
@@ -152,8 +167,10 @@ public class FinanceController {
             String customerName = customerResult.isSuccess()
                     ? customerResult.value().getCustomerName()
                     : "Customer " + customerId;
-            UIHelper.exportPdfBytes("SavingsReceipt",
-                documentService.generateSavingsReceipt(result.value(), customerName));
+            if (!documentService.printSavingsReceipt(result.value(), customerName)) {
+                UIHelper.exportPdfBytes("SavingsReceipt",
+                    documentService.generateSavingsReceipt(result.value(), customerName));
+            }
             UIHelper.showInfo("SUCCESS", result.message());
             loadSavings();
             savingsAmount.clear();
@@ -169,6 +186,7 @@ public class FinanceController {
     }
 
     private void configureTables() {
+
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
         recordDateColumn.setCellValueFactory(c -> new SimpleStringProperty(
@@ -206,6 +224,8 @@ public class FinanceController {
         });
         savingsTotalBalanceColumn.setCellFactory(UiControlUtilities.formattedCell(MoneyHelper::formatMoney));
 
+        UiControlUtilities.autoSizeColumns(customerSavingsTable);
+        UiControlUtilities.autoSizeColumns(expensesTable);
     }
 
     private void loadExpenses() {
@@ -213,6 +233,7 @@ public class FinanceController {
                 expenseService.getAllExpenses().value().stream()
                         .sorted((a, b) -> b.getDate().compareTo(a.getDate()))
                         .collect(Collectors.toList())));
+        UiControlUtilities.autoSizeColumns(expensesTable);
     }
 
     private void loadSavings() {
@@ -221,6 +242,7 @@ public class FinanceController {
                         .filter(t -> t.getType() == CashTransactionType.SAVINGS_DEPOSIT || t.getType() == CashTransactionType.SAVINGS_WITHDRAWAL)
                         .sorted((a, b) -> b.getDate().compareTo(a.getDate()))
                         .collect(Collectors.toList())));
+        UiControlUtilities.autoSizeColumns(customerSavingsTable);
     }
 
     @FXML

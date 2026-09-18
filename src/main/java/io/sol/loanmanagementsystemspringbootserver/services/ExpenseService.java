@@ -1,6 +1,7 @@
 package io.sol.loanmanagementsystemspringbootserver.services;
 
 import io.sol.loanmanagementsystemspringbootserver.entities.Finance.Expense;
+import io.sol.loanmanagementsystemspringbootserver.entities.Finance.SystemFinancialState;
 import io.sol.loanmanagementsystemspringbootserver.events.ExpenseIncurredEvent;
 import io.sol.loanmanagementsystemspringbootserver.repositories.ExpenseRepository;
 import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
@@ -20,13 +21,15 @@ public class ExpenseService {
     private final ApplicationEventPublisher applicationEventPublisher;
     private final UserSession userSession;
     private final AuditService auditService;
+    private final FinancialStateService financialStateService;
 
     public ExpenseService(ExpenseRepository expenseRepository, ApplicationEventPublisher applicationEventPublisher,
-                          UserSession userSession, AuditService auditService) {
+                          UserSession userSession, AuditService auditService, FinancialStateService financialStateService) {
         this.expenseRepository = expenseRepository;
         this.applicationEventPublisher = applicationEventPublisher;
         this.userSession = userSession;
         this.auditService = auditService;
+        this.financialStateService = financialStateService;
     }
 
     @Transactional
@@ -39,6 +42,11 @@ public class ExpenseService {
         }
         if (expense.getCategory() == null) {
             return Result.invalid("Category is required", null);
+        }
+
+        SystemFinancialState state = financialStateService.getCurrentState();
+        if (expense.getAmount().compareTo(state.getCashOnHand()) > 0) {
+            return Result.invalid("Insufficient Cash on Hand to record this expense. Current Cash: " + state.getCashOnHand(), null);
         }
 
         Expense saved = expenseRepository.save(expense);

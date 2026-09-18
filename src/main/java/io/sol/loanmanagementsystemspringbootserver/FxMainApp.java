@@ -1,16 +1,15 @@
 package io.sol.loanmanagementsystemspringbootserver;
 
+import io.sol.loanmanagementsystemspringbootserver.utilities.DatabaseMigrationUtility;
 import io.sol.loanmanagementsystemspringbootserver.utilities.GlobalExceptionHandler;
+import io.sol.loanmanagementsystemspringbootserver.utilities.StageManager;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
-
-import java.util.Objects;
 
 public class FxMainApp extends Application {
 
@@ -18,6 +17,8 @@ public class FxMainApp extends Application {
 
     @Override
     public void init() {
+    DatabaseMigrationUtility.migrateDataDirectory();
+
     Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
         GlobalExceptionHandler.handleException(throwable);
     });
@@ -44,12 +45,10 @@ public class FxMainApp extends Application {
             GlobalExceptionHandler.handleException(throwable);
         });
 
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/login/LoginView.fxml"));
-        loader.setControllerFactory(applicationContext::getBean);
-        Parent root = loader.load();
+        StageManager stageManager = applicationContext.getBean(StageManager.class);
+        Parent root = stageManager.loadView("/ui/login/LoginView.fxml");
 
         Scene scene = new Scene(root);
-        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/styles.css")).toExternalForm());
 
         primaryStage.setTitle("Loan Management System");
         primaryStage.setScene(scene);

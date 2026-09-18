@@ -35,8 +35,6 @@ public class EmployeesController {
     @FXML private TableColumn<EmployeeDTO, String> lastNameColumn;
     @FXML private TableColumn<EmployeeDTO, String> emailColumn;
     @FXML private TableColumn<EmployeeDTO, String> telephoneColumn;
-    @FXML private TableColumn<EmployeeDTO, String> passwordColumn;
-
     @FXML private TableColumn<EmployeeDTO, Number> salaryColumn;
     @FXML private TableColumn<EmployeeDTO, String> roleColumn;
     @FXML private TableColumn<EmployeeDTO, String> userNameColumn;
@@ -88,12 +86,16 @@ public class EmployeesController {
         var result = employeeService.getAllEmployees();
         if (result.isSuccess()) {
             employeesTable.getItems().setAll(result.value());
+            UiControlUtilities.autoSizeColumns(employeesTable);
         }
     }
 
     private void loadUsers() {
         var result = userService.getAllUsers();
-        if (result.isSuccess()) usersTable.getItems().setAll(result.value());
+        if (result.isSuccess()) {
+            usersTable.getItems().setAll(result.value());
+            UiControlUtilities.autoSizeColumns(usersTable);
+        }
     }
 
     private void configureTable(){
@@ -106,13 +108,15 @@ public class EmployeesController {
             salaryValue -> MoneyHelper.formatMoney(
                 BigDecimal.valueOf(salaryValue.longValue()))));
 
-        passwordColumn.setCellValueFactory(new PropertyValueFactory<>("password"));
         roleColumn.setCellValueFactory(new PropertyValueFactory<>("role"));
         userNameColumn.setCellValueFactory(new PropertyValueFactory<>("username"));
         activeColumn.setCellValueFactory(new PropertyValueFactory<>("active"));
         userUsernameColumn.setCellValueFactory(new PropertyValueFactory<>("username"));
         userEmailColumn.setCellValueFactory(new PropertyValueFactory<>("email"));
         userRoleColumn.setCellValueFactory(new PropertyValueFactory<>("role"));
+
+        UiControlUtilities.autoSizeColumns(employeesTable);
+
     }
 
     @FXML

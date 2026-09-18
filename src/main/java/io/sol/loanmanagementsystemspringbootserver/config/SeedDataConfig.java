@@ -38,11 +38,11 @@ public class SeedDataConfig implements CommandLineRunner {
     @Override
     public void run(String... args) {
 
-        SystemFinancialState initialSystemState = getSystemFinancialState();
-
-        financialStateService.initialiseSystemState(initialSystemState);
-
-        System.out.println("PRINTING ------------- "+financialStateService.getAvailableLiquidity() );
+//        SystemFinancialState initialSystemState = getSystemFinancialState();
+//
+//        financialStateService.initialiseSystemState(initialSystemState);
+//
+//        System.out.println("PRINTING ------------- "+financialStateService.getAvailableLiquidity() );
 
         userRepository.findByUsername("admin")
                 .ifPresentOrElse(admin -> {
@@ -60,11 +60,7 @@ public class SeedDataConfig implements CommandLineRunner {
                 });
 
         List<Employee> seeds = List.of(
-                make("Solomon", "Twist", 20000, "solomon@twist.com", "0789847372"),
-                make("Nisha",   "Twist", 20300, "nisha@twist.com",   "085958332"),
-                make("Hansa",   "Gans",  20000, "hans@gans.com",     "0758437722"),
-                make("Hasifa",  "Muus",  12000, "has@has.com",       "089483722"),
-                make("Wendy",   "Glav",  20000, "wens@wen.com",      "093728923")
+                make("Wendy",   "Heaven",  20000, "wens@wen.com",      "093728923")
         );
         for (Employee e : seeds) {
             employeeRepository.findByEmailIncludingDeleted(e.getEmail())

@@ -101,6 +101,7 @@ public class ReportsController {
     }
 
     private void setupTables() {
+
         // Daily Loans Table
         TableColumn<Loan, String> customerCol = new TableColumn<>("Customer");
         customerCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getCustomer().getCustomerName()));
@@ -213,6 +214,14 @@ public class ReportsController {
                         ? "-fx-background-color: #ffd6d6; -fx-text-fill: #8b0000;" : "");
             }
         });
+
+        UiControlUtilities.autoSizeColumns(agingAnalysisTable);
+        UiControlUtilities.autoSizeColumns(auditTable);
+        UiControlUtilities.autoSizeColumns(dailyExpensesTable);
+        UiControlUtilities.autoSizeColumns(dailyLoansTable);
+        UiControlUtilities.autoSizeColumns(dailySavingsTable);
+        UiControlUtilities.autoSizeColumns(loanStatementTable);
+
     }
 
     private void loadAllData() {
@@ -258,6 +267,13 @@ public class ReportsController {
         // Aging Analysis
         loadAgingAnalysis();
         loadAuditData();
+
+        UiControlUtilities.autoSizeColumns(dailyLoansTable);
+        UiControlUtilities.autoSizeColumns(dailyExpensesTable);
+        UiControlUtilities.autoSizeColumns(dailySavingsTable);
+        UiControlUtilities.autoSizeColumns(loanStatementTable);
+        UiControlUtilities.autoSizeColumns(agingAnalysisTable);
+        UiControlUtilities.autoSizeColumns(auditTable);
     }
 
     private void loadAuditData() {
