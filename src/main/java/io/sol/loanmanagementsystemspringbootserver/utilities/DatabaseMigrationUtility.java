@@ -1,46 +1,40 @@
 package io.sol.loanmanagementsystemspringbootserver.utilities;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.DosFileAttributeView;
 
 public class DatabaseMigrationUtility {
 
     public static void migrateDataDirectory() {
-        String localAppData = System.getenv("LOCALAPPDATA");
-        if (localAppData == null) {
-            localAppData = System.getProperty("user.home") + File.separator + "AppData" + File.separator + "Local";
+        try {
+            Path directory = databaseDirectory(System.getenv("LOCALAPPDATA"), System.getProperty("user.home"));
+            prepareDatabase(directory, Path.of(System.getProperty("user.dir"), "data"));
+            System.setProperty("lms.db.path", directory.resolve("loan_db").toAbsolutePath().toString().replace('\\', '/'));
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to prepare the loan database directory", e);
         }
+    }
 
-        File newDbDir = new File(localAppData, "LMS" + File.separator + "data");
-        File oldDbDir = new File("data");
+    public static Path databaseDirectory(String localAppData, String userHome) {
+        Path local = localAppData == null || localAppData.isBlank()
+                ? Path.of(userHome, "AppData", "Local") : Path.of(localAppData);
+        return local.resolve("LMS").resolve("data");
+    }
 
-        if (oldDbDir.exists() && oldDbDir.isDirectory()) {
-            if (!newDbDir.exists()) {
-                newDbDir.mkdirs();
-            }
-
-            File[] files = oldDbDir.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    if (file.isFile()) {
-                        File targetFile = new File(newDbDir, file.getName());
-                        if (!targetFile.exists()) {
-                            try {
-                                Files.copy(file.toPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                                System.out.println("Migrated: " + file.getName() + " to " + targetFile.getAbsolutePath());
-                            } catch (IOException e) {
-                                System.err.println("Failed to migrate: " + file.getName() + " - " + e.getMessage());
-                            }
-                        }
-                    }
-                }
-            }
-            
-            // Note: We don't delete the old directory yet just in case, 
-            // but in a real release candidate we might want to archive it.
-            System.out.println("Data migration check completed. Data is now primarily managed in: " + newDbDir.getAbsolutePath());
+    public static void prepareDatabase(Path directory, Path oldDirectory) throws IOException {
+        Files.createDirectories(directory);
+        Path database = directory.resolve("loan_db.mv.db");
+        Path oldDatabase = oldDirectory.resolve("loan_db.mv.db");
+        if (!Files.exists(database) && Files.isRegularFile(oldDatabase)
+                && !Files.isSameFile(directory, oldDirectory)) {
+            Files.copy(oldDatabase, database);
+        }
+        DosFileAttributeView attributes = Files.getFileAttributeView(directory, DosFileAttributeView.class);
+        if (attributes != null) {
+            attributes.setHidden(true);
         }
     }
 }
