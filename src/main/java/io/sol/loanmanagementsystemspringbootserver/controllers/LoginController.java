@@ -6,6 +6,7 @@ import io.sol.loanmanagementsystemspringbootserver.utilities.Result;
 import io.sol.loanmanagementsystemspringbootserver.utilities.StageManager;
 import io.sol.loanmanagementsystemspringbootserver.entities.custom.User;
 import io.sol.loanmanagementsystemspringbootserver.services.AuthenticationService;
+import io.sol.loanmanagementsystemspringbootserver.services.OfflineLicenseService;
 import io.sol.loanmanagementsystemspringbootserver.utilities.UserSession;
 import org.springframework.context.ApplicationContext;
 import javafx.fxml.FXML;
@@ -15,6 +16,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 import javafx.stage.Stage;
 import org.springframework.stereotype.Component;
 
@@ -54,11 +56,13 @@ public class LoginController {
 
     private final AuthenticationService authenticationService;
     private final UserSession userSession;
-    public LoginController(AuthenticationService authenticationService, ApplicationContext applicationContext, StageManager stageManager, UserRepository userRepository, UserSession userSession) {
+    private final OfflineLicenseService licenseService;
+    public LoginController(AuthenticationService authenticationService, ApplicationContext applicationContext, StageManager stageManager, UserRepository userRepository, UserSession userSession, OfflineLicenseService licenseService) {
         this.authenticationService = authenticationService;
         this.stageManager = stageManager;
         this.userRepository = userRepository;
         this.userSession = userSession;
+        this.licenseService = licenseService;
     }
 
     @FXML
@@ -68,6 +72,7 @@ public class LoginController {
 
     @FXML
     private void onLoginClicked() {
+        if (!checkLicense()) return;
         Logger.logInfo("Login clicked");
         String username = usernameField.getText() == null ? "" : usernameField.getText().trim();
         String password = passwordField.getText() == null ? "" : passwordField.getText();
@@ -84,6 +89,7 @@ public class LoginController {
 
     @FXML
     private void loadCreateAccount(){
+        if (!checkLicense()) return;
         try{
             Parent createAccountView = stageManager.loadView("ui/login/CreateAccountView.fxml");
 
@@ -112,5 +118,27 @@ public class LoginController {
             messageLabel.setText("Unable to open dashboard. Please contact support.");
             Logger.logError(e.getMessage());
         }
+    }
+
+    @FXML
+    private void activateLicense() {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Activate access");
+        dialog.setHeaderText("Enter the code supplied after payment. Internet is needed only for activation or renewal.");
+        dialog.setContentText("Installation: " + licenseService.installationId() + "\nCode:");
+        dialog.showAndWait().ifPresent(code -> {
+            try {
+                licenseService.activate(code);
+                messageLabel.setText("License activated. Sign in to continue.");
+            } catch (Exception e) {
+                messageLabel.setText("Activation failed. Check the code and connection or contact the provider.");
+            }
+        });
+    }
+
+    private boolean checkLicense() {
+        if (licenseService.isAllowed()) return true;
+        messageLabel.setText("Access expired or not activated. Activate or renew your license.");
+        return false;
     }
 }

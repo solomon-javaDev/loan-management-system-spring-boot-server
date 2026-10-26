@@ -3,6 +3,10 @@ package io.sol.loanmanagementsystemspringbootserver;
 import io.sol.loanmanagementsystemspringbootserver.utilities.DatabaseMigrationUtility;
 import io.sol.loanmanagementsystemspringbootserver.utilities.GlobalExceptionHandler;
 import io.sol.loanmanagementsystemspringbootserver.utilities.StageManager;
+import io.sol.loanmanagementsystemspringbootserver.services.OfflineLicenseService;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Parent;
@@ -14,6 +18,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 public class FxMainApp extends Application {
 
     private ConfigurableApplicationContext applicationContext;
+    private Timeline licenseWatch;
 
     @Override
     public void init() {
@@ -54,10 +59,20 @@ public class FxMainApp extends Application {
         primaryStage.setScene(scene);
         primaryStage.setResizable(false);
         primaryStage.show();
+        OfflineLicenseService license = applicationContext.getBean(OfflineLicenseService.class);
+        licenseWatch = new Timeline(new KeyFrame(Duration.seconds(30), event -> {
+            if (!license.isAllowed() && primaryStage.getScene().getRoot() != root) {
+                primaryStage.close();
+                Platform.exit();
+            }
+        }));
+        licenseWatch.setCycleCount(Timeline.INDEFINITE);
+        licenseWatch.play();
     }
 
     @Override
     public void stop() {
+        if (licenseWatch != null) licenseWatch.stop();
         if (applicationContext != null) {
             applicationContext.close();
         }
