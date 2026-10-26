@@ -14,7 +14,13 @@
                </padding>
                <children>
                   
-                  <TitledPane animated="false" collapsible="false" text="Reporting Settings">
+                  <TitledPane animated="false" collapsible="false" lineSpacing="8.0" text="Email Settings" VBox.vgrow="ALWAYS">
+                     <content>
+                        <fx:include source="EmailSettingsView.fxml" />
+                     </content>
+                  </TitledPane>
+
+                  <TitledPane animated="false" collapsible="false" lineSpacing="8.0" text="Reporting Settings" VBox.vgrow="ALWAYS">
                      <content>
                         <GridPane hgap="10.0" vgap="15.0">
                           <columnConstraints>
@@ -52,7 +58,7 @@
                      </content>
                   </TitledPane>
                   
-                  <TitledPane animated="false" collapsible="false" text="Capital &amp; Cash Management">
+                  <TitledPane animated="false" collapsible="false" lineSpacing="8.0" text="Capital &amp; Cash Management" VBox.vgrow="ALWAYS">
                      <content>
                         <GridPane hgap="10.0" vgap="15.0">
                            <columnConstraints>
@@ -93,7 +99,7 @@
                      </content>
                   </TitledPane>
       
-                  <TitledPane animated="false" collapsible="false" text="Loan Fee Buckets">
+                  <TitledPane animated="false" collapsible="false" lineSpacing="2.0" text="Loan Fee Buckets" VBox.vgrow="ALWAYS">
                      <content>
                         <VBox spacing="10.0">
                            <GridPane hgap="10.0" vgap="10.0">

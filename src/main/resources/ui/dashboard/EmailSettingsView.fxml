@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.sol.loanmanagementsystemspringbootserver.mailing.EmailSettingsController">
+   <VBox prefHeight="400.0" prefWidth="600.0" spacing="8.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="5.0">
+      <children>
+          <Label alignment="CENTER" contentDisplay="CENTER" lineSpacing="2.0" prefHeight="25.0" prefWidth="611.0" style="-fx-font-size: 16px; -fx-font-weight: bold;" text="SMTP Email Configuration" textAlignment="CENTER" textOverrun="CENTER_ELLIPSIS" />
+          <GridPane hgap="12" vgap="10">
+              <columnConstraints>
+               <ColumnConstraints minWidth="150" />
+               <ColumnConstraints hgrow="ALWAYS" />
+            </columnConstraints>
+              <Label text="SMTP Host" />
+            <TextField fx:id="hostField" promptText="smtp.gmail.com" GridPane.columnIndex="1" />
+              <Label text="SMTP Port" GridPane.rowIndex="1" />
+            <TextField fx:id="portField" promptText="587" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+              <Label text="Email Address" GridPane.rowIndex="2" />
+            <TextField fx:id="usernameField" promptText="you@example.com" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+              <Label text="App Password" GridPane.rowIndex="3" />
+            <PasswordField fx:id="passwordField" promptText="Enter password for this session" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+            <rowConstraints>
+               <RowConstraints />
+               <RowConstraints />
+               <RowConstraints />
+               <RowConstraints />
+            </rowConstraints>
+          </GridPane>
+          <RadioButton fx:id="startTlsRadio" contentDisplay="CENTER" text="STARTTLS (usually port 587)" textAlignment="CENTER" textFill="#875050" />
+          <RadioButton fx:id="sslRadio" contentDisplay="CENTER" text="SSL/TLS (usually port 465)" textAlignment="CENTER" textFill="#875050" />
+          <HBox spacing="10">
+              <Button fx:id="testButton" contentDisplay="CENTER" onAction="#handleTestConnection" text="Test Connection" textAlignment="CENTER" textFill="#875050" />
+              <Button fx:id="saveButton" contentDisplay="CENTER" onAction="#handleSave" text="Save Settings" textAlignment="CENTER" textFill="#875050" />
+              <ProgressIndicator fx:id="progressIndicator" managed="false" prefHeight="28" prefWidth="28" visible="false" />
+          </HBox>
+          <Label fx:id="statusLabel" contentDisplay="CENTER" text="Password is kept only for this session; re-enter it after restart." textAlignment="CENTER" textFill="#875050" wrapText="true" />
+      </children>
+      <opaqueInsets>
+         <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+      </opaqueInsets>
+      <padding>
+         <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+      </padding>
+   </VBox>
+</AnchorPane>

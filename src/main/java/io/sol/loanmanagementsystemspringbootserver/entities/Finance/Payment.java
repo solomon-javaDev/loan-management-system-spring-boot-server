@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "payments")
 @SQLDelete(sql = "UPDATE payments SET deleted = true WHERE id = ?")
-@SQLRestriction("deleted = false")
+@SQLRestriction("(deleted = false OR deleted IS NULL)")
 @Getter
 @Setter
 public class Payment {
@@ -20,8 +20,8 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false)
-    private boolean deleted = false;
+    @Column
+    private Boolean deleted = false;
 
     @Column
     private LocalDate date; // Represents the date on which the payment was made
