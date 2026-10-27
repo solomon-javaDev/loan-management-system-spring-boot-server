@@ -70,3 +70,42 @@ hs_err_pid40184.log
 /reports/LoanStatement_2_20260918_052607.pdf
 /mvn-test-output.txt
 /receipts/PaymentReceipt_20260917_211905.pdf
+
+.data/
+.receipts/
+secret.key
+system.log.enc
+hs_err_pid40184.log
+.reports/
+/reports/DailyLoans_20260909_195800.pdf
+/hs_err_pid22188.log
+/launch.bat
+/data/loan_db.mv.db
+/data/loan_db.trace.db
+/reports/LoanStatement_35_20260910_171420.pdf
+/reports/LoanStatement_36_20260910_172215.pdf
+/receipts/Payment receipt -_20260909_195608.pdf
+/receipts/Payment receipt -_20260909_195636.pdf
+/receipts/Payment receipt -_20260909_195727.pdf
+/receipts/Payment receipt -_20260910_073650.pdf
+/receipts/Payment receipt -_20260910_073719.pdf
+/receipts/Payment receipt -_20260910_074832.pdf
+/receipts/Payment receipt -_20260910_170726.pdf
+/receipts/Payment receipt -_20260910_171136.pdf
+/receipts/Payment receipt -_20260910_172116.pdf
+/receipts/PaymentReceipt_20260912_142523.pdf
+/receipts/PaymentReceipt_20260912_142549.pdf
+/receipts/PaymentReceipt_20260912_142623.pdf
+/receipts/PaymentReceipt_20260912_142701.pdf
+/system.log
+/test.log
+/validation-settings.log
+/reports/AgingAnalysis_20260916_070311.pdf
+/reports/DailyReport_2026-09-18.pdf
+/launch4j-config.xml
+/launch_v3.bat
+/data/realData/loan_db.mv.db
+/data/realData/loan_db.mv-1.db
+/reports/LoanStatement_2_20260918_052607.pdf
+/mvn-test-output.txt
+/receipts/PaymentReceipt_20260917_211905.pdf
